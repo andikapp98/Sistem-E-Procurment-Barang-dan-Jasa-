@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name', // virtual, maps to nama
         'email',
         'password',
+        'role',
+        'jabatan',
+        'unit_kerja',
     ];
 
     /**

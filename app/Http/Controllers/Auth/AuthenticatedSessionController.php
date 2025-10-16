@@ -33,6 +33,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Redirect berdasarkan role user
+        $user = Auth::user();
+        
+        if ($user->role === 'kepala_instalasi') {
+            return redirect()->intended(route('kepala-instalasi.dashboard', absolute: false));
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

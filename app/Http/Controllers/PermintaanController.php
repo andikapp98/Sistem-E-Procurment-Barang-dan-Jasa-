@@ -55,7 +55,21 @@ class PermintaanController extends Controller
     /** Display the specified resource. */
     public function show(Permintaan $permintaan)
     {
+        // Load relasi user
         $permintaan->load('user');
+        
+        // Load tracking tahapan (jika sudah ada data)
+        // Nanti akan digunakan saat tabel tracking sudah ada data
+        // $permintaan->load([
+        //     'notaDinas',
+        //     'notaDinas.disposisi',
+        //     'notaDinas.disposisi.perencanaan',
+        //     'notaDinas.disposisi.perencanaan.kso',
+        //     'notaDinas.disposisi.perencanaan.kso.pengadaan',
+        //     'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan',
+        //     'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima',
+        // ]);
+        
         return Inertia::render('Permintaan/Show', [
             'permintaan' => $permintaan,
         ]);

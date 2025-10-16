@@ -1,19 +1,18 @@
-# 🏥 Sistem e-Procurement RSUD Ibnu Sina
+# 🏥 Sistem e-Procurement RSUD Ibnu Sina Kabupaten Gresik
 
 <p align="center">
-  <img src="public/images/logorsis.png" alt="RSUD Ibnu Sina Kabupaten Gresik" width="200"/>
+  <img src="public/images/logorsis.png" alt="RSUD Ibnu Sina" width="200"/>
 </p>
 
 <p align="center">
-  <strong>Aplikasi Manajemen Permintaan Pengadaan Barang dan Jasa</strong><br>
-  RSUD Ibnu Sina Kabupaten Gresik
+  <strong>Aplikasi Manajemen Permintaan Pengadaan Barang dan Jasa</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Laravel-12.0-FF2D20?style=flat&logo=laravel" alt="Laravel">
+  <img src="https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel" alt="Laravel">
   <img src="https://img.shields.io/badge/Vue.js-3.5-4FC08D?style=flat&logo=vue.js" alt="Vue.js">
   <img src="https://img.shields.io/badge/Inertia.js-2.0-9553E9?style=flat&logo=inertia" alt="Inertia.js">
-  <img src="https://img.shields.io/badge/Tailwind-3.2-06B6D4?style=flat&logo=tailwind-css" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/Tailwind-3.2-06B6D4?style=flat&logo=tailwind-css" alt="Tailwind">
   <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat&logo=php" alt="PHP">
 </p>
 
@@ -21,7 +20,398 @@
 
 ## 📋 Tentang Aplikasi
 
-Sistem e-Procurement adalah aplikasi web untuk mengelola permintaan pengadaan barang dan jasa di RSUD Ibnu Sina Kabupaten Gresik. Aplikasi ini memudahkan proses pengajuan, verifikasi, dan approval permintaan dari berbagai unit/instalasi di rumah sakit.
+Sistem e-Procurement adalah aplikasi web untuk mengelola permintaan pengadaan barang dan jasa di RSUD Ibnu Sina Kabupaten Gresik. Aplikasi ini memudahkan proses pengajuan, review, dan approval permintaan dari berbagai unit/instalasi rumah sakit dengan alur bertingkat.
+
+### ✨ Fitur Utama
+
+- 🔐 **Multi-Role System** - Admin, Kepala Instalasi, dan Unit Kerja
+- 📊 **Dashboard Interaktif** - Statistik real-time berdasarkan role
+- 📝 **Manajemen Permintaan** - CRUD lengkap dengan workflow approval
+- 📋 **Nota Dinas** - Pembuatan dan tracking nota dinas
+- 🏥 **Multi-Unit Support** - 24+ unit/instalasi rumah sakit
+- 📱 **Responsive Design** - Mobile-friendly
+- 🔍 **Status Tracking** - Lacak status permintaan dari awal hingga serah terima
+- 🎨 **Modern UI/UX** - Clean dan user-friendly dengan Tailwind CSS
+
+---
+
+## 🚀 Tech Stack
+
+**Backend:**
+- Laravel 11.x - PHP Framework
+- Inertia.js 2.0 - Modern monolith approach
+- MySQL - Database
+
+**Frontend:**
+- Vue.js 3.5 - Progressive JavaScript Framework
+- Tailwind CSS 3.2 - Utility-first CSS
+- Vite 7.0 - Build tool
+
+**Authentication:**
+- Laravel Breeze - Authentication scaffolding
+
+---
+
+## 🛠️ Instalasi
+
+### Prasyarat
+
+- PHP >= 8.2
+- Composer >= 2.0
+- Node.js >= 18.x & NPM >= 9.x
+- MySQL >= 8.0
+
+### Langkah Instalasi
+
+```bash
+# 1. Clone repository
+git clone <repository-url>
+cd pengadaan-app
+
+# 2. Install dependencies
+composer install
+npm install
+
+# 3. Setup environment
+cp .env.example .env
+php artisan key:generate
+
+# 4. Konfigurasi database (.env)
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=pengadaan_app
+DB_USERNAME=root
+DB_PASSWORD=
+
+# 5. Migrasi database
+php artisan migrate
+
+# 6. Seed data demo (optional)
+php artisan db:seed --class=KepalaInstalasiDataSeeder
+
+# 7. Build assets
+npm run build
+
+# 8. Jalankan aplikasi
+php artisan serve
+```
+
+Akses aplikasi di: **http://127.0.0.1:8000**
+
+---
+
+## 📚 Dokumentasi Lengkap
+
+| 📄 File | 📝 Deskripsi |
+|---------|--------------|
+| **[README.md](README.md)** | Overview project, fitur, dan quick start guide |
+| **[INSTALASI.md](INSTALASI.md)** | Panduan instalasi lengkap untuk development & production |
+| **[PENGGUNAAN.md](PENGGUNAAN.md)** | Panduan penggunaan aplikasi untuk end-user |
+| **[SEEDER.md](SEEDER.md)** | Panduan data demo dan seeder |
+| **[CHANGELOG.md](CHANGELOG.md)** | Riwayat perubahan dan roadmap |
+
+---
+
+## 👥 Akun Default
+
+Setelah menjalankan seeder, gunakan akun berikut:
+
+### Kepala Instalasi
+- **Email:** kepala_instalasi@rsud.id
+- **Password:** password123
+- **Unit:** Instalasi Farmasi
+
+### Staff Farmasi (Unit)
+- **Email:** staff.farmasi@rsud.id
+- **Password:** password123
+- **Unit:** Instalasi Farmasi
+
+---
+
+## 📱 Fitur Berdasarkan Role
+
+### 1. **Admin**
+- Dashboard dengan statistik keseluruhan
+- Kelola semua permintaan dari semua unit
+- Monitoring status pengadaan
+
+**Routes:**
+- `/dashboard` - Dashboard admin
+- `/permintaan` - Kelola permintaan
+
+### 2. **Kepala Instalasi**
+- Dashboard khusus dengan statistik unit
+- Review permintaan dari unit kerjanya
+- Approve/Reject/Revisi permintaan
+- Membuat dan mengirim nota dinas
+- Meneruskan ke Direktur/Bagian Pengadaan
+
+**Routes:**
+- `/kepala-instalasi/dashboard` - Dashboard
+- `/kepala-instalasi` - Daftar permintaan untuk review
+- `/kepala-instalasi/permintaan/{id}` - Detail & aksi permintaan
+- `/kepala-instalasi/permintaan/{id}/nota-dinas/create` - Buat nota dinas
+
+### 3. **Unit Kerja**
+- Dashboard statistik permintaan sendiri
+- Buat permintaan pengadaan baru
+- Lihat status permintaan
+- Edit/Hapus permintaan (draft)
+
+**Routes:**
+- `/dashboard` - Dashboard unit
+- `/permintaan` - Daftar permintaan saya
+- `/permintaan/create` - Buat permintaan baru
+
+---
+
+## 🔄 Workflow Pengadaan
+
+```
+┌─────────────────┐
+│  Unit Kerja     │  1. Buat Permintaan
+│  (Staff)        │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Kepala Instalasi│  2. Review & Tindakan:
+│                 │     - Approve langsung
+└────────┬────────┘     - Buat Nota Dinas
+         │              - Minta Revisi
+         │              - Tolak
+         ▼
+    ┌────────┐
+    │Direktur│  3. Approval
+    └───┬────┘
+        │
+        ▼
+┌───────────────┐
+│Bagian Pengadaan│  4. Proses Pengadaan
+└───────┬───────┘
+        │
+        ▼
+  ┌──────────┐
+  │Serah Terima│  5. Selesai
+  └──────────┘
+```
+
+---
+
+## 📊 Status Permintaan
+
+| Status | Deskripsi |
+|--------|-----------|
+| **diajukan** | Permintaan baru menunggu review Kepala Instalasi |
+| **proses** | Sedang diproses (sudah ada nota dinas) |
+| **disetujui** | Disetujui dan diteruskan ke Bagian Pengadaan |
+| **ditolak** | Ditolak dengan alasan |
+| **revisi** | Perlu revisi dari pemohon |
+
+## 🔍 Tracking Status
+
+1. **Permintaan** - Status awal
+2. **Nota Dinas** - Sudah dibuat nota dinas
+3. **Disposisi** - Sudah didisposisi
+4. **Perencanaan** - Masuk tahap perencanaan
+5. **KSO** - Komite Standar & Obat
+6. **Pengadaan** - Proses pengadaan
+7. **Nota Penerimaan** - Barang diterima
+8. **Serah Terima** - Selesai
+
+---
+
+## 🗂️ Struktur Database
+
+### Tabel Utama
+
+**`users`**
+- `user_id` - Primary Key
+- `nama` - Nama lengkap
+- `email` - Email (unique)
+- `password` - Password (hashed)
+- `role` - admin / kepala_instalasi / unit
+- `jabatan` - Jabatan user
+- `unit_kerja` - Unit kerja
+
+**`permintaan`**
+- `permintaan_id` - Primary Key
+- `user_id` - Foreign Key ke users
+- `bidang` - Bidang pengadaan
+- `tanggal_permintaan` - Tanggal pengajuan
+- `deskripsi` - Detail permintaan
+- `status` - diajukan / proses / disetujui / ditolak / revisi
+- `pic_pimpinan` - Pimpinan yang menangani
+- `no_nota_dinas` - Nomor nota dinas
+- `link_scan` - Link scan dokumen
+
+**`nota_dinas`**
+- `nota_id` - Primary Key
+- `permintaan_id` - Foreign Key ke permintaan
+- `dari_unit` - Unit pembuat nota
+- `ke_jabatan` - Tujuan nota (Direktur/Bagian Pengadaan/dll)
+- `tanggal_nota` - Tanggal nota dinas
+- `status` - Status nota
+
+---
+
+## 🎨 Struktur File
+
+```
+pengadaan-app/
+├── app/
+│   ├── Http/Controllers/
+│   │   ├── Auth/                          # Authentication
+│   │   ├── KepalaInstalasiController.php  # Kepala Instalasi
+│   │   ├── PermintaanController.php       # CRUD Permintaan
+│   │   └── ProfileController.php          # Profile
+│   └── Models/
+│       ├── User.php
+│       ├── Permintaan.php
+│       └── NotaDinas.php
+├── resources/js/
+│   ├── Layouts/
+│   │   ├── AuthenticatedLayout.vue        # Layout dengan sidebar
+│   │   └── GuestLayout.vue                # Layout login
+│   ├── Pages/
+│   │   ├── Dashboard.vue                  # Dashboard umum
+│   │   ├── KepalaInstalasi/
+│   │   │   ├── Dashboard.vue              # Dashboard Kepala Instalasi
+│   │   │   ├── Index.vue                  # List permintaan
+│   │   │   ├── Show.vue                   # Detail & aksi
+│   │   │   └── CreateNotaDinas.vue        # Form nota dinas
+│   │   └── Permintaan/
+│   │       ├── Index.vue
+│   │       ├── Create.vue
+│   │       ├── Edit.vue
+│   │       └── Show.vue
+│   └── Components/                        # Reusable components
+└── routes/
+    └── web.php                            # Web routes
+```
+
+---
+
+## 💻 Development
+
+### Menjalankan Development Server
+
+```bash
+# Terminal 1: Laravel
+php artisan serve
+
+# Terminal 2: Vite (hot reload)
+npm run dev
+```
+
+### Build untuk Production
+
+```bash
+npm run build
+```
+
+### Clear Cache
+
+```bash
+php artisan route:clear
+php artisan view:clear
+php artisan config:clear
+```
+
+### Database Commands
+
+```bash
+# Fresh migration
+php artisan migrate:fresh
+
+# Migrate + Seed
+php artisan migrate:fresh --seed
+
+# Seed khusus
+php artisan db:seed --class=KepalaInstalasiDataSeeder
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Error: Route not found / Ziggy error
+```bash
+php artisan route:clear
+npm run build
+```
+
+### Error: Layout tidak muncul
+```bash
+php artisan view:clear
+npm run build
+```
+
+### Error: Database connection refused
+- Pastikan MySQL berjalan
+- Cek kredensial di `.env`
+- Pastikan database sudah dibuat
+
+### Halaman blank setelah login
+- Buka Developer Tools (F12) → Console
+- Lihat error yang muncul
+- Biasanya karena route belum ada
+
+---
+
+## 🔒 Keamanan
+
+- ✅ CSRF Protection
+- ✅ Password Hashing (bcrypt)
+- ✅ SQL Injection Prevention (Eloquent ORM)
+- ✅ XSS Protection
+- ✅ Role-based Access Control (RBAC)
+- ✅ Secure Session Management
+
+---
+
+## 📈 Roadmap
+
+### Version 1.1 (Coming Soon)
+- [ ] Notifikasi email
+- [ ] Export data (Excel/PDF)
+- [ ] File upload langsung
+- [ ] History perubahan
+
+### Version 1.2
+- [ ] Dashboard analytics lanjutan
+- [ ] Sistem komentar
+- [ ] Audit trail
+- [ ] API untuk integrasi
+
+### Version 2.0
+- [ ] Mobile app
+- [ ] Real-time notifications
+- [ ] Budget tracking
+- [ ] E-signature
+
+---
+
+## 📞 Support
+
+Untuk bantuan atau pertanyaan:
+- **Email:** it@rsudibsinugresik.id
+- **Website:** https://rsudibsinugresik.id
+
+---
+
+## 📄 License
+
+Proprietary - RSUD Ibnu Sina Kabupaten Gresik
+
+---
+
+<p align="center">
+  <strong>Developed with ❤️ for RSUD Ibnu Sina Kabupaten Gresik</strong><br>
+  <em>Last Updated: October 16, 2025</em>
+</p>
+
 
 ### ✨ Fitur Utama
 

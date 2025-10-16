@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Models;
+
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
+
+class SerahTerima extends Model
+{
+    protected $table = 'serah_terima';
+    protected $primaryKey = 'serah_id';
+    public $timestamps = true;
+
+    protected $casts = [
+        'nota_penerimaan_id' => 'int',
+        'tanggal_serah' => 'date'
+    ];
+
+    protected $fillable = [
+        'nota_penerimaan_id',
+        'tanggal_serah',
+        'penerima',
+        'status'
+    ];
+
+    public function notaPenerimaan()
+    {
+        return $this->belongsTo(NotaPenerimaan::class, 'nota_penerimaan_id', 'nota_penerimaan_id');
+    }
+}

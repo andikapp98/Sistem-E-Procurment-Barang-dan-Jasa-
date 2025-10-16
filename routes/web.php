@@ -37,9 +37,22 @@ Route::middleware('auth')->group(function () {
 });
 
 use App\Http\Controllers\PermintaanController;
+use App\Http\Controllers\KepalaInstalasiController;
 
 Route::resource('permintaan', PermintaanController::class)
     ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
     ->middleware(['auth', 'verified']);
+
+// Routes untuk Kepala Instalasi
+Route::middleware(['auth', 'verified'])->prefix('kepala-instalasi')->name('kepala-instalasi.')->group(function () {
+    Route::get('/dashboard', [KepalaInstalasiController::class, 'dashboard'])->name('dashboard');
+    Route::get('/', [KepalaInstalasiController::class, 'index'])->name('index');
+    Route::get('/permintaan/{permintaan}', [KepalaInstalasiController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/nota-dinas/create', [KepalaInstalasiController::class, 'createNotaDinas'])->name('nota-dinas.create');
+    Route::post('/permintaan/{permintaan}/nota-dinas', [KepalaInstalasiController::class, 'storeNotaDinas'])->name('nota-dinas.store');
+    Route::post('/permintaan/{permintaan}/approve', [KepalaInstalasiController::class, 'approve'])->name('approve');
+    Route::post('/permintaan/{permintaan}/reject', [KepalaInstalasiController::class, 'reject'])->name('reject');
+    Route::post('/permintaan/{permintaan}/revisi', [KepalaInstalasiController::class, 'requestRevision'])->name('revisi');
+});
 
 require __DIR__.'/auth.php';

@@ -1,18 +1,31 @@
 <template>
 	<AuthenticatedLayout>
 		<template #header>
-			<h2 class="font-semibold text-xl text-gray-800 leading-tight">Buat Permintaan</h2>
+			<h2 class="font-semibold text-xl text-gray-800 leading-tight">Buat Permintaan Baru</h2>
 		</template>
 
 		<div class="py-12">
-			<div class="mx-auto px-2 sm:px-4">
-				<div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-					<form @submit.prevent="submit">
+			<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="bg-white overflow-hidden shadow-sm rounded-lg">
+					<div class="p-6 border-b border-gray-200">
+						<h3 class="text-lg font-medium text-gray-900">Form Permintaan Pengadaan</h3>
+						<p class="mt-1 text-sm text-gray-600">
+							Isi form di bawah untuk membuat permintaan pengadaan barang/jasa
+						</p>
+					</div>
+
+					<form @submit.prevent="submit" class="p-6 space-y-6">
 						<!-- Bidang -->
-						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700">Bidang</label>
-							<select v-model="form.bidang" class="mt-1 block w-full rounded-md border-gray-300">
-								<option value="">-- Pilih bidang --</option>
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">
+								Bidang / Unit <span class="text-red-500">*</span>
+							</label>
+							<select 
+								v-model="form.bidang" 
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+								required
+							>
+								<option value="">-- Pilih Bidang / Unit --</option>
 								<option value="Instalasi Gawat Darurat">Instalasi Gawat Darurat</option>
 								<option value="Instalasi Rawat Jalan">Instalasi Rawat Jalan</option>
 								<option value="Instalasi Rawat Inap">Instalasi Rawat Inap</option>
@@ -45,56 +58,122 @@
 						</div>
 
 						<!-- Deskripsi -->
-						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700">Deskripsi</label>
-							<textarea v-model="form.deskripsi" class="mt-1 block w-full rounded-md border-gray-300" rows="5"></textarea>
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">
+								Deskripsi Permintaan <span class="text-red-500">*</span>
+							</label>
+							<textarea 
+								v-model="form.deskripsi" 
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" 
+								rows="6"
+								placeholder="Jelaskan detail permintaan pengadaan (nama barang/jasa, spesifikasi, jumlah, alasan)"
+								required
+							></textarea>
+							<p class="mt-1 text-xs text-gray-500">
+								Sertakan: nama barang/jasa, spesifikasi, jumlah, dan alasan permintaan
+							</p>
 							<InputError :message="form.errors.deskripsi" class="mt-2" />
 						</div>
 
-						<!-- Tanggal Permintaan -->
-						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700">Tanggal Permintaan</label>
-							<TextInput type="date" v-model="form.tanggal_permintaan" class="mt-1 block w-full" />
-							<InputError :message="form.errors.tanggal_permintaan" class="mt-2" />
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<!-- Tanggal Permintaan -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-2">
+									Tanggal Permintaan <span class="text-red-500">*</span>
+								</label>
+								<TextInput 
+									type="date" 
+									v-model="form.tanggal_permintaan" 
+									class="mt-1 block w-full" 
+									required
+								/>
+								<InputError :message="form.errors.tanggal_permintaan" class="mt-2" />
+							</div>
+
+							<!-- PIC Pimpinan -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-2">
+									PIC Pimpinan <span class="text-red-500">*</span>
+								</label>
+								<TextInput 
+									type="text" 
+									v-model="form.pic_pimpinan" 
+									class="mt-1 block w-full" 
+									placeholder="Contoh: Dr. Ahmad Yani, Sp.PD"
+									required
+								/>
+								<p class="mt-1 text-xs text-gray-500">Nama lengkap dengan gelar</p>
+								<InputError :message="form.errors.pic_pimpinan" class="mt-2" />
+							</div>
 						</div>
 
-						<!-- PIC Pimpinan -->
-						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700">PIC Pimpinan</label>
-							<TextInput type="text" v-model="form.pic_pimpinan" class="mt-1 block w-full" placeholder="Nama pimpinan" />
-							<InputError :message="form.errors.pic_pimpinan" class="mt-2" />
-						</div>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<!-- No Nota Dinas -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-2">
+									No Nota Dinas <span class="text-red-500">*</span>
+								</label>
+								<TextInput 
+									type="text" 
+									v-model="form.no_nota_dinas" 
+									class="mt-1 block w-full" 
+									placeholder="Contoh: ND/IGD/2025/001/X"
+									required
+								/>
+								<p class="mt-1 text-xs text-gray-500">Format: ND/[Unit]/[Tahun]/[Nomor]/[Bulan]</p>
+								<InputError :message="form.errors.no_nota_dinas" class="mt-2" />
+							</div>
 
-						<!-- No Nota Dinas -->
-						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700">No Nota Dinas</label>
-							<TextInput type="text" v-model="form.no_nota_dinas" class="mt-1 block w-full" placeholder="Nomor nota dinas" />
-							<InputError :message="form.errors.no_nota_dinas" class="mt-2" />
-						</div>
-
-						<!-- Link Scan -->
-						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700">Link Scan Dokumen</label>
-							<TextInput type="url" v-model="form.link_scan" class="mt-1 block w-full" placeholder="https://..." />
-							<InputError :message="form.errors.link_scan" class="mt-2" />
+							<!-- Link Scan -->
+							<div>
+								<label class="block text-sm font-medium text-gray-700 mb-2">
+									Link Scan Dokumen
+								</label>
+								<TextInput 
+									type="url" 
+									v-model="form.link_scan" 
+									class="mt-1 block w-full" 
+									placeholder="https://drive.google.com/..."
+								/>
+								<p class="mt-1 text-xs text-gray-500">Link Google Drive atau dokumen scan</p>
+								<InputError :message="form.errors.link_scan" class="mt-2" />
+							</div>
 						</div>
 
 						<!-- Status -->
-						<div class="mb-4">
-							<label class="block text-sm font-medium text-gray-700">Status</label>
-							<select v-model="form.status" class="mt-1 block w-full rounded-md border-gray-300">
-								<option value="">-- Pilih status --</option>
-								<option value="diajukan">Diajukan</option>
-								<option value="proses">Proses</option>
-								<option value="disetujui">Disetujui</option>
+						<div>
+							<label class="block text-sm font-medium text-gray-700 mb-2">
+								Status <span class="text-red-500">*</span>
+							</label>
+							<select 
+								v-model="form.status" 
+								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+								required
+							>
+								<option value="">-- Pilih Status --</option>
+								<option value="diajukan">🟡 Diajukan</option>
+								<option value="proses">🔄 Proses</option>
+								<option value="disetujui">✅ Disetujui</option>
 							</select>
 							<InputError :message="form.errors.status" class="mt-2" />
 						</div>
 
 						<!-- Actions -->
-						<div class="flex items-center justify-end space-x-3">
-							<Link :href="route('permintaan.index')" class="text-gray-600">Batal</Link>
-							<PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Buat</PrimaryButton>
+						<div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
+							<Link 
+								:href="route('permintaan.index')" 
+								class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+							>
+								Batal
+							</Link>
+							<PrimaryButton 
+								:class="{ 'opacity-25': form.processing }" 
+								:disabled="form.processing"
+								class="px-6 py-2"
+							>
+								<span v-if="form.processing">⏳ Menyimpan...</span>
+								<span v-else>💾 Simpan Permintaan</span>
+							</PrimaryButton>
 						</div>
 					</form>
 				</div>

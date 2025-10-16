@@ -44,34 +44,19 @@
                                         class="text-xs uppercase tracking-wide text-gray-600 border-b border-gray-200"
                                     >
                                         <th
-                                            class="py-3 px-3 text-left font-medium"
+                                            class="py-3 px-3 text-left font-medium w-16"
                                         >
                                             ID
                                         </th>
                                         <th
-                                            class="py-3 px-3 text-left font-medium"
+                                            class="py-3 px-3 text-left font-medium w-28"
                                         >
                                             Tanggal
                                         </th>
                                         <th
                                             class="py-3 px-3 text-left font-medium"
                                         >
-                                            Bidang
-                                        </th>
-                                        <th
-                                            class="py-3 px-3 text-left font-medium"
-                                        >
-                                            Unit / User
-                                        </th>
-                                        <th
-                                            class="py-3 px-3 text-left font-medium"
-                                        >
-                                            PIC Pimpinan
-                                        </th>
-                                        <th
-                                            class="py-3 px-3 text-left font-medium"
-                                        >
-                                            No Nota Dinas
+                                            Bidang / Unit
                                         </th>
                                         <th
                                             class="py-3 px-3 text-left font-medium"
@@ -79,17 +64,12 @@
                                             Deskripsi
                                         </th>
                                         <th
-                                            class="py-3 px-3 text-left font-medium"
+                                            class="py-3 px-3 text-left font-medium w-24"
                                         >
                                             Status
                                         </th>
                                         <th
-                                            class="py-3 px-3 text-left font-medium"
-                                        >
-                                            Link Scan
-                                        </th>
-                                        <th
-                                            class="py-3 px-3 text-left font-medium"
+                                            class="py-3 px-3 text-left font-medium w-28"
                                         >
                                             Aksi
                                         </th>
@@ -102,7 +82,7 @@
                                         class="border-b hover:bg-gray-50 transition-colors"
                                     >
                                         <td
-                                            class="py-2.5 px-3 whitespace-nowrap text-indigo-600"
+                                            class="py-3 px-3 whitespace-nowrap text-indigo-600 font-medium"
                                         >
                                             <Link
                                                 :href="
@@ -113,85 +93,65 @@
                                                 "
                                                 class="hover:underline"
                                             >
-                                                {{ item.permintaan_id }}
+                                                #{{ item.permintaan_id }}
                                             </Link>
                                         </td>
-                                        <td class="py-2.5 px-3 whitespace-nowrap">
-                                            {{ item.tanggal_permintaan ? new Date(item.tanggal_permintaan).toLocaleDateString('id-ID') : "-" }}
+                                        <td class="py-3 px-3 whitespace-nowrap text-sm text-gray-600">
+                                            {{ item.tanggal_permintaan ? new Date(item.tanggal_permintaan).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : "-" }}
                                         </td>
-                                        <td class="py-2.5 px-3">
-                                            {{ item.bidang ?? "-" }}
+                                        <td class="py-3 px-3">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ item.bidang ?? "-" }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-0.5">
+                                                {{ item.user?.nama ?? "-" }}
+                                            </div>
                                         </td>
-                                        <td class="py-2.5 px-3">
-                                            {{ item.user?.nama ?? "-" }}
+                                        <td class="py-3 px-3">
+                                            <div class="text-sm text-gray-900 line-clamp-2">
+                                                {{ item.deskripsi }}
+                                            </div>
+                                            <div v-if="item.no_nota_dinas" class="text-xs text-gray-500 mt-1">
+                                                <span class="font-medium">No Nota:</span> {{ item.no_nota_dinas }}
+                                            </div>
                                         </td>
-                                        <td class="py-2.5 px-3">
-                                            {{ item.pic_pimpinan ?? "-" }}
-                                        </td>
-                                        <td class="py-2.5 px-3">
-                                            {{ item.no_nota_dinas ?? "-" }}
-                                        </td>
-                                        <td class="py-2.5 px-3">
-                                            {{ item.deskripsi }}
-                                        </td>
-                                        <td class="py-2.5 px-3">
+                                        <td class="py-3 px-3 whitespace-nowrap">
                                             <span
-                                                class="inline-block px-2 py-1 text-[11px] font-semibold rounded-full"
-                                                :class="
-                                                    statusClass(item.status)
-                                                "
+                                                class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full"
+                                                :class="statusClass(item.status)"
                                             >
+                                                <span class="mr-1">{{ getStatusIcon(item.status) }}</span>
                                                 {{ item.status }}
                                             </span>
                                         </td>
-                                        <td class="py-2.5 px-3">
-                                            <a
-                                                v-if="item.link_scan"
-                                                :href="item.link_scan"
-                                                target="_blank"
-                                                class="text-indigo-600 hover:text-indigo-900 hover:underline"
-                                            >
-                                                Lihat Scan
-                                            </a>
-                                            <span v-else class="text-gray-400">-</span>
-                                        </td>
-                                        <td class="py-2.5 px-3">
-                                            <template v-if="canEdit(item)">
+                                        <td class="py-3 px-3 whitespace-nowrap text-sm">
+                                            <div class="flex items-center gap-2">
                                                 <Link
-                                                    :href="
-                                                        route(
-                                                            'permintaan.edit',
-                                                            item.permintaan_id
-                                                        )
-                                                    "
-                                                    class="text-indigo-600 hover:text-indigo-900 mr-2"
+                                                    :href="route('permintaan.show', item.permintaan_id)"
+                                                    class="text-indigo-600 hover:text-indigo-900"
+                                                    title="Lihat Detail"
                                                 >
-                                                    Edit
+                                                    👁️
                                                 </Link>
-                                                <button
-                                                    @click="
-                                                        destroy(
-                                                            item.permintaan_id
-                                                        )
-                                                    "
-                                                    class="text-red-600 hover:text-red-900 disabled:opacity-50"
-                                                    :disabled="
-                                                        deleting ===
-                                                        item.permintaan_id
-                                                    "
-                                                >
-                                                    <span
-                                                        v-if="
-                                                            deleting ===
-                                                            item.permintaan_id
-                                                        "
-                                                        class="animate-pulse"
+                                                <template v-if="canEdit(item)">
+                                                    <Link
+                                                        :href="route('permintaan.edit', item.permintaan_id)"
+                                                        class="text-green-600 hover:text-green-900"
+                                                        title="Edit"
                                                     >
-                                                        ...
-                                                    </span>
-                                                    <span v-else>Hapus</span>
-                                                </button>
-                                            </template>
+                                                        ✏️
+                                                    </Link>
+                                                    <button
+                                                        @click="destroy(item.permintaan_id)"
+                                                        class="text-red-600 hover:text-red-900 disabled:opacity-50"
+                                                        :disabled="deleting === item.permintaan_id"
+                                                        title="Hapus"
+                                                    >
+                                                        <span v-if="deleting === item.permintaan_id">⏳</span>
+                                                        <span v-else>🗑️</span>
+                                                    </button>
+                                                </template>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -264,14 +224,32 @@ const canEdit = (item) => {
 const statusClass = (status) => {
     switch ((status || "").toLowerCase()) {
         case "disetujui":
-            return "bg-green-100 text-green-700";
+            return "bg-green-100 text-green-700 border border-green-200";
         case "diajukan":
-            return "bg-yellow-100 text-yellow-700";
+            return "bg-yellow-100 text-yellow-700 border border-yellow-200";
         case "diproses":
         case "proses":
-            return "bg-gray-100 text-gray-700";
+            return "bg-blue-100 text-blue-700 border border-blue-200";
+        case "ditolak":
+            return "bg-red-100 text-red-700 border border-red-200";
         default:
-            return "bg-slate-100 text-slate-700";
+            return "bg-gray-100 text-gray-700 border border-gray-200";
+    }
+};
+
+const getStatusIcon = (status) => {
+    switch ((status || "").toLowerCase()) {
+        case "disetujui":
+            return "✅";
+        case "diajukan":
+            return "🟡";
+        case "diproses":
+        case "proses":
+            return "🔄";
+        case "ditolak":
+            return "❌";
+        default:
+            return "⚪";
     }
 };
 

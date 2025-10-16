@@ -1,97 +1,132 @@
-# Release Notes
+# 📝 Changelog
 
-## [Unreleased](https://github.com/laravel/laravel/compare/v12.5.0...12.x)
+Semua perubahan penting pada project ini akan didokumentasikan di file ini.
 
-## [v12.5.0](https://github.com/laravel/laravel/compare/v12.4.0...v12.5.0) - 2025-09-30
+Format berdasarkan [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+dan project ini mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-* [12.x] Fix type casting for environment variables in config files by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6670
-* Fix CVEs affecting vite by [@faissaloux](https://github.com/faissaloux) in https://github.com/laravel/laravel/pull/6672
-* Update .editorconfig to target compose.yaml by [@fredikaputra](https://github.com/fredikaputra) in https://github.com/laravel/laravel/pull/6679
-* Add pre-package-uninstall script to composer.json by [@cosmastech](https://github.com/cosmastech) in https://github.com/laravel/laravel/pull/6681
+---
 
-## [v12.4.0](https://github.com/laravel/laravel/compare/v12.3.1...v12.4.0) - 2025-08-29
+## [1.0.0] - 2025-10-16
 
-* [12.x] Add default Redis retry configuration by [@mateusjatenee](https://github.com/mateusjatenee) in https://github.com/laravel/laravel/pull/6666
+### ✨ Added
+- **Multi-Role System** - Admin, Kepala Instalasi, dan Unit Kerja
+- **Dashboard Kepala Instalasi** dengan statistik real-time
+- **Manajemen Permintaan** - CRUD lengkap untuk pengadaan
+- **Workflow Approval** - Approve, Reject, Revisi permintaan
+- **Nota Dinas** - Pembuatan dan tracking nota dinas
+- **Auto-redirect** setelah login berdasarkan role
+- **Status Tracking** - Lacak permintaan dari awal hingga selesai
+- **Responsive Design** - Mobile-friendly UI
 
-## [v12.3.1](https://github.com/laravel/laravel/compare/v12.3.0...v12.3.1) - 2025-08-21
+### 🎨 UI/UX
+- Layout dengan sidebar navigasi
+- Dashboard cards dengan statistik
+- Modal konfirmasi untuk aksi penting
+- Status badges dengan color-coding
+- Clean dan modern design dengan Tailwind CSS
 
-* [12.x] Bump Pint version by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6653
-* [12.x] Making sure all related processed are closed when terminating the currently command by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6654
-* [12.x] Use application name from configuration by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6655
-* Bring back postAutoloadDump script by [@jasonvarga](https://github.com/jasonvarga) in https://github.com/laravel/laravel/pull/6662
+### 📱 Pages
+- **Dashboard.vue** - Dashboard umum
+- **KepalaInstalasi/Dashboard.vue** - Dashboard khusus
+- **KepalaInstalasi/Index.vue** - List permintaan untuk review
+- **KepalaInstalasi/Show.vue** - Detail dan aksi permintaan
+- **KepalaInstalasi/CreateNotaDinas.vue** - Form nota dinas
+- **Permintaan/Index.vue** - Daftar permintaan
+- **Permintaan/Create.vue** - Buat permintaan baru
+- **Permintaan/Edit.vue** - Edit permintaan
+- **Permintaan/Show.vue** - Detail permintaan
 
-## [v12.3.0](https://github.com/laravel/laravel/compare/v12.2.0...v12.3.0) - 2025-08-03
+### 🗄️ Database
+- **users** table - Multi-role user management
+- **permintaan** table - Permintaan pengadaan
+- **nota_dinas** table - Nota dinas tracking
 
-* Fix Critical Security Vulnerability in form-data Dependency by [@izzygld](https://github.com/izzygld) in https://github.com/laravel/laravel/pull/6645
-* Revert "fix" by [@RobertBoes](https://github.com/RobertBoes) in https://github.com/laravel/laravel/pull/6646
-* Change composer post-autoload-dump script to Artisan command by [@lmjhs](https://github.com/lmjhs) in https://github.com/laravel/laravel/pull/6647
+### 🔧 Backend
+- **KepalaInstalasiController** - 8 methods untuk workflow
+- **PermintaanController** - CRUD permintaan
+- **ProfileController** - User profile management
+- **AuthenticatedSessionController** - Auto-redirect by role
 
-## [v12.2.0](https://github.com/laravel/laravel/compare/v12.1.0...v12.2.0) - 2025-07-11
+### 🌱 Seeders
+- **KepalaInstalasiDataSeeder** - Data demo lengkap
+- 2 Users (Kepala + Staff)
+- 5 Permintaan dengan berbagai status
+- 3 Nota Dinas
 
-* Add Vite 7 support by [@timacdonald](https://github.com/timacdonald) in https://github.com/laravel/laravel/pull/6639
+### 📚 Documentation
+- **README.md** - Overview dan quick start
+- **INSTALASI.md** - Panduan instalasi lengkap
+- **PENGGUNAAN.md** - Panduan penggunaan aplikasi
+- **SEEDER.md** - Panduan data demo
 
-## [v12.1.0](https://github.com/laravel/laravel/compare/v12.0.11...v12.1.0) - 2025-07-03
+### 🔒 Security
+- CSRF Protection
+- Password Hashing (bcrypt)
+- SQL Injection Prevention (Eloquent ORM)
+- XSS Protection
+- Role-based Access Control
 
-* [12.x] Disable nightwatch in testing by [@laserhybiz](https://github.com/laserhybiz) in https://github.com/laravel/laravel/pull/6632
-* [12.x] Reorder environment variables in phpunit.xml for logical grouping by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6634
-* Change to hyphenate prefixes and cookie names by [@u01jmg3](https://github.com/u01jmg3) in https://github.com/laravel/laravel/pull/6636
-* [12.x] Fix type casting for environment variables in config files by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6637
+### 🐛 Fixed
+- Route error (Ziggy): nota-dinas.index, users.index
+- Layout blank issue saat login
+- NotaDinas model timestamps error
+- Query optimization untuk dashboard
+- Tracking status accessor error
 
-## [v12.0.11](https://github.com/laravel/laravel/compare/v12.0.10...v12.0.11) - 2025-06-10
+### 🗑️ Removed
+- 23 file Markdown redundan
+- 19 file .bat yang tidak perlu
+- Debug console.log dari production build
 
-**Full Changelog**: https://github.com/laravel/laravel/compare/v12.0.10...v12.0.11
+---
 
-## [v12.0.10](https://github.com/laravel/laravel/compare/v12.0.9...v12.0.10) - 2025-06-09
+## [Unreleased]
 
-* fix alphabetical order by [@Khuthaily](https://github.com/Khuthaily) in https://github.com/laravel/laravel/pull/6627
-* [12.x] Reduce redundancy and keeps the .gitignore file cleaner by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6629
-* [12.x] Fix: Add void return type to satisfy Rector analysis by [@Aluisio-Pires](https://github.com/Aluisio-Pires) in https://github.com/laravel/laravel/pull/6628
+### 🎯 Planned Features
 
-## [v12.0.9](https://github.com/laravel/laravel/compare/v12.0.8...v12.0.9) - 2025-05-26
+#### Version 1.1 (Coming Soon)
+- [ ] Notifikasi email
+- [ ] Export data (Excel/PDF)
+- [ ] File upload langsung (tanpa Google Drive)
+- [ ] History perubahan permintaan
+- [ ] Advanced search & filtering
 
-* [12.x] Remove apc by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6611
-* [12.x] Add JSON Schema to package.json by [@martinbean](https://github.com/martinbean) in https://github.com/laravel/laravel/pull/6613
-* Minor language update by [@woganmay](https://github.com/woganmay) in https://github.com/laravel/laravel/pull/6615
-* Enhance .gitignore to exclude common OS and log files by [@mohammadRezaei1380](https://github.com/mohammadRezaei1380) in https://github.com/laravel/laravel/pull/6619
+#### Version 1.2
+- [ ] Dashboard analytics lanjutan
+- [ ] Sistem komentar/catatan
+- [ ] Audit trail lengkap
+- [ ] API untuk integrasi eksternal
+- [ ] Bulk operations
 
-## [v12.0.8](https://github.com/laravel/laravel/compare/v12.0.7...v12.0.8) - 2025-05-12
+#### Version 2.0
+- [ ] Mobile app (Android/iOS)
+- [ ] Real-time notifications (WebSocket)
+- [ ] Budget tracking
+- [ ] Vendor management
+- [ ] E-signature integration
+- [ ] Multi-language support
 
-* [12.x] Clean up URL formatting in README by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6601
+---
 
-## [v12.0.7](https://github.com/laravel/laravel/compare/v12.0.6...v12.0.7) - 2025-04-15
+## 📌 Notes
 
-* Add `composer run test` command by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/laravel/pull/6598
-* Partner Directory Changes in ReadME by [@joshcirre](https://github.com/joshcirre) in https://github.com/laravel/laravel/pull/6599
+### Versi Numbering
+- **MAJOR** version - Breaking changes
+- **MINOR** version - New features (backward compatible)
+- **PATCH** version - Bug fixes
 
-## [v12.0.6](https://github.com/laravel/laravel/compare/v12.0.5...v12.0.6) - 2025-04-08
+### Tipe Perubahan
+- **Added** - Fitur baru
+- **Changed** - Perubahan pada fitur yang ada
+- **Deprecated** - Fitur yang akan dihapus
+- **Removed** - Fitur yang dihapus
+- **Fixed** - Bug fixes
+- **Security** - Perbaikan keamanan
 
-**Full Changelog**: https://github.com/laravel/laravel/compare/v12.0.5...v12.0.6
+---
 
-## [v12.0.5](https://github.com/laravel/laravel/compare/v12.0.4...v12.0.5) - 2025-04-02
-
-* [12.x] Update `config/mail.php` to match the latest core configuration by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6594
-
-## [v12.0.4](https://github.com/laravel/laravel/compare/v12.0.3...v12.0.4) - 2025-03-31
-
-* Bump vite from 6.0.11 to 6.2.3 - Vulnerability patch by [@abdel-aouby](https://github.com/abdel-aouby) in https://github.com/laravel/laravel/pull/6586
-* Bump vite from 6.2.3 to 6.2.4 by [@thinkverse](https://github.com/thinkverse) in https://github.com/laravel/laravel/pull/6590
-
-## [v12.0.3](https://github.com/laravel/laravel/compare/v12.0.2...v12.0.3) - 2025-03-17
-
-* Remove reverted change from CHANGELOG.md by [@AJenbo](https://github.com/AJenbo) in https://github.com/laravel/laravel/pull/6565
-* Improves clarity in app.css file by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6569
-* [12.x] Refactor: Structural improvement for clarity by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6574
-* Bump axios from 1.7.9 to 1.8.2 - Vulnerability patch by [@abdel-aouby](https://github.com/abdel-aouby) in https://github.com/laravel/laravel/pull/6572
-* [12.x] Remove Unnecessarily [@source](https://github.com/source) by [@AhmedAlaa4611](https://github.com/AhmedAlaa4611) in https://github.com/laravel/laravel/pull/6584
-
-## [v12.0.2](https://github.com/laravel/laravel/compare/v12.0.1...v12.0.2) - 2025-03-04
-
-* Make the github test action run out of the box independent of the choice of testing framework by [@ndeblauw](https://github.com/ndeblauw) in https://github.com/laravel/laravel/pull/6555
-
-## [v12.0.1](https://github.com/laravel/laravel/compare/v12.0.0...v12.0.1) - 2025-02-24
-
-* [12.x] prefer stable stability by [@pataar](https://github.com/pataar) in https://github.com/laravel/laravel/pull/6548
-
-## [v12.0.0 (2025-??-??)](https://github.com/laravel/laravel/compare/v11.0.2...v12.0.0)
-
-Laravel 12 includes a variety of changes to the application skeleton. Please consult the diff to see what's new.
+<p align="center">
+  <strong>Developed for RSUD Ibnu Sina Kabupaten Gresik</strong><br>
+  <em>Last Updated: October 16, 2025</em>
+</p>

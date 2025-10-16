@@ -43,8 +43,15 @@ const sidebarOpen = ref(true);
                                                 type="button"
                                                 class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
                                             >
-                                                {{ $page.props.auth.user.name }}
-                                                <span class="ml-1 text-xs text-gray-400">(Admin RS)</span>
+                                                {{ $page.props.auth.user.nama }}
+                                                <span class="ml-1 text-xs text-gray-400">
+                                                    ({{ 
+                                                        $page.props.auth.user.role === 'admin' ? 'Admin' : 
+                                                        $page.props.auth.user.role === 'kepala_instalasi' ? 'Kepala Instalasi' : 
+                                                        $page.props.auth.user.role === 'unit' ? 'Unit' : 
+                                                        $page.props.auth.user.jabatan || 'User' 
+                                                    }})
+                                                </span>
 
                                                 <svg
                                                     class="-me-0.5 ms-2 h-4 w-4"
@@ -132,18 +139,43 @@ const sidebarOpen = ref(true);
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
+                        <!-- Dashboard - Semua Role -->
                         <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
                             Dashboard
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('permintaan.index')"
-                            :active="route().current('permintaan.*')"
-                        >
-                            Permintaan
-                        </ResponsiveNavLink>
+
+                        <!-- Menu untuk Unit/Kepala Instalasi -->
+                        <template v-if="$page.props.auth.user.role === 'unit' || $page.props.auth.user.role === 'kepala_instalasi'">
+                            <ResponsiveNavLink
+                                :href="route('permintaan.index')"
+                                :active="route().current('permintaan.*')"
+                            >
+                                Permintaan Saya
+                            </ResponsiveNavLink>
+                        </template>
+
+                        <!-- Menu khusus Kepala Instalasi -->
+                        <template v-if="$page.props.auth.user.role === 'kepala_instalasi'">
+                            <ResponsiveNavLink
+                                :href="route('kepala-instalasi.index')"
+                                :active="route().current('kepala-instalasi.index')"
+                            >
+                                Review Permintaan
+                            </ResponsiveNavLink>
+                        </template>
+
+                        <!-- Menu untuk Admin -->
+                        <template v-if="$page.props.auth.user.role === 'admin'">
+                            <ResponsiveNavLink
+                                :href="route('permintaan.index')"
+                                :active="route().current('permintaan.*')"
+                            >
+                                Kelola Permintaan
+                            </ResponsiveNavLink>
+                        </template>
                     </div>
 
                     <!-- Responsive Settings Options -->
@@ -154,10 +186,18 @@ const sidebarOpen = ref(true);
                             <div
                                 class="text-base font-medium text-gray-800"
                             >
-                                {{ $page.props.auth.user.name }}
+                                {{ $page.props.auth.user.nama }}
                             </div>
                             <div class="text-sm font-medium text-gray-500">
                                 {{ $page.props.auth.user.email }}
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">
+                                {{ 
+                                    $page.props.auth.user.role === 'admin' ? 'Administrator Sistem' : 
+                                    $page.props.auth.user.role === 'kepala_instalasi' ? 'Kepala Instalasi' : 
+                                    $page.props.auth.user.role === 'unit' ? 'Unit Kerja' : 
+                                    $page.props.auth.user.jabatan || 'User' 
+                                }}
                             </div>
                         </div>
 
@@ -185,6 +225,7 @@ const sidebarOpen = ref(true);
                     class="bg-white border-r border-gray-200 min-h-screen transition-all duration-300 overflow-hidden hidden sm:block"
                 >
                     <nav class="mt-5 px-2">
+                        <!-- Dashboard - Semua Role -->
                         <Link
                             :href="route('dashboard')"
                             :class="route().current('dashboard') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
@@ -196,16 +237,47 @@ const sidebarOpen = ref(true);
                             Dashboard
                         </Link>
 
-                        <Link
-                            :href="route('permintaan.index')"
-                            :class="route().current('permintaan.*') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
-                            class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
-                        >
-                            <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Permintaan
-                        </Link>
+                        <!-- Menu untuk Unit/Kepala Instalasi -->
+                        <template v-if="$page.props.auth.user.role === 'unit' || $page.props.auth.user.role === 'kepala_instalasi'">
+                            <Link
+                                :href="route('permintaan.index')"
+                                :class="route().current('permintaan.*') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
+                                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
+                            >
+                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Permintaan Saya
+                            </Link>
+                        </template>
+
+                        <!-- Menu khusus Kepala Instalasi -->
+                        <template v-if="$page.props.auth.user.role === 'kepala_instalasi'">
+                            <Link
+                                :href="route('kepala-instalasi.index')"
+                                :class="route().current('kepala-instalasi.index') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
+                                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
+                            >
+                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Review Permintaan
+                            </Link>
+                        </template>
+
+                        <!-- Menu untuk Admin -->
+                        <template v-if="$page.props.auth.user.role === 'admin'">
+                            <Link
+                                :href="route('permintaan.index')"
+                                :class="route().current('permintaan.*') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
+                                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
+                            >
+                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Kelola Permintaan
+                            </Link>
+                        </template>
                     </nav>
                 </aside>
 
