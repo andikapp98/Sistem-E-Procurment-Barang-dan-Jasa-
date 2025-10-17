@@ -1,0 +1,335 @@
+<template>
+    <AuthenticatedLayout>
+        <template #header>
+            <div class="flex items-center justify-between">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Detail Permintaan #{{ permintaan.permintaan_id }}
+                </h2>
+                <Link :href="route('kepala-bidang.index')" class="text-sm text-gray-600 hover:text-gray-900">
+                    ← Kembali ke Daftar
+                </Link>
+            </div>
+        </template>
+
+        <div class="py-12">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                
+                <!-- Progress Timeline -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                Progress Tracking
+                            </h3>
+                            <span class="text-sm font-medium text-purple-600">
+                                {{ progress }}% Complete
+                            </span>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-gray-200 rounded-full h-3 mb-4">
+                            <div class="bg-purple-600 h-3 rounded-full transition-all" :style="{ width: progress + '%' }"></div>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="mt-6 space-y-3">
+                            <div v-for="(step, index) in timeline" :key="index" class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <p class="font-medium text-gray-900">{{ step.tahapan }}</p>
+                                        <span class="text-xs text-gray-500">{{ new Date(step.tanggal).toLocaleDateString('id-ID') }}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-1">{{ step.keterangan }}</p>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                        {{ step.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detail Permintaan -->
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            Informasi Permintaan
+                        </h3>
+                    </div>
+                    
+                    <div class="p-6">
+                        <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Bidang</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ permintaan.bidang }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                <dd class="mt-1">
+                                    <span :class="{
+                                        'bg-yellow-100 text-yellow-800': permintaan.status === 'proses',
+                                        'bg-green-100 text-green-800': permintaan.status === 'disetujui',
+                                        'bg-red-100 text-red-800': permintaan.status === 'ditolak',
+                                        'bg-blue-100 text-blue-800': permintaan.status === 'diajukan'
+                                    }" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full">
+                                        {{ permintaan.status.toUpperCase() }}
+                                    </span>
+                                </dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Tanggal Permintaan</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ new Date(permintaan.tanggal_permintaan).toLocaleDateString('id-ID') }}</dd>
+                            </div>
+                            
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Pemohon</dt>
+                                <dd class="mt-1 text-sm text-gray-900">{{ permintaan.user?.nama || '-' }}</dd>
+                            </div>
+                            
+                            <div class="sm:col-span-2">
+                                <dt class="text-sm font-medium text-gray-500 mb-2">Deskripsi</dt>
+                                <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-4 rounded-lg whitespace-pre-line">{{ permintaan.deskripsi }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div v-if="permintaan.status === 'proses'" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            Aksi
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Approve Button -->
+                            <button
+                                @click="showApproveModal = true"
+                                class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Setujui
+                            </button>
+                            
+                            <!-- Reject Button -->
+                            <button
+                                @click="showRejectModal = true"
+                                class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Tolak
+                            </button>
+                            
+                            <!-- Revisi Button -->
+                            <button
+                                @click="showRevisiModal = true"
+                                class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-medium flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Minta Revisi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nota Dinas -->
+                <div v-if="permintaan.nota_dinas && permintaan.nota_dinas.length > 0" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            Riwayat Nota Dinas
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div v-for="nota in permintaan.nota_dinas" :key="nota.nota_id"
+                                class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{ nota.dari_unit }} → {{ nota.ke_jabatan }}</p>
+                                        <p class="text-sm text-gray-600 mt-1">{{ new Date(nota.tanggal_nota).toLocaleDateString('id-ID') }}</p>
+                                    </div>
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        {{ nota.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approve Modal -->
+        <Modal :show="showApproveModal" @close="showApproveModal = false">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    Setujui Permintaan
+                </h3>
+                
+                <form @submit.prevent="submitApprove">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Teruskan ke: <span class="text-red-500">*</span>
+                        </label>
+                        <select v-model="approveForm.tujuan" required
+                            class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                            <option value="">-- Pilih Tujuan --</option>
+                            <option value="Bagian Perencanaan">Bagian Perencanaan</option>
+                            <option value="Bagian Pengadaan">Bagian Pengadaan</option>
+                            <option value="Direktur">Direktur</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Catatan (Opsional)
+                        </label>
+                        <textarea v-model="approveForm.catatan" rows="3"
+                            class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                            placeholder="Tambahkan catatan jika diperlukan"></textarea>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" @click="showApproveModal = false"
+                            class="px-4 py-2 text-gray-700 hover:text-gray-900">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            Setujui & Teruskan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+
+        <!-- Reject Modal -->
+        <Modal :show="showRejectModal" @close="showRejectModal = false">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    Tolak Permintaan
+                </h3>
+                
+                <form @submit.prevent="submitReject">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Alasan Penolakan <span class="text-red-500">*</span>
+                        </label>
+                        <textarea v-model="rejectForm.alasan" rows="4" required
+                            class="w-full rounded-lg border-gray-300 focus:border-red-500 focus:ring-red-500"
+                            placeholder="Jelaskan alasan penolakan"></textarea>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" @click="showRejectModal = false"
+                            class="px-4 py-2 text-gray-700 hover:text-gray-900">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            Tolak Permintaan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+
+        <!-- Revisi Modal -->
+        <Modal :show="showRevisiModal" @close="showRevisiModal = false">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    Minta Revisi
+                </h3>
+                
+                <form @submit.prevent="submitRevisi">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Catatan Revisi <span class="text-red-500">*</span>
+                        </label>
+                        <textarea v-model="revisiForm.catatan_revisi" rows="4" required
+                            class="w-full rounded-lg border-gray-300 focus:border-yellow-500 focus:ring-yellow-500"
+                            placeholder="Jelaskan apa yang perlu direvisi"></textarea>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" @click="showRevisiModal = false"
+                            class="px-4 py-2 text-gray-700 hover:text-gray-900">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                            Kirim Permintaan Revisi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+    </AuthenticatedLayout>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Modal from '@/Components/Modal.vue';
+import { Link, router } from '@inertiajs/vue3';
+
+const props = defineProps({
+    permintaan: Object,
+    trackingStatus: String,
+    timeline: Array,
+    progress: Number,
+});
+
+const showApproveModal = ref(false);
+const showRejectModal = ref(false);
+const showRevisiModal = ref(false);
+
+const approveForm = ref({
+    tujuan: '',
+    catatan: '',
+});
+
+const rejectForm = ref({
+    alasan: '',
+});
+
+const revisiForm = ref({
+    catatan_revisi: '',
+});
+
+const submitApprove = () => {
+    router.post(route('kepala-bidang.approve', props.permintaan.permintaan_id), approveForm.value, {
+        onSuccess: () => {
+            showApproveModal.value = false;
+        },
+    });
+};
+
+const submitReject = () => {
+    router.post(route('kepala-bidang.reject', props.permintaan.permintaan_id), rejectForm.value, {
+        onSuccess: () => {
+            showRejectModal.value = false;
+        },
+    });
+};
+
+const submitRevisi = () => {
+    router.post(route('kepala-bidang.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+        onSuccess: () => {
+            showRevisiModal.value = false;
+        },
+    });
+};
+</script>

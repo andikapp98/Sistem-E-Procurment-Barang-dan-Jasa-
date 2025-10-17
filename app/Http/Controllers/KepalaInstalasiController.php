@@ -27,18 +27,16 @@ class KepalaInstalasiController extends Controller
     {
         $user = Auth::user();
         
-        // Hitung statistik - ambil semua permintaan dari unit kerja yang sama atau yang ditugaskan ke user ini
+        // Hitung statistik - ambil semua permintaan untuk bagian/unit kerja kepala instalasi
+        // Filter berdasarkan bidang di tabel permintaan, bukan unit_kerja dari user pembuat
         $permintaans = Permintaan::with(['user', 'notaDinas'])
             ->where(function($query) use ($user) {
                 if ($user->unit_kerja) {
-                    $query->whereHas('user', function($q) use ($user) {
-                        $q->where('unit_kerja', $user->unit_kerja);
-                    })
-                    ->orWhere('pic_pimpinan', $user->nama);
-                } else {
-                    // Jika tidak ada unit_kerja, ambil yang ditugaskan saja
-                    $query->where('pic_pimpinan', $user->nama);
+                    // Filter berdasarkan bidang yang sesuai dengan unit_kerja kepala instalasi
+                    $query->where('bidang', $user->unit_kerja);
                 }
+                // Atau permintaan yang ditugaskan langsung ke kepala instalasi ini
+                $query->orWhere('pic_pimpinan', $user->nama);
             })
             ->get();
 
@@ -55,6 +53,8 @@ class KepalaInstalasiController extends Controller
             ->take(5)
             ->map(function($permintaan) {
                 $permintaan->tracking_status = $permintaan->trackingStatus;
+                $permintaan->progress = $permintaan->getProgressPercentage();
+                $permintaan->timeline_count = count($permintaan->getTimelineTracking());
                 return $permintaan;
             })
             ->values();
@@ -68,30 +68,30 @@ class KepalaInstalasiController extends Controller
 
     /**
      * Tampilkan daftar permintaan yang perlu direview oleh Kepala Instalasi
+     * Hanya menampilkan permintaan untuk bagian/unit yang dipimpin
      */
     public function index()
     {
         $user = Auth::user();
         
-        // Ambil permintaan yang berasal dari unit kerja yang sama dengan Kepala Instalasi
-        // atau permintaan yang sudah dibuat nota dinas tapi masih perlu tindak lanjut
+        // Ambil permintaan yang ditujukan untuk bagian/unit kerja kepala instalasi
+        // Filter berdasarkan kolom 'bidang' di tabel permintaan
         $permintaans = Permintaan::with(['user', 'notaDinas'])
             ->where(function($query) use ($user) {
                 if ($user->unit_kerja) {
-                    $query->whereHas('user', function($q) use ($user) {
-                        $q->where('unit_kerja', $user->unit_kerja);
-                    })
-                    ->orWhere('pic_pimpinan', $user->nama);
-                } else {
-                    // Jika tidak ada unit_kerja, ambil yang ditugaskan saja
-                    $query->where('pic_pimpinan', $user->nama);
+                    // Filter berdasarkan bidang yang sesuai dengan unit_kerja kepala instalasi
+                    $query->where('bidang', $user->unit_kerja);
                 }
+                // Atau permintaan yang ditugaskan langsung ke kepala instalasi ini
+                $query->orWhere('pic_pimpinan', $user->nama);
             })
             ->orderByDesc('permintaan_id')
             ->get()
             ->map(function($permintaan) {
-                // Tambahkan status tracking
+                // Tambahkan status tracking dan progress
                 $permintaan->tracking_status = $permintaan->trackingStatus;
+                $permintaan->progress = $permintaan->getProgressPercentage();
+                $permintaan->timeline_count = count($permintaan->getTimelineTracking());
                 return $permintaan;
             });
 
@@ -103,22 +103,90 @@ class KepalaInstalasiController extends Controller
 
     /**
      * Tampilkan detail permintaan untuk review
+     * Hanya bisa melihat permintaan untuk bagiannya sendiri
      */
     public function show(Permintaan $permintaan)
     {
+        $user = Auth::user();
+        
+        // Cek apakah kepala instalasi berhak melihat permintaan ini
+        // Hanya boleh jika bidang permintaan sesuai dengan unit_kerja kepala instalasi
+        // atau jika permintaan ditugaskan ke kepala instalasi ini
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk melihat permintaan ini.');
+        }
+        
         $permintaan->load(['user', 'notaDinas.disposisi']);
+        
+        // Get timeline tracking
+        $timeline = $permintaan->getTimelineTracking();
+        $progress = $permintaan->getProgressPercentage();
         
         return Inertia::render('KepalaInstalasi/Show', [
             'permintaan' => $permintaan,
             'trackingStatus' => $permintaan->trackingStatus,
+            'timeline' => $timeline,
+            'progress' => $progress,
+        ]);
+    }
+
+    /**
+     * Tampilkan timeline tracking untuk permintaan
+     * Dedicated page untuk melihat tracking detail
+     */
+    public function tracking(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk melihat tracking permintaan ini.');
+        }
+        
+        $permintaan->load(['user', 'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima']);
+        
+        // Get timeline tracking lengkap
+        $timeline = $permintaan->getTimelineTracking();
+        $progress = $permintaan->getProgressPercentage();
+        
+        // Tahapan yang belum dilalui
+        $allSteps = [
+            'Permintaan',
+            'Nota Dinas',
+            'Disposisi',
+            'Perencanaan',
+            'KSO',
+            'Pengadaan',
+            'Nota Penerimaan',
+            'Serah Terima'
+        ];
+        
+        $completedSteps = array_column($timeline, 'tahapan');
+        $pendingSteps = array_diff($allSteps, $completedSteps);
+        
+        return Inertia::render('KepalaInstalasi/Tracking', [
+            'permintaan' => $permintaan,
+            'timeline' => $timeline,
+            'progress' => $progress,
+            'completedSteps' => $completedSteps,
+            'pendingSteps' => array_values($pendingSteps),
+            'currentStep' => end($completedSteps),
         ]);
     }
 
     /**
      * Form untuk membuat Nota Dinas dari permintaan
+     * Hanya bisa membuat nota dinas untuk permintaan bagiannya sendiri
      */
     public function createNotaDinas(Permintaan $permintaan)
     {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk membuat nota dinas untuk permintaan ini.');
+        }
+        
         $permintaan->load('user');
         
         return Inertia::render('KepalaInstalasi/CreateNotaDinas', [
@@ -128,9 +196,17 @@ class KepalaInstalasiController extends Controller
 
     /**
      * Store Nota Dinas
+     * Hanya bisa menyimpan nota dinas untuk permintaan bagiannya sendiri
      */
     public function storeNotaDinas(Request $request, Permintaan $permintaan)
     {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk membuat nota dinas untuk permintaan ini.');
+        }
+        
         $data = $request->validate([
             'dari_unit' => 'required|string',
             'ke_jabatan' => 'required|string',
@@ -159,50 +235,73 @@ class KepalaInstalasiController extends Controller
     }
 
     /**
-     * Approve permintaan (langsung tanpa nota dinas formal)
+     * Approve permintaan - Teruskan ke Kepala Bidang
+     * Hanya bisa menyetujui permintaan untuk bagiannya sendiri
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
         $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk menyetujui permintaan ini.');
+        }
 
-        // Update status permintaan
-        $permintaan->update([
-            'status' => 'disetujui',
-            'pic_pimpinan' => $user->nama,
+        // Validasi input - bisa dengan atau tanpa catatan
+        $data = $request->validate([
+            'catatan' => 'nullable|string',
         ]);
 
-        // Buat nota dinas otomatis
+        // Update status permintaan menjadi disetujui oleh Kepala Instalasi
+        $permintaan->update([
+            'status' => 'proses', // Masih proses karena menunggu Kepala Bidang
+            'pic_pimpinan' => 'Kepala Bidang', // Diteruskan ke Kepala Bidang
+        ]);
+
+        // Buat nota dinas ke Kepala Bidang
         NotaDinas::create([
             'permintaan_id' => $permintaan->permintaan_id,
             'dari_unit' => $user->unit_kerja ?? $user->jabatan,
-            'ke_jabatan' => 'Bagian Pengadaan',
+            'ke_jabatan' => 'Kepala Bidang',
             'tanggal_nota' => Carbon::now(),
-            'status' => 'disetujui',
+            'status' => 'dikirim',
         ]);
+
+        $message = 'Permintaan disetujui dan diteruskan ke Kepala Bidang';
+        if (isset($data['catatan']) && $data['catatan']) {
+            $message .= ' dengan catatan: ' . $data['catatan'];
+        }
 
         return redirect()
             ->route('kepala-instalasi.index')
-            ->with('success', 'Permintaan disetujui dan diteruskan ke Bagian Pengadaan');
+            ->with('success', $message);
     }
 
     /**
      * Reject permintaan
+     * Hanya bisa menolak permintaan untuk bagiannya sendiri
      */
     public function reject(Request $request, Permintaan $permintaan)
     {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk menolak permintaan ini.');
+        }
+        
         $data = $request->validate([
             'alasan' => 'required|string',
         ]);
 
-        $user = Auth::user();
-
-        // Update status permintaan
+        // Update status permintaan menjadi ditolak
         $permintaan->update([
             'status' => 'ditolak',
-            'deskripsi' => $permintaan->deskripsi . "\n\n[DITOLAK] " . $data['alasan'],
+            'pic_pimpinan' => $user->nama,
+            'deskripsi' => $permintaan->deskripsi . "\n\n[DITOLAK oleh {$user->jabatan}] " . $data['alasan'],
         ]);
 
-        // Buat nota dinas penolakan
+        // Buat nota dinas penolakan ke unit pemohon
         NotaDinas::create([
             'permintaan_id' => $permintaan->permintaan_id,
             'dari_unit' => $user->unit_kerja ?? $user->jabatan,
@@ -213,14 +312,22 @@ class KepalaInstalasiController extends Controller
 
         return redirect()
             ->route('kepala-instalasi.index')
-            ->with('success', 'Permintaan ditolak');
+            ->with('success', 'Permintaan ditolak dan dikembalikan ke unit pemohon');
     }
 
     /**
      * Request revisi dari pemohon
+     * Hanya bisa meminta revisi untuk permintaan bagiannya sendiri
      */
     public function requestRevision(Request $request, Permintaan $permintaan)
     {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk meminta revisi permintaan ini.');
+        }
+        
         $data = $request->validate([
             'catatan_revisi' => 'required|string',
         ]);

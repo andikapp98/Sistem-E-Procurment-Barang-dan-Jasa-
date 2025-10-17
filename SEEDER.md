@@ -20,9 +20,9 @@ Panduan untuk menggunakan data demo yang tersedia dalam aplikasi.
 Seeder ini membuat data lengkap untuk testing fitur Kepala Instalasi.
 
 **Yang Dibuat:**
-- 1 User Kepala Instalasi (Instalasi Farmasi)
-- 1 User Staff Farmasi (Unit)
-- 5 Permintaan dengan berbagai status
+- 2 User Kepala Instalasi (Farmasi & IGD)
+- 2 User Staff (Farmasi & IGD)
+- 6 Permintaan (5 Farmasi + 1 IGD)
 - 3 Nota Dinas
 
 **File:** `database/seeders/KepalaInstalasiDataSeeder.php`
@@ -62,6 +62,16 @@ Password: password123
 Role:     kepala_instalasi
 Unit:     Instalasi Farmasi
 ```
+**Dapat melihat:** 5 permintaan Instalasi Farmasi saja
+
+### Kepala Instalasi IGD
+```
+Email:    kepala_igd@rsud.id
+Password: password123
+Role:     kepala_instalasi
+Unit:     Instalasi IGD
+```
+**Dapat melihat:** 1 permintaan Instalasi IGD saja
 
 ### Staff Farmasi
 ```
@@ -70,6 +80,27 @@ Password: password123
 Role:     unit
 Unit:     Instalasi Farmasi
 ```
+
+### Staff IGD
+```
+Email:    staff.igd@rsud.id
+Password: password123
+Role:     unit
+Unit:     Instalasi IGD
+```
+
+---
+
+## 🔒 Isolasi Data Antar Bagian
+
+**PENTING:** Setiap Kepala Instalasi **HANYA** dapat melihat permintaan untuk bagiannya sendiri!
+
+- ✅ Kepala Farmasi melihat permintaan dengan `bidang = 'Instalasi Farmasi'`
+- ✅ Kepala IGD melihat permintaan dengan `bidang = 'Instalasi IGD'`
+- ❌ Kepala Farmasi **TIDAK DAPAT** melihat permintaan IGD
+- ❌ Kepala IGD **TIDAK DAPAT** melihat permintaan Farmasi
+
+Filter berdasarkan kolom `bidang` di tabel permintaan yang harus sesuai dengan `unit_kerja` Kepala Instalasi.
 
 ---
 
@@ -137,20 +168,37 @@ Unit:     Instalasi Farmasi
 
 ---
 
+### Permintaan #6 - Status: Diajukan (IGD)
+**Deskripsi:** Pengadaan Alat Medis IGD  
+**Bidang:** Instalasi IGD
+- Defibrillator portable - 2 unit
+- Oksigen tabung besar - 10 tabung
+- Nebulizer - 5 unit
+- Tensimeter digital - 10 unit
+
+**Pemohon:** Staff IGD  
+**Status:** Menunggu review dari Kepala Instalasi IGD  
+**⚠️ PENTING:** Permintaan ini **TIDAK TERLIHAT** oleh Kepala Farmasi!
+
+---
+
 ## 📊 Statistik Data Demo
 
 Setelah seeder dijalankan:
 
 **Total Data:**
-- Users: 2 (1 Kepala + 1 Staff)
-- Permintaan: 5
+- Users: 4 (2 Kepala Instalasi + 2 Staff)
+- Permintaan: 6 (5 Farmasi + 1 IGD)
 - Nota Dinas: 3
 
-**Status Permintaan:**
+**Status Permintaan Farmasi (Terlihat oleh Kepala Farmasi):**
 - Diajukan: 2 permintaan
 - Proses: 1 permintaan
 - Disetujui: 1 permintaan
 - Ditolak: 1 permintaan
+
+**Status Permintaan IGD (Terlihat oleh Kepala IGD):**
+- Diajukan: 1 permintaan
 
 ---
 
@@ -189,5 +237,5 @@ Edit file `database/seeders/IGDDataSeeder.php` dan ikuti pola dari `KepalaInstal
 ---
 
 <p align="center">
-  <em>Last Updated: October 16, 2025</em>
+  <em>Last Updated: October 17, 2025</em>
 </p>

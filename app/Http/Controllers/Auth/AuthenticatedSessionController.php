@@ -39,6 +39,10 @@ class AuthenticatedSessionController extends Controller
         if ($user->role === 'kepala_instalasi') {
             return redirect()->intended(route('kepala-instalasi.dashboard', absolute: false));
         }
+        
+        if ($user->role === 'kepala_bidang') {
+            return redirect()->intended(route('kepala-bidang.dashboard', absolute: false));
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

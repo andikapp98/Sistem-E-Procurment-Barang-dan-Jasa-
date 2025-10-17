@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
 
 use App\Http\Controllers\PermintaanController;
 use App\Http\Controllers\KepalaInstalasiController;
+use App\Http\Controllers\KepalaBidangController;
 
 Route::resource('permintaan', PermintaanController::class)
     ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
@@ -48,11 +49,24 @@ Route::middleware(['auth', 'verified'])->prefix('kepala-instalasi')->name('kepal
     Route::get('/dashboard', [KepalaInstalasiController::class, 'dashboard'])->name('dashboard');
     Route::get('/', [KepalaInstalasiController::class, 'index'])->name('index');
     Route::get('/permintaan/{permintaan}', [KepalaInstalasiController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/tracking', [KepalaInstalasiController::class, 'tracking'])->name('tracking');
     Route::get('/permintaan/{permintaan}/nota-dinas/create', [KepalaInstalasiController::class, 'createNotaDinas'])->name('nota-dinas.create');
     Route::post('/permintaan/{permintaan}/nota-dinas', [KepalaInstalasiController::class, 'storeNotaDinas'])->name('nota-dinas.store');
     Route::post('/permintaan/{permintaan}/approve', [KepalaInstalasiController::class, 'approve'])->name('approve');
     Route::post('/permintaan/{permintaan}/reject', [KepalaInstalasiController::class, 'reject'])->name('reject');
     Route::post('/permintaan/{permintaan}/revisi', [KepalaInstalasiController::class, 'requestRevision'])->name('revisi');
+});
+
+// Routes untuk Kepala Bidang
+Route::middleware(['auth', 'verified'])->prefix('kepala-bidang')->name('kepala-bidang.')->group(function () {
+    Route::get('/dashboard', [KepalaBidangController::class, 'dashboard'])->name('dashboard');
+    Route::get('/', [KepalaBidangController::class, 'index'])->name('index');
+    Route::get('/permintaan/{permintaan}', [KepalaBidangController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/disposisi/create', [KepalaBidangController::class, 'createDisposisi'])->name('disposisi.create');
+    Route::post('/permintaan/{permintaan}/disposisi', [KepalaBidangController::class, 'storeDisposisi'])->name('disposisi.store');
+    Route::post('/permintaan/{permintaan}/approve', [KepalaBidangController::class, 'approve'])->name('approve');
+    Route::post('/permintaan/{permintaan}/reject', [KepalaBidangController::class, 'reject'])->name('reject');
+    Route::post('/permintaan/{permintaan}/revisi', [KepalaBidangController::class, 'requestRevision'])->name('revisi');
 });
 
 require __DIR__.'/auth.php';

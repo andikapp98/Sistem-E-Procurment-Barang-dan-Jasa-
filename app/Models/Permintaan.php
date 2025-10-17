@@ -68,17 +68,137 @@ class Permintaan extends Model
 	 */
 	public function getTrackingStatusAttribute()
 	{
-		$status = 'Permintaan';
+		$timeline = $this->getTimelineTracking();
 		
-		// Cek apakah ada nota dinas
-		if ($this->notaDinas && $this->notaDinas->count() > 0) {
-			$status = 'Nota Dinas';
-			
-			// Cek tahapan selanjutnya hanya jika method/relasi ada
-			// Untuk sementara, kita hanya cek sampai nota dinas
-			// Relasi lain (disposisi, perencanaan, dll) bisa ditambahkan nanti
+		if (empty($timeline)) {
+			return 'Permintaan';
 		}
 		
-		return $status;
+		// Return tahap terakhir
+		return $timeline[count($timeline) - 1]['tahapan'];
+	}
+
+	/**
+	 * Get timeline tracking lengkap untuk permintaan ini
+	 * Return array tahapan yang sudah dilalui
+	 */
+	public function getTimelineTracking()
+	{
+		$timeline = [];
+
+		// TAHAP 1: Permintaan
+		$timeline[] = [
+			'tahapan' => 'Permintaan',
+			'tanggal' => $this->tanggal_permintaan,
+			'status' => $this->status,
+			'keterangan' => 'Permintaan diajukan',
+			'icon' => 'document',
+			'completed' => true,
+		];
+
+		// TAHAP 2: Nota Dinas
+		$notaDinas = $this->notaDinas()->latest('tanggal_nota')->first();
+		if ($notaDinas) {
+			$timeline[] = [
+				'tahapan' => 'Nota Dinas',
+				'tanggal' => $notaDinas->tanggal_nota,
+				'status' => $notaDinas->status,
+				'keterangan' => "Nota dinas ke: {$notaDinas->ke_jabatan}",
+				'icon' => 'mail',
+				'completed' => true,
+			];
+
+			// TAHAP 3: Disposisi
+			$disposisi = $notaDinas->disposisi()->latest('tanggal_disposisi')->first();
+			if ($disposisi) {
+				$timeline[] = [
+					'tahapan' => 'Disposisi',
+					'tanggal' => $disposisi->tanggal_disposisi,
+					'status' => $disposisi->status,
+					'keterangan' => "Disposisi ke: {$disposisi->jabatan_tujuan}",
+					'icon' => 'clipboard',
+					'completed' => true,
+				];
+
+				// TAHAP 4: Perencanaan
+				$perencanaan = $disposisi->perencanaan()->latest('tanggal_perencanaan')->first();
+				if ($perencanaan) {
+					$timeline[] = [
+						'tahapan' => 'Perencanaan',
+						'tanggal' => $perencanaan->tanggal_perencanaan,
+						'status' => $perencanaan->status,
+						'keterangan' => 'Tahap perencanaan pengadaan',
+						'icon' => 'chart',
+						'completed' => true,
+					];
+
+					// TAHAP 5: KSO
+					$kso = $perencanaan->kso()->latest('tanggal_kso')->first();
+					if ($kso) {
+						$timeline[] = [
+							'tahapan' => 'KSO',
+							'tanggal' => $kso->tanggal_kso,
+							'status' => $kso->status,
+							'keterangan' => 'Kerja Sama Operasional',
+							'icon' => 'handshake',
+							'completed' => true,
+						];
+
+						// TAHAP 6: Pengadaan
+						$pengadaan = $kso->pengadaan()->latest('tanggal_pengadaan')->first();
+						if ($pengadaan) {
+							$timeline[] = [
+								'tahapan' => 'Pengadaan',
+								'tanggal' => $pengadaan->tanggal_pengadaan,
+								'status' => $pengadaan->status,
+								'keterangan' => "Vendor: {$pengadaan->vendor}" . ($pengadaan->tracking ? " | Tracking: {$pengadaan->tracking}" : ''),
+								'icon' => 'shopping-cart',
+								'completed' => true,
+							];
+
+							// TAHAP 7: Nota Penerimaan
+							$notaPenerimaan = $pengadaan->notaPenerimaan()->latest('tanggal_penerimaan')->first();
+							if ($notaPenerimaan) {
+								$timeline[] = [
+									'tahapan' => 'Nota Penerimaan',
+									'tanggal' => $notaPenerimaan->tanggal_penerimaan,
+									'status' => $notaPenerimaan->status,
+									'keterangan' => 'Penerimaan barang/jasa',
+									'icon' => 'inbox',
+									'completed' => true,
+								];
+
+								// TAHAP 8: Serah Terima
+								$serahTerima = $notaPenerimaan->serahTerima()->latest('tanggal_serah')->first();
+								if ($serahTerima) {
+									$timeline[] = [
+										'tahapan' => 'Serah Terima',
+										'tanggal' => $serahTerima->tanggal_serah,
+										'status' => $serahTerima->status,
+										'keterangan' => "Penerima: {$serahTerima->penerima}",
+										'icon' => 'check-circle',
+										'completed' => true,
+									];
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return $timeline;
+	}
+
+	/**
+	 * Get progress percentage
+	 */
+	public function getProgressPercentage()
+	{
+		$timeline = $this->getTimelineTracking();
+		$totalSteps = 8; // Total tahapan: Permintaan, Nota Dinas, Disposisi, Perencanaan, KSO, Pengadaan, Nota Penerimaan, Serah Terima
+		$completedSteps = count($timeline);
+		
+		return round(($completedSteps / $totalSteps) * 100);
 	}
 }
