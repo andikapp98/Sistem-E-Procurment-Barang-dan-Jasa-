@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel" alt="Laravel">
+  <img src="https://img.shields.io/badge/Laravel-12.x-FF2D20?style=flat&logo=laravel" alt="Laravel">
   <img src="https://img.shields.io/badge/Vue.js-3.5-4FC08D?style=flat&logo=vue.js" alt="Vue.js">
   <img src="https://img.shields.io/badge/Inertia.js-2.0-9553E9?style=flat&logo=inertia" alt="Inertia.js">
   <img src="https://img.shields.io/badge/Tailwind-3.2-06B6D4?style=flat&logo=tailwind-css" alt="Tailwind">
@@ -20,35 +20,41 @@
 
 ## 📋 Tentang Aplikasi
 
-Sistem e-Procurement adalah aplikasi web untuk mengelola permintaan pengadaan barang dan jasa di RSUD Ibnu Sina Kabupaten Gresik. Aplikasi ini memudahkan proses pengajuan, review, dan approval permintaan dari berbagai unit/instalasi rumah sakit dengan alur bertingkat.
+Sistem e-Procurement RSUD Ibnu Sina adalah aplikasi web modern untuk mengelola seluruh alur pengadaan barang dan jasa rumah sakit, mulai dari pengajuan permintaan oleh unit kerja hingga serah terima barang ke instalasi. Aplikasi ini dibangun dengan teknologi terkini untuk memberikan pengalaman pengguna yang optimal dan proses bisnis yang terstruktur.
 
 ### ✨ Fitur Utama
 
-- 🔐 **Multi-Role System** - Admin, Kepala Instalasi, dan Unit Kerja
-- 📊 **Dashboard Interaktif** - Statistik real-time berdasarkan role
-- 📝 **Manajemen Permintaan** - CRUD lengkap dengan workflow approval
-- 📋 **Nota Dinas** - Pembuatan dan tracking nota dinas
+- 🔐 **Multi-Role Access Control** - 9 role berbeda dengan hak akses spesifik
+- 📊 **Dashboard Interaktif** - Statistik real-time berdasarkan role pengguna
+- 📝 **Workflow Management** - Alur kerja lengkap dari permintaan hingga serah terima
+- 📋 **Nota Dinas Digital** - Pembuatan dan tracking nota dinas
+- 📄 **Disposisi & Perencanaan** - Manajemen disposisi dan scan berkas perencanaan
 - 🏥 **Multi-Unit Support** - 24+ unit/instalasi rumah sakit
-- 📱 **Responsive Design** - Mobile-friendly
-- 🔍 **Status Tracking** - Lacak status permintaan dari awal hingga serah terima
-- 🎨 **Modern UI/UX** - Clean dan user-friendly dengan Tailwind CSS
+- 🔍 **Status Tracking** - Pelacakan status real-time di setiap tahapan
+- 📱 **Responsive Design** - Akses dari desktop, tablet, dan smartphone
+- 📎 **Document Management** - Upload dan manajemen dokumen pendukung
+- 🎨 **Modern UI/UX** - Interface yang clean dan user-friendly
 
 ---
 
 ## 🚀 Tech Stack
 
 **Backend:**
-- Laravel 11.x - PHP Framework
-- Inertia.js 2.0 - Modern monolith approach
-- MySQL - Database
+- Laravel 12.x - PHP Framework
+- Inertia.js 2.0 - Modern monolith architecture
+- MySQL 8.0+ - Relational database
 
 **Frontend:**
 - Vue.js 3.5 - Progressive JavaScript Framework
-- Tailwind CSS 3.2 - Utility-first CSS
-- Vite 7.0 - Build tool
+- Tailwind CSS 3.2 - Utility-first CSS framework
+- Vite 7.0 - Next generation build tool
+- Heroicons - Beautiful hand-crafted SVG icons
 
-**Authentication:**
+**Development Tools:**
 - Laravel Breeze - Authentication scaffolding
+- Laravel Pail - Real-time log viewer
+- Laravel Pint - Code style fixer
+- Ziggy - Route helper untuk JavaScript
 
 ---
 
@@ -60,6 +66,7 @@ Sistem e-Procurement adalah aplikasi web untuk mengelola permintaan pengadaan ba
 - Composer >= 2.0
 - Node.js >= 18.x & NPM >= 9.x
 - MySQL >= 8.0
+- Git
 
 ### Langkah Instalasi
 
@@ -68,32 +75,42 @@ Sistem e-Procurement adalah aplikasi web untuk mengelola permintaan pengadaan ba
 git clone <repository-url>
 cd pengadaan-app
 
-# 2. Install dependencies
+# 2. Install PHP dependencies
 composer install
+
+# 3. Install JavaScript dependencies
 npm install
 
-# 3. Setup environment
+# 4. Setup environment
 cp .env.example .env
 php artisan key:generate
 
-# 4. Konfigurasi database (.env)
+# 5. Konfigurasi database di file .env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=pengadaan_app
 DB_USERNAME=root
-DB_PASSWORD=
+DB_PASSWORD=your_password
 
-# 5. Migrasi database
+# 6. Buat database
+mysql -u root -p
+CREATE DATABASE pengadaan_app;
+exit;
+
+# 7. Migrasi database
 php artisan migrate
 
-# 6. Seed data demo (optional)
-php artisan db:seed --class=KepalaInstalasiDataSeeder
+# 8. Seed data demo (optional)
+php artisan db:seed
 
-# 7. Build assets
+# 9. Build assets untuk production
 npm run build
 
-# 8. Jalankan aplikasi
+# Atau untuk development dengan hot reload
+npm run dev
+
+# 10. Jalankan aplikasi
 php artisan serve
 ```
 
@@ -101,124 +118,178 @@ Akses aplikasi di: **http://127.0.0.1:8000**
 
 ---
 
-## 📚 Dokumentasi Lengkap
+## 👥 User Roles & Akun Default
 
-| 📄 File | 📝 Deskripsi |
-|---------|--------------|
-| **[README.md](README.md)** | Overview project, fitur, dan quick start guide |
-| **[INSTALASI.md](INSTALASI.md)** | Panduan instalasi lengkap untuk development & production |
-| **[PENGGUNAAN.md](PENGGUNAAN.md)** | Panduan penggunaan aplikasi untuk end-user |
-| **[SEEDER.md](SEEDER.md)** | Panduan data demo dan seeder |
-| **[CHANGELOG.md](CHANGELOG.md)** | Riwayat perubahan dan roadmap |
+### Role yang Tersedia
+
+1. **Admin** - Akses penuh ke seluruh sistem
+2. **Unit Kerja** - Membuat dan mengelola permintaan
+3. **Kepala Instalasi** - Review dan approval permintaan dari unit
+4. **Kepala Bidang** - Review permintaan dari instalasi di bidangnya
+5. **Wakil Direktur** - Approval tingkat wakil direktur
+6. **Direktur** - Approval tertinggi
+7. **Staff Perencanaan** - Mengelola perencanaan dan disposisi
+8. **KSO** - Komite Standar & Obat
+9. **Pengadaan** - Proses pengadaan barang/jasa
+10. **Serah Terima** - Penerimaan dan serah terima barang
+
+### Akun Default (Setelah Seeder)
+
+```
+Kepala Instalasi:
+Email: kepala.instalasi@rsud.id
+Password: password123
+
+KSO:
+Email: kso@rsud.id  
+Password: password123
+
+Staff Perencanaan:
+Email: staff.perencanaan@rsud.id
+Password: password123
+```
 
 ---
 
-## 👥 Akun Default
+## 🔄 Workflow Pengadaan Lengkap
 
-Setelah menjalankan seeder, gunakan akun berikut:
-
-### Kepala Instalasi
-- **Email:** kepala_instalasi@rsud.id
-- **Password:** password123
-- **Unit:** Instalasi Farmasi
-
-### Staff Farmasi (Unit)
-- **Email:** staff.farmasi@rsud.id
-- **Password:** password123
-- **Unit:** Instalasi Farmasi
+```
+1. Unit Kerja
+   ↓ Buat Permintaan
+   
+2. Kepala Instalasi  
+   ↓ Review & Buat Nota Dinas
+   
+3. Kepala Bidang
+   ↓ Review & Approve
+   
+4. Wakil Direktur/Direktur
+   ↓ Approval Final
+   
+5. Staff Perencanaan
+   ↓ Buat Disposisi & Scan Berkas
+   ↓ Input Data Perencanaan
+   
+6. KSO (Komite Standar & Obat)
+   ↓ Review & Validasi
+   
+7. Bagian Pengadaan
+   ↓ Proses Pengadaan
+   
+8. Nota Penerimaan
+   ↓ Terima Barang
+   
+9. Serah Terima ke Kepala Instalasi
+   ✓ Selesai
+```
 
 ---
 
-## 📱 Fitur Berdasarkan Role
+## 📊 Status & Tracking
 
-### 1. **Admin**
-- Dashboard dengan statistik keseluruhan
-- Kelola semua permintaan dari semua unit
-- Monitoring status pengadaan
+### Status Permintaan
 
-**Routes:**
-- `/dashboard` - Dashboard admin
-- `/permintaan` - Kelola permintaan
+| Status | Deskripsi | Aksi Selanjutnya |
+|--------|-----------|------------------|
+| **diajukan** | Permintaan baru dari unit | Review oleh Kepala Instalasi |
+| **proses** | Sedang dalam proses | Menunggu approval |
+| **disetujui** | Sudah disetujui | Lanjut ke tahap berikutnya |
+| **ditolak** | Ditolak dengan alasan | Revisi atau batal |
+| **revisi** | Perlu diperbaiki | Perbaikan oleh pemohon |
 
-### 2. **Kepala Instalasi**
-- Dashboard khusus dengan statistik unit
-- Review permintaan dari unit kerjanya
-- Approve/Reject/Revisi permintaan
-- Membuat dan mengirim nota dinas
-- Meneruskan ke Direktur/Bagian Pengadaan
+### Tahapan Tracking
 
-**Routes:**
-- `/kepala-instalasi/dashboard` - Dashboard
-- `/kepala-instalasi` - Daftar permintaan untuk review
-- `/kepala-instalasi/permintaan/{id}` - Detail & aksi permintaan
-- `/kepala-instalasi/permintaan/{id}/nota-dinas/create` - Buat nota dinas
+1. **Permintaan** - Pengajuan awal dari unit kerja
+2. **Nota Dinas** - Pembuatan nota dinas oleh Kepala Instalasi
+3. **Disposisi** - Disposisi dari Staff Perencanaan (Coming Soon)
+4. **Perencanaan** - Input data perencanaan dan scan berkas
+5. **KSO** - Review oleh Komite Standar & Obat
+6. **Pengadaan** - Proses pengadaan oleh bagian pengadaan
+7. **Nota Penerimaan** - Penerimaan barang
+8. **Serah Terima** - Serah terima ke instalasi (selesai)
 
-### 3. **Unit Kerja**
-- Dashboard statistik permintaan sendiri
+---
+
+## 📱 Fitur per Role
+
+### 1. Unit Kerja
+- Dashboard dengan statistik permintaan sendiri
 - Buat permintaan pengadaan baru
-- Lihat status permintaan
-- Edit/Hapus permintaan (draft)
+- Lihat dan edit permintaan yang masih draft
+- Tracking status permintaan
 
 **Routes:**
 - `/dashboard` - Dashboard unit
-- `/permintaan` - Daftar permintaan saya
+- `/permintaan` - Daftar permintaan
 - `/permintaan/create` - Buat permintaan baru
 
----
+### 2. Kepala Instalasi
+- Dashboard dengan statistik unit kerjanya
+- Review permintaan dari unit di instalasinya
+- Buat nota dinas
+- Approve/Reject/Minta revisi permintaan
 
-## 🔄 Workflow Pengadaan
+**Routes:**
+- `/kepala-instalasi/dashboard` - Dashboard
+- `/kepala-instalasi` - List permintaan
+- `/kepala-instalasi/permintaan/{id}/nota-dinas/create` - Buat nota dinas
 
-```
-┌─────────────────┐
-│  Unit Kerja     │  1. Buat Permintaan
-│  (Staff)        │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│ Kepala Instalasi│  2. Review & Tindakan:
-│                 │     - Approve langsung
-└────────┬────────┘     - Buat Nota Dinas
-         │              - Minta Revisi
-         │              - Tolak
-         ▼
-    ┌────────┐
-    │Direktur│  3. Approval
-    └───┬────┘
-        │
-        ▼
-┌───────────────┐
-│Bagian Pengadaan│  4. Proses Pengadaan
-└───────┬───────┘
-        │
-        ▼
-  ┌──────────┐
-  │Serah Terima│  5. Selesai
-  └──────────┘
-```
+### 3. Kepala Bidang
+- Dashboard dengan statistik bidangnya
+- Review permintaan dari instalasi di bidangnya
+- Approve/Reject permintaan
 
----
+**Routes:**
+- `/kepala-bidang/dashboard` - Dashboard
+- `/kepala-bidang` - List permintaan untuk review
 
-## 📊 Status Permintaan
+### 4. Wakil Direktur / Direktur
+- Dashboard dengan statistik keseluruhan
+- Review dan approval permintaan
+- Monitoring seluruh proses
 
-| Status | Deskripsi |
-|--------|-----------|
-| **diajukan** | Permintaan baru menunggu review Kepala Instalasi |
-| **proses** | Sedang diproses (sudah ada nota dinas) |
-| **disetujui** | Disetujui dan diteruskan ke Bagian Pengadaan |
-| **ditolak** | Ditolak dengan alasan |
-| **revisi** | Perlu revisi dari pemohon |
+**Routes:**
+- `/wakil-direktur/dashboard` - Dashboard Wakil Direktur
+- `/direktur/dashboard` - Dashboard Direktur
 
-## 🔍 Tracking Status
+### 5. Staff Perencanaan
+- Dashboard dengan statistik perencanaan
+- Buat disposisi untuk permintaan
+- Upload scan berkas perencanaan
+- Input data perencanaan lengkap
 
-1. **Permintaan** - Status awal
-2. **Nota Dinas** - Sudah dibuat nota dinas
-3. **Disposisi** - Sudah didisposisi
-4. **Perencanaan** - Masuk tahap perencanaan
-5. **KSO** - Komite Standar & Obat
-6. **Pengadaan** - Proses pengadaan
-7. **Nota Penerimaan** - Barang diterima
-8. **Serah Terima** - Selesai
+**Routes:**
+- `/staff-perencanaan/dashboard` - Dashboard
+- `/staff-perencanaan` - List permintaan
+- `/staff-perencanaan/permintaan/{id}/perencanaan/create` - Input perencanaan
+- `/staff-perencanaan/permintaan/{id}/scan-berkas` - Upload scan berkas
+
+### 6. KSO (Komite Standar & Obat)
+- Dashboard KSO
+- Review permintaan yang masuk
+- Validasi standar dan spesifikasi obat/alkes
+
+**Routes:**
+- `/kso/dashboard` - Dashboard KSO
+- `/kso` - List permintaan untuk review
+
+### 7. Bagian Pengadaan
+- Dashboard pengadaan
+- Proses pengadaan barang/jasa
+- Update status pengadaan
+
+**Routes:**
+- `/pengadaan/dashboard` - Dashboard Pengadaan
+- `/pengadaan` - List permintaan untuk diproses
+
+### 8. Serah Terima
+- Dashboard penerimaan barang
+- Buat nota penerimaan
+- Serah terima ke kepala instalasi
+
+**Routes:**
+- `/serah-terima/dashboard` - Dashboard
+- `/serah-terima` - List penerimaan
 
 ---
 
@@ -227,66 +298,95 @@ Setelah menjalankan seeder, gunakan akun berikut:
 ### Tabel Utama
 
 **`users`**
-- `user_id` - Primary Key
-- `nama` - Nama lengkap
-- `email` - Email (unique)
-- `password` - Password (hashed)
-- `role` - admin / kepala_instalasi / unit
-- `jabatan` - Jabatan user
-- `unit_kerja` - Unit kerja
+- Menyimpan data pengguna dengan role-based access
+- Fields: user_id, nama, email, password, role, jabatan, unit_kerja
 
 **`permintaan`**
-- `permintaan_id` - Primary Key
-- `user_id` - Foreign Key ke users
-- `bidang` - Bidang pengadaan
-- `tanggal_permintaan` - Tanggal pengajuan
-- `deskripsi` - Detail permintaan
-- `status` - diajukan / proses / disetujui / ditolak / revisi
-- `pic_pimpinan` - Pimpinan yang menangani
-- `no_nota_dinas` - Nomor nota dinas
-- `link_scan` - Link scan dokumen
+- Menyimpan data permintaan pengadaan
+- Fields: permintaan_id, user_id, bidang, tanggal_permintaan, deskripsi, status, pic_pimpinan
 
 **`nota_dinas`**
-- `nota_id` - Primary Key
-- `permintaan_id` - Foreign Key ke permintaan
-- `dari_unit` - Unit pembuat nota
-- `ke_jabatan` - Tujuan nota (Direktur/Bagian Pengadaan/dll)
-- `tanggal_nota` - Tanggal nota dinas
-- `status` - Status nota
+- Menyimpan nota dinas yang dibuat
+- Fields: nota_id, permintaan_id, dari, dari_jabatan, ke_jabatan, tanggal_nota, perihal, isi_nota
+
+**`disposisi`**
+- Menyimpan data disposisi (Coming Soon)
+- Fields: disposisi_id, nota_id, dari, kepada, tanggal_disposisi, isi_disposisi, status
+
+**`perencanaan`**
+- Menyimpan data perencanaan pengadaan
+- Fields: perencanaan_id, permintaan_id, jenis_pengadaan, metode_pengadaan, nilai_pagu, scan_berkas, catatan
+
+**`kso`**
+- Menyimpan data review KSO
+- Fields: kso_id, permintaan_id, tanggal_review, hasil_review, catatan_kso
+
+**`pengadaan`**
+- Menyimpan data proses pengadaan
+- Fields: pengadaan_id, permintaan_id, nomor_kontrak, tanggal_kontrak, vendor, nilai_kontrak
+
+**`nota_penerimaan`**
+- Menyimpan data penerimaan barang
+- Fields: penerimaan_id, pengadaan_id, tanggal_terima, jumlah_diterima, kondisi
+
+**`serah_terima`**
+- Menyimpan data serah terima
+- Fields: serah_terima_id, penerimaan_id, tanggal_serah_terima, penerima, bukti_terima
 
 ---
 
-## 🎨 Struktur File
+## 🎨 Struktur Project
 
 ```
 pengadaan-app/
 ├── app/
-│   ├── Http/Controllers/
-│   │   ├── Auth/                          # Authentication
-│   │   ├── KepalaInstalasiController.php  # Kepala Instalasi
-│   │   ├── PermintaanController.php       # CRUD Permintaan
-│   │   └── ProfileController.php          # Profile
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Auth/                      # Authentication
+│   │   │   ├── PermintaanController.php   # CRUD Permintaan
+│   │   │   ├── KepalaInstalasiController.php
+│   │   │   ├── KepalaBidangController.php
+│   │   │   ├── DirekturController.php
+│   │   │   ├── StaffPerencanaanController.php
+│   │   │   ├── KsoController.php
+│   │   │   ├── PengadaanController.php
+│   │   │   └── SerahTerimaController.php
+│   │   └── Middleware/
+│   │       └── RedirectBasedOnRole.php    # Role redirect
 │   └── Models/
 │       ├── User.php
 │       ├── Permintaan.php
-│       └── NotaDinas.php
-├── resources/js/
-│   ├── Layouts/
-│   │   ├── AuthenticatedLayout.vue        # Layout dengan sidebar
-│   │   └── GuestLayout.vue                # Layout login
-│   ├── Pages/
-│   │   ├── Dashboard.vue                  # Dashboard umum
-│   │   ├── KepalaInstalasi/
-│   │   │   ├── Dashboard.vue              # Dashboard Kepala Instalasi
-│   │   │   ├── Index.vue                  # List permintaan
-│   │   │   ├── Show.vue                   # Detail & aksi
-│   │   │   └── CreateNotaDinas.vue        # Form nota dinas
-│   │   └── Permintaan/
-│   │       ├── Index.vue
-│   │       ├── Create.vue
-│   │       ├── Edit.vue
-│   │       └── Show.vue
-│   └── Components/                        # Reusable components
+│       ├── NotaDinas.php
+│       ├── Disposisi.php
+│       ├── Perencanaan.php
+│       ├── Kso.php
+│       ├── Pengadaan.php
+│       └── SerahTerima.php
+├── database/
+│   ├── migrations/                        # Database migrations
+│   └── seeders/                           # Data seeders
+│       ├── DatabaseSeeder.php
+│       ├── UserSeeder.php
+│       ├── KsoSeeder.php
+│       └── ...
+├── resources/
+│   ├── js/
+│   │   ├── Components/                    # Vue components
+│   │   ├── Layouts/
+│   │   │   ├── AuthenticatedLayout.vue
+│   │   │   └── GuestLayout.vue
+│   │   └── Pages/
+│   │       ├── Dashboard.vue
+│   │       ├── Permintaan/
+│   │       ├── KepalaInstalasi/
+│   │       ├── KepalaBidang/
+│   │       ├── Direktur/
+│   │       ├── StaffPerencanaan/
+│   │       ├── KSO/
+│   │       ├── Pengadaan/
+│   │       └── SerahTerima/
+│   └── css/
+│       └── app.css
 └── routes/
     └── web.php                            # Web routes
 ```
@@ -298,7 +398,7 @@ pengadaan-app/
 ### Menjalankan Development Server
 
 ```bash
-# Terminal 1: Laravel
+# Terminal 1: Laravel server
 php artisan serve
 
 # Terminal 2: Vite (hot reload)
@@ -311,449 +411,120 @@ npm run dev
 npm run build
 ```
 
-### Clear Cache
-
-```bash
-php artisan route:clear
-php artisan view:clear
-php artisan config:clear
-```
-
-### Database Commands
-
-```bash
-# Fresh migration
-php artisan migrate:fresh
-
-# Migrate + Seed
-php artisan migrate:fresh --seed
-
-# Seed khusus
-php artisan db:seed --class=KepalaInstalasiDataSeeder
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Error: Route not found / Ziggy error
-```bash
-php artisan route:clear
-npm run build
-```
-
-### Error: Layout tidak muncul
-```bash
-php artisan view:clear
-npm run build
-```
-
-### Error: Database connection refused
-- Pastikan MySQL berjalan
-- Cek kredensial di `.env`
-- Pastikan database sudah dibuat
-
-### Halaman blank setelah login
-- Buka Developer Tools (F12) → Console
-- Lihat error yang muncul
-- Biasanya karena route belum ada
-
----
-
-## 🔒 Keamanan
-
-- ✅ CSRF Protection
-- ✅ Password Hashing (bcrypt)
-- ✅ SQL Injection Prevention (Eloquent ORM)
-- ✅ XSS Protection
-- ✅ Role-based Access Control (RBAC)
-- ✅ Secure Session Management
-
----
-
-## 📈 Roadmap
-
-### Version 1.1 (Coming Soon)
-- [ ] Notifikasi email
-- [ ] Export data (Excel/PDF)
-- [ ] File upload langsung
-- [ ] History perubahan
-
-### Version 1.2
-- [ ] Dashboard analytics lanjutan
-- [ ] Sistem komentar
-- [ ] Audit trail
-- [ ] API untuk integrasi
-
-### Version 2.0
-- [ ] Mobile app
-- [ ] Real-time notifications
-- [ ] Budget tracking
-- [ ] E-signature
-
----
-
-## 📞 Support
-
-Untuk bantuan atau pertanyaan:
-- **Email:** it@rsudibsinugresik.id
-- **Website:** https://rsudibsinugresik.id
-
----
-
-## 📄 License
-
-Proprietary - RSUD Ibnu Sina Kabupaten Gresik
-
----
-
-<p align="center">
-  <strong>Developed with ❤️ for RSUD Ibnu Sina Kabupaten Gresik</strong><br>
-  <em>Last Updated: October 16, 2025</em>
-</p>
-
-
-### ✨ Fitur Utama
-
-- 🔐 **Autentikasi & Autorisasi** - Sistem login yang aman dengan role-based access
-- 📊 **Dashboard Interaktif** - Statistik real-time permintaan pengadaan
-- 📝 **Manajemen Permintaan** - CRUD lengkap untuk permintaan pengadaan
-- 🏥 **Multi-Unit Support** - Mendukung 24+ unit/instalasi RS
-- 📱 **Responsive Design** - Dapat diakses dari desktop, tablet, dan smartphone
-- 🔍 **Filter & Search** - Pencarian dan filter berdasarkan status, bidang, dll
-- 👤 **Profil Management** - User dapat mengelola profil sendiri
-- 📎 **Document Link** - Integrasi dengan Google Drive untuk scan dokumen
-- 🎨 **Modern UI/UX** - Antarmuka yang clean dan user-friendly
-
-### 🏗️ Tech Stack
-
-**Backend:**
-- Laravel 12.0 - PHP Framework
-- Inertia.js 2.0 - Modern monolith approach
-- SQLite/MySQL/PostgreSQL - Database
-
-**Frontend:**
-- Vue.js 3.5 - Progressive JavaScript Framework
-- Tailwind CSS 3.2 - Utility-first CSS framework
-- Vite 7.0 - Frontend build tool
-
-**Development:**
-- Laravel Breeze - Authentication scaffolding
-- Laravel Pail - Log viewer
-- Laravel Pint - Code style fixer
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- PHP 8.2 atau lebih tinggi
-- Composer 2.0+
-- Node.js 18.x+ & NPM 9.x+
-- Database (SQLite/MySQL/PostgreSQL)
-
-### Instalasi Cepat
-
-```bash
-# Clone repository
-git clone https://github.com/your-repo/pengadaan-app.git
-cd pengadaan-app
-
-# Install dependencies
-composer install
-npm install
-
-# Setup environment
-cp .env.example .env
-php artisan key:generate
-
-# Setup database
-touch database/database.sqlite  # untuk SQLite
-php artisan migrate
-
-# Seed data (optional)
-php artisan db:seed
-
-# Build assets
-npm run build
-
-# Jalankan aplikasi
-php artisan serve
-```
-
-Buka browser dan akses: **http://localhost:8000**
-
----
-
-## 📚 Dokumentasi
-
-Dokumentasi lengkap tersedia dalam file-file berikut:
-
-### 📖 Dokumentasi Utama
-
-| Dokumentasi | Deskripsi | Link |
-|------------|-----------|------|
-| **Instalasi** | Panduan instalasi lengkap untuk development & production | [INSTALASI.md](INSTALASI.md) |
-| **Penggunaan** | Panduan penggunaan aplikasi untuk end-user | [PENGGUNAAN.md](PENGGUNAAN.md) |
-| **Contoh Data IGD** | Template & contoh pengisian untuk IGD | [CONTOH_DATA_IGD.md](CONTOH_DATA_IGD.md) |
-| **Panduan Seed Data** | Cara menggunakan sample data | [README_CONTOH_DATA.md](README_CONTOH_DATA.md) |
-
-### 📂 Struktur Dokumentasi
-
-```
-pengadaan-app/
-├── README.md                    ← File ini (Overview)
-├── INSTALASI.md                 ← Panduan instalasi lengkap
-├── PENGGUNAAN.md                ← Panduan penggunaan aplikasi
-├── CONTOH_DATA_IGD.md           ← Contoh data Instalasi Gawat Darurat
-├── README_CONTOH_DATA.md        ← Panduan seed data
-└── CHANGELOG.md                 ← (Coming soon) Riwayat perubahan
-```
-
----
-
-## 🎯 Fitur Detail
-
-### 1. Dashboard
-- Statistik total permintaan
-- Breakdown per status (Diajukan, Proses, Disetujui)
-- Visualisasi data dengan cards yang intuitif
-
-### 2. Manajemen Permintaan
-
-**Create (Buat Permintaan):**
-- Form lengkap dengan validasi
-- Support untuk 24+ bidang/unit RS
-- Upload link scan dokumen (Google Drive integration)
-
-**Read (Lihat Permintaan):**
-- Tabel interaktif dengan pagination
-- Detail view untuk setiap permintaan
-- Filter berdasarkan status dan bidang
-
-**Update (Edit Permintaan):**
-- Edit form dengan pre-filled data
-- Real-time validation
-- History tracking (coming soon)
-
-**Delete (Hapus Permintaan):**
-- Soft delete dengan konfirmasi
-- Role-based authorization
-
-### 3. Bidang/Unit yang Didukung
-
-- Instalasi Gawat Darurat
-- Instalasi Rawat Jalan
-- Instalasi Rawat Inap
-- Instalasi Bedah Sentral
-- Instalasi Intensif Care
-- Instalasi Farmasi
-- Instalasi Laboratorium Patologi Klinik
-- Instalasi Radiologi
-- Instalasi Rehabilitasi Medik
-- Instalasi Gizi
-- Dan 14 bidang lainnya...
-
----
-
-## 🗂️ Struktur Aplikasi
-
-```
-pengadaan-app/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── Auth/             # Authentication controllers
-│   │   │   ├── PermintaanController.php
-│   │   │   └── ProfileController.php
-│   │   ├── Middleware/
-│   │   └── Requests/
-│   ├── Models/
-│   │   ├── User.php
-│   │   └── Permintaan.php
-│   └── Providers/
-├── database/
-│   ├── migrations/               # Database migrations
-│   ├── seeders/                  # Database seeders
-│   │   ├── IGDPermintaanSeeder.php
-│   │   └── DatabaseSeeder.php
-│   └── database.sqlite          # SQLite database
-├── resources/
-│   ├── js/
-│   │   ├── Components/          # Vue components
-│   │   ├── Layouts/             # Layout components
-│   │   │   ├── AppLayout.vue
-│   │   │   ├── AuthenticatedLayout.vue
-│   │   │   └── GuestLayout.vue
-│   │   ├── Pages/               # Inertia pages
-│   │   │   ├── Auth/
-│   │   │   ├── Permintaan/
-│   │   │   │   ├── Index.vue
-│   │   │   │   ├── Create.vue
-│   │   │   │   ├── Edit.vue
-│   │   │   │   └── Show.vue
-│   │   │   └── Dashboard.vue
-│   │   └── app.js
-│   ├── css/
-│   │   └── app.css
-│   └── views/
-├── routes/
-│   ├── web.php                  # Web routes
-│   └── auth.php                 # Authentication routes
-└── public/
-    ├── images/
-    │   └── logorsis.png
-    └── index.php
-```
-
----
-
-## 🔒 Keamanan
-
-- ✅ CSRF Protection
-- ✅ Password Hashing (bcrypt)
-- ✅ SQL Injection Prevention (Eloquent ORM)
-- ✅ XSS Protection
-- ✅ Role-based Access Control
-- ✅ HTTPS Support (production)
-- ✅ Secure Session Management
-
----
-
-## 🧪 Testing
-
-```bash
-# Run tests
-php artisan test
-
-# Run specific test
-php artisan test --filter PermintaanTest
-
-# With coverage
-php artisan test --coverage
-```
-
----
-
-## 🛠️ Development
-
-### Menjalankan Development Server
-
-```bash
-# Terminal 1: Laravel development server
-php artisan serve
-
-# Terminal 2: Vite development server (with hot reload)
-npm run dev
-```
-
-### Code Style
-
-```bash
-# Check code style
-./vendor/bin/pint --test
-
-# Fix code style
-./vendor/bin/pint
-```
-
 ### Database Management
 
 ```bash
 # Fresh migration
 php artisan migrate:fresh
 
-# Migrate with seed
+# Migrate dengan seeder
 php artisan migrate:fresh --seed
 
-# Seed specific seeder
-php artisan db:seed --class=IGDPermintaanSeeder
+# Seeder spesifik
+php artisan db:seed --class=UserSeeder
+php artisan db:seed --class=KsoSeeder
 ```
+
+### Clear Cache
+
+```bash
+php artisan route:clear
+php artisan view:clear
+php artisan config:clear
+php artisan cache:clear
+```
+
+---
+
+## 🔒 Keamanan
+
+- ✅ CSRF Protection
+- ✅ Password Hashing (Bcrypt)
+- ✅ SQL Injection Prevention (Eloquent ORM)
+- ✅ XSS Protection
+- ✅ Role-based Access Control (RBAC)
+- ✅ Secure Session Management
+- ✅ Input Validation & Sanitization
+
+---
+
+## 🐛 Troubleshooting
+
+### Vite manifest error
+```bash
+npm run build
+php artisan route:clear
+```
+
+### Route not found
+```bash
+php artisan route:clear
+php artisan route:list  # Cek route yang tersedia
+```
+
+### Error 500 - Internal Server Error
+```bash
+# Cek log
+php artisan pail
+
+# Clear semua cache
+php artisan optimize:clear
+```
+
+### Database connection refused
+- Pastikan MySQL berjalan
+- Cek kredensial di file `.env`
+- Pastikan database sudah dibuat
 
 ---
 
 ## 📈 Roadmap
 
 ### Version 1.1 (Q4 2025)
-- [ ] Notifikasi email
-- [ ] Export data ke Excel/PDF
-- [ ] Advanced search & filtering
-- [ ] Approval workflow multi-level
-- [ ] File upload langsung (tanpa Google Drive)
+- ✅ Workflow lengkap hingga serah terima
+- ✅ Role-based access control
+- ✅ Scan berkas perencanaan
+- 🚧 Fitur disposisi (Coming Soon)
+- [ ] Notifikasi email otomatis
+- [ ] Export laporan (Excel/PDF)
 
 ### Version 1.2 (Q1 2026)
 - [ ] Dashboard analytics lanjutan
-- [ ] Reporting & visualization
-- [ ] Sistem komentar/catatan
-- [ ] Audit trail lengkap
-- [ ] API untuk integrasi eksternal
+- [ ] History & audit trail lengkap
+- [ ] Sistem komentar antar role
+- [ ] Upload file langsung (multi-upload)
+- [ ] API untuk integrasi sistem lain
 
 ### Version 2.0 (Q2 2026)
-- [ ] Mobile app (Android/iOS)
+- [ ] Mobile application (Android/iOS)
 - [ ] Real-time notifications (WebSocket)
-- [ ] Budget tracking
-- [ ] Vendor management
+- [ ] Budget tracking & monitoring
+- [ ] Vendor management system
 - [ ] E-signature integration
+- [ ] Advanced reporting & BI
 
 ---
 
-## 🤝 Contributing
+## 📞 Support & Kontak
 
-Kontribusi sangat dihargai! Silakan buat pull request atau laporkan bug melalui Issues.
+Untuk bantuan, pertanyaan, atau pelaporan bug:
 
-### Guidelines
-1. Fork repository
-2. Buat branch baru (`git checkout -b feature/AmazingFeature`)
-3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
-4. Push ke branch (`git push origin feature/AmazingFeature`)
-5. Buat Pull Request
+- **Email IT:** it@rsudibsinugresik.id
+- **Website:** https://rsudibsinugresik.id
+- **Telepon:** (031) 3981718
 
 ---
 
 ## 📄 License
 
-Aplikasi ini dikembangkan untuk RSUD Ibnu Sina Kabupaten Gresik.
+Proprietary Software - RSUD Ibnu Sina Kabupaten Gresik
 
-Powered by [Laravel](https://laravel.com)
+Aplikasi ini dikembangkan khusus untuk RSUD Ibnu Sina Kabupaten Gresik.  
+Hak cipta dilindungi undang-undang.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+<p align="center">
+  <strong>Developed with ❤️ for RSUD Ibnu Sina Kabupaten Gresik</strong><br>
+  <em>Last Updated: October 19, 2025</em>
+</p>

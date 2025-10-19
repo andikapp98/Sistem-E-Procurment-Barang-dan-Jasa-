@@ -178,20 +178,16 @@
                     Setujui Permintaan
                 </h3>
                 
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-purple-800">
+                        <svg class="w-5 h-5 inline-block mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                        Permintaan akan diteruskan ke <strong>Wakil Direktur</strong> untuk approval selanjutnya.
+                    </p>
+                </div>
+                
                 <form @submit.prevent="submitApprove">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Teruskan ke: <span class="text-red-500">*</span>
-                        </label>
-                        <select v-model="approveForm.tujuan" required
-                            class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
-                            <option value="">-- Pilih Tujuan --</option>
-                            <option value="Bagian Perencanaan">Bagian Perencanaan</option>
-                            <option value="Bagian Pengadaan">Bagian Pengadaan</option>
-                            <option value="Direktur">Direktur</option>
-                        </select>
-                    </div>
-                    
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Catatan (Opsional)
@@ -208,7 +204,7 @@
                         </button>
                         <button type="submit"
                             class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                            Setujui & Teruskan
+                            Setujui & Teruskan ke Wadir
                         </button>
                     </div>
                 </form>
@@ -297,7 +293,6 @@ const showRejectModal = ref(false);
 const showRevisiModal = ref(false);
 
 const approveForm = ref({
-    tujuan: '',
     catatan: '',
 });
 

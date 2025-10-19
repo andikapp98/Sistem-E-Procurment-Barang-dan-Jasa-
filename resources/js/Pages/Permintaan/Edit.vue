@@ -1,13 +1,46 @@
 <template>
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Edit Permintaan
-            </h2>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                        {{ permintaan.status === 'ditolak' ? 'Edit & Ajukan Ulang Permintaan' : 'Edit Permintaan' }}
+                    </h2>
+                    <p v-if="permintaan.status === 'ditolak'" class="text-sm text-red-600 font-medium mt-1">
+                        ⚠️ Permintaan ini ditolak. Lakukan perbaikan dan ajukan ulang.
+                    </p>
+                </div>
+                <Link
+                    :href="route('permintaan.show', permintaan.permintaan_id)"
+                    class="text-gray-600 hover:text-gray-900"
+                >
+                    ← Kembali
+                </Link>
+            </div>
         </template>
 
         <div class="py-12">
             <div class="mx-auto px-2 sm:px-4">
+                <!-- Alert Ditolak -->
+                <div v-if="permintaan.status === 'ditolak'" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-bold text-red-800">
+                                Permintaan Ditolak
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p>Silakan periksa dan perbaiki detail permintaan di bawah ini, kemudian simpan untuk mengajukan ulang.</p>
+                                <p class="mt-1 font-medium">Status akan otomatis berubah menjadi "Diajukan" setelah Anda menyimpan perubahan.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <form @submit.prevent="submit">
                         <!-- Bidang -->
@@ -114,12 +147,36 @@
                                 <option value="disetujui">Disetujui</option>
                             </select>
                             <InputError :message="form.errors.status" class="mt-2" />
+                            <p v-if="permintaan.status === 'ditolak'" class="mt-2 text-sm text-red-600">
+                                💡 Tip: Ubah status ke "Diajukan" untuk mengajukan ulang permintaan ini.
+                            </p>
                         </div>
 
                         <!-- Actions -->
                         <div class="flex items-center justify-end space-x-3">
-                            <Link :href="route('permintaan.index')" class="text-gray-600">Batal</Link>
-                            <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Simpan</PrimaryButton>
+                            <Link 
+                                :href="route('permintaan.show', permintaan.permintaan_id)" 
+                                class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                            >
+                                Batal
+                            </Link>
+                            <button
+                                type="submit"
+                                :class="[
+                                    'inline-flex items-center px-6 py-2 rounded-md font-semibold text-white',
+                                    permintaan.status === 'ditolak' 
+                                        ? 'bg-red-600 hover:bg-red-700' 
+                                        : 'bg-indigo-600 hover:bg-indigo-700',
+                                    { 'opacity-50 cursor-not-allowed': form.processing }
+                                ]"
+                                :disabled="form.processing"
+                            >
+                                <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {{ permintaan.status === 'ditolak' ? 'Simpan & Ajukan Ulang' : 'Simpan Perubahan' }}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -132,24 +189,29 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import InputError from "@/Components/InputError.vue";
 import TextInput from "@/Components/TextInput.vue";
-import PrimaryButton from "@/Components/PrimaryButton.vue";
 import { Link, useForm } from "@inertiajs/vue3";
-import { usePage } from "@inertiajs/vue3";
 
-const props = usePage().props.value;
+const props = defineProps({
+    permintaan: Object,
+});
+
 const permintaan = props.permintaan || {};
 
 const form = useForm({
     bidang: permintaan.bidang || "",
     deskripsi: permintaan.deskripsi || "",
-    tanggal_permintaan: permintaan.tanggal_permintaan || "",
+    tanggal_permintaan: permintaan.tanggal_permintaan ? permintaan.tanggal_permintaan.split('T')[0] : "",
     pic_pimpinan: permintaan.pic_pimpinan || "",
     no_nota_dinas: permintaan.no_nota_dinas || "",
     link_scan: permintaan.link_scan || "",
-    status: permintaan.status || "",
+    status: permintaan.status === 'ditolak' ? 'diajukan' : permintaan.status || "", // Auto set ke diajukan jika ditolak
 });
 
 const submit = () => {
-    form.put(route("permintaan.update", permintaan.permintaan_id));
+    form.put(route("permintaan.update", permintaan.permintaan_id), {
+        onSuccess: () => {
+            // Redirect to show page after success
+        },
+    });
 };
 </script>

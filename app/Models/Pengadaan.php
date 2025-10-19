@@ -18,10 +18,12 @@ class Pengadaan extends Model
 
     protected $fillable = [
         'kso_id',
+        'no_pengadaan',
         'tanggal_pengadaan',
         'vendor',
-        'tracking',
-        'status'
+        'total_harga',
+        'status',
+        'no_tracking',
     ];
 
     public function kso()

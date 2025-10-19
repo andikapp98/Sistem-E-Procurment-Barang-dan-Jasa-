@@ -13,6 +13,13 @@
                     <span class="block sm:inline">{{ $page.props.flash.success }}</span>
                 </div>
 
+                <!-- Filter Bar -->
+                <FilterBar 
+                    route-name="kepala-instalasi.index"
+                    :initial-filters="filters"
+                    :show-bidang-filter="false"
+                />
+
                 <div class="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
                     <!-- Header card -->
                     <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-200">
@@ -101,11 +108,85 @@
                             </table>
                         </div>
 
-                        <div v-else class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <p class="mt-4 text-gray-500">Tidak ada permintaan yang perlu direview saat ini</p>
+                        <!-- Empty State -->
+                        <div v-else class="text-center py-16 px-4">
+                            <div class="max-w-md mx-auto">
+                                <!-- Icon -->
+                                <div class="mb-6">
+                                    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Title -->
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                    Tidak Ada Permintaan
+                                </h3>
+
+                                <!-- Description -->
+                                <p class="text-gray-600 mb-6">
+                                    Tidak ada permintaan yang perlu direview saat ini untuk unit kerja <span class="font-semibold">{{ userLogin.unit_kerja }}</span>.
+                                </p>
+
+                                <!-- Info Cards -->
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-left">
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div class="flex items-start">
+                                            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div>
+                                                <p class="text-sm font-medium text-blue-900">Filter Aktif</p>
+                                                <p class="text-xs text-blue-700 mt-1">Coba hapus filter untuk melihat semua data</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <div class="flex items-start">
+                                            <svg class="w-5 h-5 text-green-600 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div>
+                                                <p class="text-sm font-medium text-green-900">Semua Selesai</p>
+                                                <p class="text-xs text-green-700 mt-1">Semua permintaan sudah direview</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <Link
+                                        :href="route('kepala-instalasi.dashboard')"
+                                        class="inline-flex items-center justify-center px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors"
+                                    >
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                        </svg>
+                                        Kembali ke Dashboard
+                                    </Link>
+
+                                    <Link
+                                        :href="route('kepala-instalasi.index')"
+                                        class="inline-flex items-center justify-center px-5 py-2.5 bg-[#028174] text-white rounded-lg hover:bg-[#03a089] text-sm font-medium transition-colors"
+                                    >
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Refresh Halaman
+                                    </Link>
+                                </div>
+
+                                <!-- Additional Help Text -->
+                                <div class="mt-8 pt-6 border-t border-gray-200">
+                                    <p class="text-xs text-gray-500">
+                                        💡 <span class="font-medium">Tips:</span> Permintaan baru akan muncul di sini ketika unit Anda mengajukan permintaan pengadaan.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -116,11 +197,16 @@
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import FilterBar from '@/Components/FilterBar.vue';
 import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     permintaans: Array,
     userLogin: Object,
+    filters: {
+        type: Object,
+        default: () => ({})
+    }
 });
 
 const formatDate = (dateString) => {

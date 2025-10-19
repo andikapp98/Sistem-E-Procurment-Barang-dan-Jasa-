@@ -257,30 +257,66 @@
                 </div>
 
                 <!-- Card Actions -->
-                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div v-if="canEdit || permintaan.status === 'ditolak'" class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center justify-between">
-                            <div class="text-sm text-gray-600">
-                                <p>Dibuat: {{ formatDateTime(permintaan.created_at) }}</p>
-                                <p v-if="permintaan.updated_at !== permintaan.created_at">
-                                    Diperbarui: {{ formatDateTime(permintaan.updated_at) }}
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Aksi</h3>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <span v-if="permintaan.status === 'ditolak'" class="text-red-600 font-medium">
+                                        ⚠️ Permintaan ditolak. Anda dapat mengedit dan mengajukan ulang.
+                                    </span>
+                                    <span v-else>
+                                        Kelola permintaan Anda
+                                    </span>
                                 </p>
                             </div>
-                            <div class="flex items-center gap-3">
+                            <div class="flex gap-3">
                                 <Link
+                                    v-if="canEdit"
                                     :href="route('permintaan.edit', permintaan.permintaan_id)"
-                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                    :class="[
+                                        'inline-flex items-center px-4 py-2 rounded-md font-semibold text-sm',
+                                        permintaan.status === 'ditolak' 
+                                            ? 'bg-red-600 text-white hover:bg-red-700 border-2 border-red-700'
+                                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                    ]"
                                 >
-                                    ✏️ Edit
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    {{ permintaan.status === 'ditolak' ? 'Edit & Ajukan Ulang' : 'Edit Permintaan' }}
                                 </Link>
                                 <button
-                                    @click="destroy()"
-                                    :disabled="deleting"
-                                    class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
+                                    v-if="canEdit && permintaan.status !== 'ditolak'"
+                                    @click="deletePermintaan"
+                                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold text-sm"
                                 >
-                                    <span v-if="deleting">⏳ Menghapus...</span>
-                                    <span v-else>🗑️ Hapus</span>
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Hapus
                                 </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Alert Ditolak -->
+                        <div v-if="permintaan.status === 'ditolak'" class="mt-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800">
+                                        Permintaan Ditolak
+                                    </h3>
+                                    <div class="mt-2 text-sm text-red-700">
+                                        <p>Permintaan Anda telah ditolak. Silakan periksa kembali detail permintaan, lakukan perbaikan yang diperlukan, dan ajukan ulang.</p>
+                                        <p class="mt-2 font-medium">Alasan penolakan dapat dilihat pada deskripsi permintaan di atas.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -293,7 +329,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Link, router } from "@inertiajs/vue3";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 const props = defineProps({
     permintaan: Object,
@@ -304,16 +340,16 @@ const deleting = ref(false);
 const statusClass = (status) => {
     switch ((status || "").toLowerCase()) {
         case "disetujui":
-            return "bg-green-100 text-green-700 border border-green-200";
+            return "bg-green-100 text-green-800 border border-green-300";
         case "diajukan":
-            return "bg-yellow-100 text-yellow-700 border border-yellow-200";
+            return "bg-yellow-100 text-yellow-800 border border-yellow-300";
         case "diproses":
         case "proses":
-            return "bg-blue-100 text-blue-700 border border-blue-200";
+            return "bg-blue-100 text-blue-800 border border-blue-300";
         case "ditolak":
-            return "bg-red-100 text-red-700 border border-red-200";
+            return "bg-red-100 text-red-800 border border-red-300"; // ✅ MERAH TEBAL
         default:
-            return "bg-gray-100 text-gray-700 border border-gray-200";
+            return "bg-gray-100 text-gray-800 border border-gray-300";
     }
 };
 
@@ -353,7 +389,23 @@ const formatDateTime = (datetime) => {
     });
 };
 
-const destroy = () => {
+// Check if user can edit
+const canEdit = computed(() => {
+    const user = props.permintaan?.user;
+    const userLogin = window.$page?.props?.auth?.user;
+    
+    if (!userLogin) return false;
+    
+    // Admin always can edit
+    if (userLogin.role === 'admin') return true;
+    
+    // Owner can edit their own
+    if (user && user.user_id === userLogin.user_id) return true;
+    
+    return false;
+});
+
+const deletePermintaan = () => {
     if (!confirm(`Yakin ingin menghapus permintaan #${props.permintaan.permintaan_id}?`)) {
         return;
     }

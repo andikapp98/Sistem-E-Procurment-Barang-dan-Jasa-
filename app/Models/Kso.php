@@ -18,8 +18,12 @@ class Kso extends Model
 
     protected $fillable = [
         'perencanaan_id',
+        'no_kso',
         'tanggal_kso',
-        'deskripsi',
+        'pihak_pertama',
+        'pihak_kedua',
+        'isi_kerjasama',
+        'nilai_kontrak',
         'status'
     ];
 

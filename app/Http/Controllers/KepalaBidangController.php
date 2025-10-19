@@ -29,16 +29,22 @@ class KepalaBidangController extends Controller
         $user = Auth::user();
         
         // Ambil semua permintaan yang ditujukan ke Kepala Bidang
+        // HANYA yang statusnya proses atau disetujui (tidak termasuk yang ditolak)
         $permintaans = Permintaan::with(['user', 'notaDinas'])
-            ->where('pic_pimpinan', 'Kepala Bidang')
-            ->orWhere('pic_pimpinan', $user->nama)
+            ->where(function($q) use ($user) {
+                $q->where('pic_pimpinan', 'Kepala Bidang')
+                  ->orWhere('pic_pimpinan', $user->nama);
+            })
+            ->whereIn('status', ['proses', 'disetujui'])
             ->get();
 
         $stats = [
             'total' => $permintaans->count(),
             'menunggu' => $permintaans->where('status', 'proses')->count(),
             'disetujui' => $permintaans->where('status', 'disetujui')->count(),
-            'ditolak' => $permintaans->where('status', 'ditolak')->count(),
+            'ditolak' => Permintaan::where('status', 'ditolak')
+                ->where('deskripsi', 'like', '%DITOLAK oleh Kepala Bidang%')
+                ->count(),
         ];
 
         // Ambil 5 permintaan terbaru
@@ -62,24 +68,59 @@ class KepalaBidangController extends Controller
     /**
      * Tampilkan daftar permintaan untuk Kepala Bidang
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
-        $permintaans = Permintaan::with(['user', 'notaDinas'])
-            ->where('pic_pimpinan', 'Kepala Bidang')
-            ->orWhere('pic_pimpinan', $user->nama)
-            ->orderByDesc('permintaan_id')
-            ->get()
-            ->map(function($permintaan) {
+        // Query dasar - hanya permintaan yang ditujukan ke Kepala Bidang
+        $query = Permintaan::with(['user', 'notaDinas'])
+            ->where(function($q) use ($user) {
+                $q->where('pic_pimpinan', 'Kepala Bidang')
+                  ->orWhere('pic_pimpinan', $user->nama);
+            })
+            // Tambahkan filter: hanya tampilkan yang statusnya proses atau disetujui
+            ->whereIn('status', ['proses', 'disetujui']);
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('permintaan_id', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('bidang')) {
+            $query->where('bidang', $request->bidang);
+        }
+
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('tanggal_permintaan', '>=', $request->tanggal_dari);
+        }
+
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('tanggal_permintaan', '<=', $request->tanggal_sampai);
+        }
+
+        // Pagination dengan 10 items per page (bisa diubah sesuai kebutuhan)
+        $perPage = $request->input('per_page', 10);
+        $permintaans = $query->orderByDesc('permintaan_id')
+            ->paginate($perPage)
+            ->through(function($permintaan) {
                 $permintaan->tracking_status = $permintaan->trackingStatus;
                 $permintaan->progress = $permintaan->getProgressPercentage();
+                $permintaan->timeline_count = count($permintaan->getTimelineTracking());
                 return $permintaan;
             });
 
         return Inertia::render('KepalaBidang/Index', [
             'permintaans' => $permintaans,
             'userLogin' => $user,
+            'filters' => $request->only(['search', 'status', 'bidang', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
         ]);
     }
 
@@ -175,7 +216,7 @@ class KepalaBidangController extends Controller
     }
 
     /**
-     * Approve permintaan - Teruskan ke bagian terkait
+     * Approve permintaan - Teruskan ke Wakil Direktur
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
@@ -187,7 +228,6 @@ class KepalaBidangController extends Controller
         }
 
         $data = $request->validate([
-            'tujuan' => 'required|string', // Bagian Perencanaan, Bagian Pengadaan, dll
             'catatan' => 'nullable|string',
         ]);
 
@@ -198,24 +238,24 @@ class KepalaBidangController extends Controller
             return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
         }
 
-        // Buat disposisi otomatis
+        // Buat disposisi otomatis ke Wakil Direktur
         Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
-            'jabatan_tujuan' => $data['tujuan'],
+            'jabatan_tujuan' => 'Wakil Direktur',
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => $data['catatan'] ?? 'Disetujui oleh Kepala Bidang',
+            'catatan' => $data['catatan'] ?? 'Disetujui oleh Kepala Bidang, diteruskan ke Wakil Direktur',
             'status' => 'disetujui',
         ]);
 
-        // Update status permintaan
+        // Update status permintaan - teruskan ke Wakil Direktur
         $permintaan->update([
-            'status' => 'disetujui',
-            'pic_pimpinan' => $data['tujuan'],
+            'status' => 'proses',
+            'pic_pimpinan' => 'Wakil Direktur',
         ]);
 
         return redirect()
             ->route('kepala-bidang.index')
-            ->with('success', 'Permintaan disetujui dan diteruskan ke ' . $data['tujuan']);
+            ->with('success', 'Permintaan disetujui dan diteruskan ke Wakil Direktur');
     }
 
     /**

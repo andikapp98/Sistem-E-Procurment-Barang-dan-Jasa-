@@ -17,10 +17,12 @@ class SerahTerima extends Model
     ];
 
     protected $fillable = [
-        'nota_penerimaan_id',
-        'tanggal_serah',
+        'penerimaan_id',
+        'no_serah_terima',
+        'tanggal_serah_terima',
+        'penyerah',
         'penerima',
-        'status'
+        'keterangan',
     ];
 
     public function notaPenerimaan()

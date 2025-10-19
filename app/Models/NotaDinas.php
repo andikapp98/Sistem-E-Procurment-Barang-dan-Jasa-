@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Model;
  * 
  * @property int $nota_id
  * @property int $permintaan_id
- * @property string|null $dari_unit
- * @property string|null $ke_jabatan
+ * @property string|null $no_nota
  * @property Carbon $tanggal_nota
- * @property string $status
+ * @property string|null $dari
+ * @property string|null $kepada
+ * @property string|null $perihal
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -21,7 +22,7 @@ class NotaDinas extends Model
 {
     protected $table = 'nota_dinas';
     protected $primaryKey = 'nota_id';
-    public $timestamps = false; // Nonaktifkan timestamps karena tabel tidak punya kolom updated_at
+    public $timestamps = true; // Enable timestamps
 
     protected $casts = [
         'permintaan_id' => 'int',
@@ -30,10 +31,11 @@ class NotaDinas extends Model
 
     protected $fillable = [
         'permintaan_id',
-        'dari_unit',
-        'ke_jabatan',
+        'no_nota',
         'tanggal_nota',
-        'status'
+        'dari',
+        'kepada',
+        'perihal'
     ];
 
     /**

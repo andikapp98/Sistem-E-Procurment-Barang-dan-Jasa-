@@ -9,16 +9,67 @@ use Illuminate\Support\Facades\Auth;
 
 class PermintaanController extends Controller
 {
-    /** Display a listing of the resource. */
-    public function index()
+    /**
+     * Constructor - Add middleware to prevent KSO and Pengadaan access
+     */
+    public function __construct()
     {
-        $permintaans = Permintaan::with('user')
-            ->orderByDesc('permintaan_id')
-            ->get();
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+            if ($user && in_array($user->role, ['kso', 'pengadaan'])) {
+                abort(403, 'Akses ditolak. Silakan gunakan dashboard role Anda.');
+            }
+            return $next($request);
+        });
+    }
+
+    /** Display a listing of the resource. */
+    public function index(Request $request)
+    {
+        $query = Permintaan::with('user');
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('permintaan_id', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%")
+                  ->orWhere('no_nota_dinas', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('bidang')) {
+            $query->where('bidang', $request->bidang);
+        }
+
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('tanggal_permintaan', '>=', $request->tanggal_dari);
+        }
+
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('tanggal_permintaan', '<=', $request->tanggal_sampai);
+        }
+
+        // Pagination dengan 10 items per page (bisa diubah sesuai kebutuhan)
+        $perPage = $request->input('per_page', 10);
+        $permintaans = $query->orderByDesc('permintaan_id')
+            ->paginate($perPage)
+            ->through(function($permintaan) {
+                // Tambahkan tracking info untuk admin
+                $permintaan->tracking_status = $permintaan->trackingStatus;
+                $permintaan->progress = $permintaan->getProgressPercentage();
+                $permintaan->timeline_count = count($permintaan->getTimelineTracking());
+                return $permintaan;
+            });
 
         return Inertia::render('Permintaan/Index', [
             'permintaans' => $permintaans,
             'userLogin' => Auth::user(),
+            'filters' => $request->only(['search', 'status', 'bidang', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
         ]);
     }
 
@@ -55,23 +106,22 @@ class PermintaanController extends Controller
     /** Display the specified resource. */
     public function show(Permintaan $permintaan)
     {
-        // Load relasi user
-        $permintaan->load('user');
+        // Load all relations for tracking
+        $permintaan->load([
+            'user',
+            'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima'
+        ]);
         
-        // Load tracking tahapan (jika sudah ada data)
-        // Nanti akan digunakan saat tabel tracking sudah ada data
-        // $permintaan->load([
-        //     'notaDinas',
-        //     'notaDinas.disposisi',
-        //     'notaDinas.disposisi.perencanaan',
-        //     'notaDinas.disposisi.perencanaan.kso',
-        //     'notaDinas.disposisi.perencanaan.kso.pengadaan',
-        //     'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan',
-        //     'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima',
-        // ]);
+        // Get timeline tracking untuk admin
+        $timeline = $permintaan->getTimelineTracking();
+        $progress = $permintaan->getProgressPercentage();
         
         return Inertia::render('Permintaan/Show', [
             'permintaan' => $permintaan,
+            'trackingStatus' => $permintaan->trackingStatus,
+            'timeline' => $timeline,
+            'progress' => $progress,
+            'userLogin' => Auth::user(),
         ]);
     }
 
@@ -107,5 +157,46 @@ class PermintaanController extends Controller
     {
         $permintaan->delete();
         return redirect()->route('permintaan.index')->with('success', 'Permintaan dihapus.');
+    }
+
+    /**
+     * Tampilkan timeline tracking untuk permintaan (Admin)
+     * Dedicated page untuk melihat tracking detail
+     */
+    public function tracking(Permintaan $permintaan)
+    {
+        // Load all relations
+        $permintaan->load([
+            'user',
+            'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima'
+        ]);
+
+        // Get timeline tracking lengkap
+        $timeline = $permintaan->getTimelineTracking();
+        $progress = $permintaan->getProgressPercentage();
+
+        // Tahapan yang belum dilalui
+        $allSteps = [
+            'Permintaan',
+            'Nota Dinas',
+            'Disposisi',
+            'Perencanaan',
+            'KSO',
+            'Pengadaan',
+            'Nota Penerimaan',
+            'Serah Terima',
+        ];
+
+        $completedSteps = array_column($timeline, 'tahapan');
+        $pendingSteps = array_diff($allSteps, $completedSteps);
+
+        return Inertia::render('Permintaan/Tracking', [
+            'permintaan' => $permintaan,
+            'timeline' => $timeline,
+            'progress' => $progress,
+            'completedSteps' => $completedSteps,
+            'pendingSteps' => array_values($pendingSteps),
+            'userLogin' => Auth::user(),
+        ]);
     }
 }

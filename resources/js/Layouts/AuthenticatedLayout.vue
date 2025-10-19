@@ -21,7 +21,14 @@ const sidebarOpen = ref(true);
                     <div class="flex h-16 justify-between">
                         <div class="flex items-center">
                             <!-- Logo -->
-                            <Link :href="route('dashboard')" class="flex items-center space-x-3">
+                            <Link 
+                                :href="
+                                    $page.props.auth.user.role === 'kso' ? route('kso.dashboard') :
+                                    $page.props.auth.user.role === 'pengadaan' ? route('pengadaan.dashboard') :
+                                    route('dashboard')
+                                " 
+                                class="flex items-center space-x-3"
+                            >
                                 <img
                                     src="/images/logorsis.png"
                                     alt="RSUD Ibnu Sina Kabupaten Gresik"
@@ -139,8 +146,9 @@ const sidebarOpen = ref(true);
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
-                        <!-- Dashboard - Semua Role -->
+                        <!-- Dashboard - Semua Role kecuali KSO dan Pengadaan -->
                         <ResponsiveNavLink
+                            v-if="$page.props.auth.user.role !== 'kso' && $page.props.auth.user.role !== 'pengadaan'"
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
@@ -225,8 +233,9 @@ const sidebarOpen = ref(true);
                     class="bg-white border-r border-gray-200 min-h-screen transition-all duration-300 overflow-hidden hidden sm:block"
                 >
                     <nav class="mt-5 px-2">
-                        <!-- Dashboard - Semua Role -->
+                        <!-- Dashboard - Semua Role kecuali KSO dan Pengadaan -->
                         <Link
+                            v-if="$page.props.auth.user.role !== 'kso' && $page.props.auth.user.role !== 'pengadaan'"
                             :href="route('dashboard')"
                             :class="route().current('dashboard') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
                             class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"

@@ -24,6 +24,13 @@
                     </div>
                 </div>
 
+                <!-- Filter Bar -->
+                <FilterBar 
+                    route-name="kepala-bidang.index"
+                    :initial-filters="filters"
+                    :show-bidang-filter="true"
+                />
+
                 <!-- Table -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 border-b border-gray-200">
@@ -123,10 +130,15 @@
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import FilterBar from '@/Components/FilterBar.vue';
 import { Link } from '@inertiajs/vue3';
 
 defineProps({
     permintaans: Array,
     userLogin: Object,
+    filters: {
+        type: Object,
+        default: () => ({})
+    }
 });
 </script>

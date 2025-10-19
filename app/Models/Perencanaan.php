@@ -16,14 +16,19 @@ class Perencanaan extends Model
 
     protected $casts = [
         'disposisi_id' => 'int',
-        'tanggal_perencanaan' => 'date'
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
+        'anggaran' => 'decimal:2'
     ];
 
     protected $fillable = [
         'disposisi_id',
-        'tanggal_perencanaan',
-        'rincian',
-        'status'
+        'rencana_kegiatan',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'anggaran',
+        'link_scan_perencanaan',
+        'metode_pengadaan'
     ];
 
     public function disposisi()

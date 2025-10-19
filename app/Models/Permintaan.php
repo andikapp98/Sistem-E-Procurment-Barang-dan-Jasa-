@@ -29,7 +29,7 @@ class Permintaan extends Model
 {
 	protected $table = 'permintaan';
 	protected $primaryKey = 'permintaan_id';
-	public $timestamps = false;
+	public $timestamps = true; // Enable timestamps
 
 	protected $casts = [
 		'user_id' => 'int',
@@ -52,7 +52,7 @@ class Permintaan extends Model
 	 */
 	public function user()
 	{
-		return $this->belongsTo(User::class, 'user_id', 'user_id');
+		return $this->belongsTo(User::class, 'user_id', 'id'); // Fixed: reference 'id' not 'user_id'
 	}
 
 	/**
@@ -61,6 +61,14 @@ class Permintaan extends Model
 	public function notaDinas()
 	{
 		return $this->hasMany(NotaDinas::class, 'permintaan_id', 'permintaan_id');
+	}
+
+	/**
+	 * Relasi ke Dokumen Pengadaan
+	 */
+	public function dokumenPengadaan()
+	{
+		return $this->hasMany(DokumenPengadaan::class, 'permintaan_id', 'permintaan_id');
 	}
 
 	/**
@@ -121,12 +129,12 @@ class Permintaan extends Model
 				];
 
 				// TAHAP 4: Perencanaan
-				$perencanaan = $disposisi->perencanaan()->latest('tanggal_perencanaan')->first();
+				$perencanaan = $disposisi->perencanaan()->orderBy('perencanaan_id', 'desc')->first();
 				if ($perencanaan) {
 					$timeline[] = [
 						'tahapan' => 'Perencanaan',
-						'tanggal' => $perencanaan->tanggal_perencanaan,
-						'status' => $perencanaan->status,
+						'tanggal' => $perencanaan->tanggal_mulai ?? $perencanaan->created_at,
+						'status' => 'selesai',
 						'keterangan' => 'Tahap perencanaan pengadaan',
 						'icon' => 'chart',
 						'completed' => true,

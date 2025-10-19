@@ -70,25 +70,45 @@ class KepalaInstalasiController extends Controller
      * Tampilkan daftar permintaan yang perlu direview oleh Kepala Instalasi
      * Hanya menampilkan permintaan untuk bagian/unit yang dipimpin
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
-        // Ambil permintaan yang ditujukan untuk bagian/unit kerja kepala instalasi
-        // Filter berdasarkan kolom 'bidang' di tabel permintaan
-        $permintaans = Permintaan::with(['user', 'notaDinas'])
-            ->where(function($query) use ($user) {
+        // Query dasar dengan filter isolasi data
+        $query = Permintaan::with(['user', 'notaDinas'])
+            ->where(function($q) use ($user) {
                 if ($user->unit_kerja) {
-                    // Filter berdasarkan bidang yang sesuai dengan unit_kerja kepala instalasi
-                    $query->where('bidang', $user->unit_kerja);
+                    $q->where('bidang', $user->unit_kerja);
                 }
-                // Atau permintaan yang ditugaskan langsung ke kepala instalasi ini
-                $query->orWhere('pic_pimpinan', $user->nama);
-            })
-            ->orderByDesc('permintaan_id')
-            ->get()
-            ->map(function($permintaan) {
-                // Tambahkan status tracking dan progress
+                $q->orWhere('pic_pimpinan', $user->nama);
+            });
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('permintaan_id', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('tanggal_permintaan', '>=', $request->tanggal_dari);
+        }
+
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('tanggal_permintaan', '<=', $request->tanggal_sampai);
+        }
+
+        // Pagination dengan 10 items per page (bisa diubah sesuai kebutuhan)
+        $perPage = $request->input('per_page', 10);
+        $permintaans = $query->orderByDesc('permintaan_id')
+            ->paginate($perPage)
+            ->through(function($permintaan) {
                 $permintaan->tracking_status = $permintaan->trackingStatus;
                 $permintaan->progress = $permintaan->getProgressPercentage();
                 $permintaan->timeline_count = count($permintaan->getTimelineTracking());
@@ -98,6 +118,7 @@ class KepalaInstalasiController extends Controller
         return Inertia::render('KepalaInstalasi/Index', [
             'permintaans' => $permintaans,
             'userLogin' => $user,
+            'filters' => $request->only(['search', 'status', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
         ]);
     }
 
@@ -208,17 +229,17 @@ class KepalaInstalasiController extends Controller
         }
         
         $data = $request->validate([
-            'dari_unit' => 'required|string',
-            'ke_jabatan' => 'required|string',
+            'dari' => 'required|string',
+            'kepada' => 'required|string',
             'tanggal_nota' => 'required|date',
-            'status' => 'nullable|string',
+            'perihal' => 'nullable|string',
         ]);
 
         $data['permintaan_id'] = $permintaan->permintaan_id;
         
-        // Set default status jika tidak ada
-        if (!isset($data['status'])) {
-            $data['status'] = 'proses';
+        // Set default perihal jika tidak ada
+        if (!isset($data['perihal'])) {
+            $data['perihal'] = 'Permintaan Pengadaan - ' . $permintaan->no_nota_dinas;
         }
 
         $notaDinas = NotaDinas::create($data);
@@ -226,12 +247,12 @@ class KepalaInstalasiController extends Controller
         // Update status permintaan
         $permintaan->update([
             'status' => 'proses',
-            'pic_pimpinan' => $data['ke_jabatan'],
+            'pic_pimpinan' => $data['kepada'],
         ]);
 
         return redirect()
             ->route('kepala-instalasi.show', $permintaan)
-            ->with('success', 'Nota Dinas berhasil dibuat dan dikirim ke ' . $data['ke_jabatan']);
+            ->with('success', 'Nota Dinas berhasil dibuat dan dikirim ke ' . $data['kepada']);
     }
 
     /**
@@ -261,10 +282,11 @@ class KepalaInstalasiController extends Controller
         // Buat nota dinas ke Kepala Bidang
         NotaDinas::create([
             'permintaan_id' => $permintaan->permintaan_id,
-            'dari_unit' => $user->unit_kerja ?? $user->jabatan,
-            'ke_jabatan' => 'Kepala Bidang',
+            'no_nota' => $permintaan->no_nota_dinas ?? 'ND/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
+            'dari' => $user->unit_kerja ?? $user->jabatan,
+            'kepada' => 'Kepala Bidang',
             'tanggal_nota' => Carbon::now(),
-            'status' => 'dikirim',
+            'perihal' => 'Persetujuan Permintaan - ' . substr($permintaan->deskripsi, 0, 100),
         ]);
 
         $message = 'Permintaan disetujui dan diteruskan ke Kepala Bidang';
@@ -304,10 +326,11 @@ class KepalaInstalasiController extends Controller
         // Buat nota dinas penolakan ke unit pemohon
         NotaDinas::create([
             'permintaan_id' => $permintaan->permintaan_id,
-            'dari_unit' => $user->unit_kerja ?? $user->jabatan,
-            'ke_jabatan' => $permintaan->user->jabatan ?? 'Unit Pemohon',
+            'no_nota' => 'ND/REJECT/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
+            'dari' => $user->unit_kerja ?? $user->jabatan,
+            'kepada' => $permintaan->user->jabatan ?? 'Unit Pemohon',
             'tanggal_nota' => Carbon::now(),
-            'status' => 'ditolak',
+            'perihal' => 'Penolakan Permintaan - ' . $data['alasan'],
         ]);
 
         return redirect()
@@ -317,7 +340,7 @@ class KepalaInstalasiController extends Controller
 
     /**
      * Request revisi dari pemohon
-     * Hanya bisa meminta revisi untuk permintaan bagiannya sendiri
+     * Kepala Instalasi meminta staff untuk memperbaiki permintaan
      */
     public function requestRevision(Request $request, Permintaan $permintaan)
     {
@@ -329,17 +352,110 @@ class KepalaInstalasiController extends Controller
         }
         
         $data = $request->validate([
-            'catatan_revisi' => 'required|string',
+            'catatan_revisi' => 'required|string|min:10',
         ]);
 
-        // Update status permintaan
+        // Update status permintaan ke revisi
         $permintaan->update([
             'status' => 'revisi',
-            'deskripsi' => $permintaan->deskripsi . "\n\n[CATATAN REVISI] " . $data['catatan_revisi'],
+            'pic_pimpinan' => $permintaan->user->name ?? 'Staff Unit', // Kembalikan ke pembuat permintaan
+            'deskripsi' => $permintaan->deskripsi . "\n\n[CATATAN REVISI dari {$user->jabatan} - " . Carbon::now()->format('d/m/Y H:i') . "] " . $data['catatan_revisi'],
+        ]);
+
+        // Buat Nota Dinas untuk dokumentasi permintaan revisi
+        NotaDinas::create([
+            'permintaan_id' => $permintaan->permintaan_id,
+            'no_nota' => 'ND/REVISI/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
+            'dari' => $user->unit_kerja ?? $user->jabatan,
+            'kepada' => $permintaan->user->jabatan ?? 'Staff Unit',
+            'tanggal_nota' => Carbon::now(),
+            'perihal' => 'Permintaan Revisi - ' . substr($data['catatan_revisi'], 0, 100),
         ]);
 
         return redirect()
             ->route('kepala-instalasi.index')
-            ->with('success', 'Permintaan revisi telah dikirim ke pemohon');
+            ->with('success', 'Permintaan revisi telah dikirim ke ' . ($permintaan->user->name ?? 'pemohon') . ' untuk diperbaiki');
+    }
+
+    /**
+     * Review kembali permintaan yang ditolak oleh Kepala Bidang
+     * Kepala Instalasi dapat memperbaiki dan mengajukan kembali
+     */
+    public function reviewRejected(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk mereview permintaan ini.');
+        }
+
+        // Hanya bisa review jika status ditolak
+        if ($permintaan->status !== 'ditolak') {
+            return redirect()
+                ->route('kepala-instalasi.show', $permintaan)
+                ->with('error', 'Permintaan ini tidak dalam status ditolak.');
+        }
+
+        $permintaan->load('user', 'notaDinas');
+        
+        return Inertia::render('KepalaInstalasi/ReviewRejected', [
+            'permintaan' => $permintaan,
+            'userLogin' => $user,
+        ]);
+    }
+
+    /**
+     * Ajukan kembali permintaan yang ditolak setelah diperbaiki
+     */
+    public function resubmit(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk mengajukan kembali permintaan ini.');
+        }
+
+        // Hanya bisa resubmit jika status ditolak
+        if ($permintaan->status !== 'ditolak') {
+            return redirect()
+                ->route('kepala-instalasi.show', $permintaan)
+                ->with('error', 'Permintaan ini tidak dalam status ditolak.');
+        }
+
+        $data = $request->validate([
+            'deskripsi' => 'required|string',
+            'catatan_perbaikan' => 'nullable|string',
+        ]);
+
+        // Update permintaan dengan deskripsi baru
+        $updateData = [
+            'status' => 'diajukan', // Reset ke status diajukan
+            'deskripsi' => $data['deskripsi'],
+            'pic_pimpinan' => 'Kepala Bidang', // Kembali ke Kepala Bidang
+        ];
+
+        // Tambahkan catatan perbaikan jika ada
+        if (isset($data['catatan_perbaikan']) && $data['catatan_perbaikan']) {
+            $updateData['deskripsi'] .= "\n\n[PERBAIKAN dari {$user->jabatan}] " . $data['catatan_perbaikan'];
+        }
+
+        $permintaan->update($updateData);
+
+        // Buat nota dinas baru untuk pengajuan ulang
+        NotaDinas::create([
+            'permintaan_id' => $permintaan->permintaan_id,
+            'no_nota' => 'ND/RESUBMIT/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
+            'dari' => $user->unit_kerja ?? $user->jabatan,
+            'kepada' => 'Kepala Bidang',
+            'tanggal_nota' => Carbon::now(),
+            'perihal' => 'Pengajuan Ulang Permintaan (Setelah Perbaikan)',
+        ]);
+
+        return redirect()
+            ->route('kepala-instalasi.index')
+            ->with('success', 'Permintaan berhasil diajukan kembali ke Kepala Bidang setelah diperbaiki');
     }
 }
+

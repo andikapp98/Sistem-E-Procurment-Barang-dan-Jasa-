@@ -12,18 +12,18 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    // Use the existing primary key in your DB
-    protected $primaryKey = 'user_id';
+    // Use default primary key 'id'
+    // protected $primaryKey = 'id'; // Default, no need to specify
 
-    // Allow mass assignment for these columns (includes the existing 'nama')
+    // Allow mass assignment for these columns
     protected $fillable = [
-        'nama',
-        'name', // virtual, maps to nama
+        'name',
         'email',
         'password',
         'role',
         'jabatan',
         'unit_kerja',
+        'email_verified_at',
     ];
 
     /**
@@ -43,20 +43,14 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        //'password' => 'hashed', // leave hashing to controller when setting
+        'password' => 'hashed',
     ];
 
     /**
-     * Provide a `name` attribute that maps to the `nama` column in the DB.
+     * Get all permintaan for this user (Kepala Instalasi)
      */
-    public function getNameAttribute()
+    public function permintaan()
     {
-        return $this->attributes['nama'] ?? $this->attributes['name'] ?? null;
-    }
-
-    public function setNameAttribute($value)
-    {
-        // store under the existing `nama` column so legacy rows remain consistent
-        $this->attributes['nama'] = $value;
+        return $this->hasMany(Permintaan::class, 'user_id', 'id');
     }
 }

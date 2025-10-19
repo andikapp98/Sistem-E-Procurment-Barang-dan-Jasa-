@@ -18,9 +18,11 @@ class NotaPenerimaan extends Model
 
     protected $fillable = [
         'pengadaan_id',
+        'no_penerimaan',
         'tanggal_penerimaan',
-        'catatan',
-        'status'
+        'penerima',
+        'keterangan',
+        'kondisi',
     ];
 
     public function pengadaan()

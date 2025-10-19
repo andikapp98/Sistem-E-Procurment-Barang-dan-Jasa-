@@ -1,0 +1,327 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Permintaan;
+use App\Models\NotaDinas;
+use App\Models\Disposisi;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
+/**
+ * Controller untuk Direktur
+ * 
+ * Tugas Direktur:
+ * 1. Menerima permintaan dari Wakil Direktur
+ * 2. Review dan validasi final tingkat eksekutif tertinggi
+ * 3. Approve dan disposisi kembali ke Kepala Bidang untuk perencanaan
+ * 4. Reject jika tidak sesuai
+ */
+class DirekturController extends Controller
+{
+    /**
+     * Dashboard Direktur
+     */
+    public function dashboard()
+    {
+        $user = Auth::user();
+        
+        // Ambil semua permintaan yang ditujukan ke Direktur
+        // HANYA yang statusnya proses atau disetujui
+        $permintaans = Permintaan::with(['user', 'notaDinas'])
+            ->where(function($q) use ($user) {
+                $q->where('pic_pimpinan', 'Direktur')
+                  ->orWhere('pic_pimpinan', $user->nama);
+            })
+            ->whereIn('status', ['proses', 'disetujui'])
+            ->get();
+
+        $stats = [
+            'total' => $permintaans->count(),
+            'menunggu' => $permintaans->where('status', 'proses')->count(),
+            'disetujui' => $permintaans->where('status', 'disetujui')->count(),
+            'ditolak' => Permintaan::where('status', 'ditolak')
+                ->where('deskripsi', 'like', '%DITOLAK oleh Direktur%')
+                ->count(),
+        ];
+
+        // Ambil 5 permintaan terbaru
+        $recentPermintaans = $permintaans
+            ->sortByDesc('permintaan_id')
+            ->take(5)
+            ->map(function($permintaan) {
+                $permintaan->tracking_status = $permintaan->trackingStatus;
+                $permintaan->progress = $permintaan->getProgressPercentage();
+                return $permintaan;
+            })
+            ->values();
+
+        return Inertia::render('Direktur/Dashboard', [
+            'stats' => $stats,
+            'recentPermintaans' => $recentPermintaans,
+            'userLogin' => $user,
+        ]);
+    }
+
+    /**
+     * Tampilkan daftar permintaan untuk Direktur
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Query dasar - hanya permintaan yang ditujukan ke Direktur
+        $query = Permintaan::with(['user', 'notaDinas'])
+            ->where(function($q) use ($user) {
+                $q->where('pic_pimpinan', 'Direktur')
+                  ->orWhere('pic_pimpinan', $user->nama);
+            })
+            ->whereIn('status', ['proses', 'disetujui']);
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('permintaan_id', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('bidang')) {
+            $query->where('bidang', $request->bidang);
+        }
+
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('tanggal_permintaan', '>=', $request->tanggal_dari);
+        }
+
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('tanggal_permintaan', '<=', $request->tanggal_sampai);
+        }
+
+        // Pagination dengan 10 items per page
+        $perPage = $request->input('per_page', 10);
+        $permintaans = $query->orderByDesc('permintaan_id')
+            ->paginate($perPage)
+            ->through(function($permintaan) {
+                $permintaan->tracking_status = $permintaan->trackingStatus;
+                $permintaan->progress = $permintaan->getProgressPercentage();
+                $permintaan->timeline_count = count($permintaan->getTimelineTracking());
+                return $permintaan;
+            });
+
+        return Inertia::render('Direktur/Index', [
+            'permintaans' => $permintaans,
+            'userLogin' => $user,
+            'filters' => $request->only(['search', 'status', 'bidang', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
+        ]);
+    }
+
+    /**
+     * Tampilkan detail permintaan
+     */
+    public function show(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk melihat permintaan ini.');
+        }
+        
+        $permintaan->load(['user', 'notaDinas.disposisi']);
+        
+        // Get timeline tracking
+        $timeline = $permintaan->getTimelineTracking();
+        $progress = $permintaan->getProgressPercentage();
+        
+        return Inertia::render('Direktur/Show', [
+            'permintaan' => $permintaan,
+            'trackingStatus' => $permintaan->trackingStatus,
+            'timeline' => $timeline,
+            'progress' => $progress,
+        ]);
+    }
+
+    /**
+     * Form membuat disposisi
+     */
+    public function createDisposisi(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk membuat disposisi permintaan ini.');
+        }
+        
+        $permintaan->load(['user', 'notaDinas']);
+        
+        return Inertia::render('Direktur/CreateDisposisi', [
+            'permintaan' => $permintaan,
+        ]);
+    }
+
+    /**
+     * Store disposisi
+     */
+    public function storeDisposisi(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk membuat disposisi permintaan ini.');
+        }
+        
+        $data = $request->validate([
+            'jabatan_tujuan' => 'required|string',
+            'tanggal_disposisi' => 'required|date',
+            'catatan' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        // Ambil nota dinas terakhir
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
+        }
+
+        $data['nota_id'] = $notaDinas->nota_id;
+        
+        // Set default status
+        if (!isset($data['status'])) {
+            $data['status'] = 'dalam_proses';
+        }
+
+        Disposisi::create($data);
+
+        // Update status permintaan
+        $permintaan->update([
+            'status' => 'proses',
+            'pic_pimpinan' => $data['jabatan_tujuan'],
+        ]);
+
+        return redirect()
+            ->route('direktur.show', $permintaan)
+            ->with('success', 'Disposisi berhasil dibuat dan dikirim ke ' . $data['jabatan_tujuan']);
+    }
+
+    /**
+     * Approve permintaan - Disposisi ke Staff Perencanaan
+     */
+    public function approve(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk menyetujui permintaan ini.');
+        }
+
+        $data = $request->validate([
+            'catatan' => 'nullable|string',
+        ]);
+
+        // Ambil nota dinas terakhir
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
+        }
+
+        // Buat disposisi otomatis ke Staff Perencanaan
+        Disposisi::create([
+            'nota_id' => $notaDinas->nota_id,
+            'jabatan_tujuan' => 'Staff Perencanaan',
+            'tanggal_disposisi' => Carbon::now(),
+            'catatan' => $data['catatan'] ?? 'Disetujui oleh Direktur. Silakan lakukan perencanaan pengadaan.',
+            'status' => 'disetujui',
+        ]);
+
+        // Update status permintaan - teruskan ke Staff Perencanaan
+        $permintaan->update([
+            'status' => 'disetujui',
+            'pic_pimpinan' => 'Staff Perencanaan',
+        ]);
+
+        return redirect()
+            ->route('direktur.index')
+            ->with('success', 'Permintaan disetujui dan didisposisi ke Staff Perencanaan untuk perencanaan pengadaan');
+    }
+
+    /**
+     * Reject permintaan
+     */
+    public function reject(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk menolak permintaan ini.');
+        }
+        
+        $data = $request->validate([
+            'alasan' => 'required|string',
+        ]);
+
+        // Update status permintaan
+        $permintaan->update([
+            'status' => 'ditolak',
+            'pic_pimpinan' => $user->nama,
+            'deskripsi' => $permintaan->deskripsi . "\n\n[DITOLAK oleh Direktur] " . $data['alasan'],
+        ]);
+
+        // Ambil nota dinas terakhir dan buat disposisi penolakan
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if ($notaDinas) {
+            Disposisi::create([
+                'nota_id' => $notaDinas->nota_id,
+                'jabatan_tujuan' => $permintaan->user->jabatan ?? 'Unit Pemohon',
+                'tanggal_disposisi' => Carbon::now(),
+                'catatan' => $data['alasan'],
+                'status' => 'ditolak',
+            ]);
+        }
+
+        return redirect()
+            ->route('direktur.index')
+            ->with('success', 'Permintaan ditolak dan dikembalikan ke unit pemohon');
+    }
+
+    /**
+     * Request revisi dari pemohon
+     */
+    public function requestRevision(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk meminta revisi permintaan ini.');
+        }
+        
+        $data = $request->validate([
+            'catatan_revisi' => 'required|string',
+        ]);
+
+        // Update status permintaan
+        $permintaan->update([
+            'status' => 'revisi',
+            'deskripsi' => $permintaan->deskripsi . "\n\n[CATATAN REVISI dari Direktur] " . $data['catatan_revisi'],
+        ]);
+
+        return redirect()
+            ->route('direktur.index')
+            ->with('success', 'Permintaan revisi telah dikirim ke pemohon');
+    }
+}
