@@ -80,8 +80,13 @@ Route::middleware(['auth', 'verified'])->prefix('kepala-instalasi')->name('kepal
 
 // Routes untuk Kepala Bidang
 Route::middleware(['auth', 'verified'])->prefix('kepala-bidang')->name('kepala-bidang.')->group(function () {
+    // Redirect root ke dashboard
+    Route::get('/', function () {
+        return redirect()->route('kepala-bidang.dashboard');
+    });
+    
     Route::get('/dashboard', [KepalaBidangController::class, 'dashboard'])->name('dashboard');
-    Route::get('/', [KepalaBidangController::class, 'index'])->name('index');
+    Route::get('/index', [KepalaBidangController::class, 'index'])->name('index');
     Route::get('/permintaan/{permintaan}', [KepalaBidangController::class, 'show'])->name('show');
     Route::get('/permintaan/{permintaan}/tracking', [KepalaBidangController::class, 'tracking'])->name('tracking');
     Route::get('/approved', [KepalaBidangController::class, 'approved'])->name('approved');

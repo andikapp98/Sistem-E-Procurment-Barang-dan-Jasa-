@@ -193,18 +193,27 @@
                                 Menampilkan {{ permintaans.from }} - {{ permintaans.to }} dari {{ permintaans.total }} permintaan
                             </div>
                             <div class="flex gap-2">
-                                <Link
-                                    v-for="link in permintaans.links"
-                                    :key="link.label"
-                                    :href="link.url"
-                                    :class="{
-                                        'bg-purple-600 text-white': link.active,
-                                        'bg-gray-100 text-gray-700 hover:bg-gray-200': !link.active,
-                                        'opacity-50 cursor-not-allowed': !link.url
-                                    }"
-                                    class="px-3 py-2 text-sm rounded-md transition"
-                                    v-html="link.label"
-                                ></Link>
+                                <template v-for="link in permintaans.links" :key="link.label">
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        :class="{
+                                            'bg-purple-600 text-white': link.active,
+                                            'bg-gray-100 text-gray-700 hover:bg-gray-200': !link.active
+                                        }"
+                                        class="px-3 py-2 text-sm rounded-md transition"
+                                        v-html="link.label"
+                                    ></Link>
+                                    <span
+                                        v-else
+                                        :class="{
+                                            'bg-purple-600 text-white': link.active,
+                                            'bg-gray-100 text-gray-700': !link.active
+                                        }"
+                                        class="opacity-50 cursor-not-allowed px-3 py-2 text-sm rounded-md transition"
+                                        v-html="link.label"
+                                    ></span>
+                                </template>
                             </div>
                         </div>
                     </div>

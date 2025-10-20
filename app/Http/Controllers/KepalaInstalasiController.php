@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Permintaan;
 use App\Models\NotaDinas;
+use App\Models\Disposisi;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -27,16 +28,14 @@ class KepalaInstalasiController extends Controller
     {
         $user = Auth::user();
         
-        // Hitung statistik - ambil semua permintaan untuk bagian/unit kerja kepala instalasi
-        // Filter berdasarkan bidang di tabel permintaan, bukan unit_kerja dari user pembuat
+        // Hitung statistik - ambil permintaan untuk unit kerja kepala instalasi
+        // Filter berdasarkan bidang di tabel permintaan sesuai dengan unit_kerja
         $permintaans = Permintaan::with(['user', 'notaDinas'])
             ->where(function($query) use ($user) {
                 if ($user->unit_kerja) {
                     // Filter berdasarkan bidang yang sesuai dengan unit_kerja kepala instalasi
                     $query->where('bidang', $user->unit_kerja);
                 }
-                // Atau permintaan yang ditugaskan langsung ke kepala instalasi ini
-                $query->orWhere('pic_pimpinan', $user->nama);
             })
             ->get();
 
@@ -68,19 +67,19 @@ class KepalaInstalasiController extends Controller
 
     /**
      * Tampilkan daftar permintaan yang perlu direview oleh Kepala Instalasi
-     * Hanya menampilkan permintaan untuk bagian/unit yang dipimpin
+     * Hanya menampilkan permintaan untuk unit yang dipimpin
      */
     public function index(Request $request)
     {
         $user = Auth::user();
         
-        // Query dasar dengan filter isolasi data
+        // Query dasar - filter berdasarkan unit_kerja
         $query = Permintaan::with(['user', 'notaDinas'])
             ->where(function($q) use ($user) {
                 if ($user->unit_kerja) {
+                    // Hanya tampilkan permintaan dari unit kerja kepala instalasi
                     $q->where('bidang', $user->unit_kerja);
                 }
-                $q->orWhere('pic_pimpinan', $user->nama);
             });
 
         // Apply filters
@@ -124,7 +123,7 @@ class KepalaInstalasiController extends Controller
 
     /**
      * Tampilkan detail permintaan untuk review
-     * Hanya bisa melihat permintaan untuk bagiannya sendiri
+     * Hanya bisa melihat permintaan dari unit yang dipimpin
      */
     public function show(Permintaan $permintaan)
     {
@@ -132,6 +131,13 @@ class KepalaInstalasiController extends Controller
         
         // Cek apakah kepala instalasi berhak melihat permintaan ini
         // Hanya boleh jika bidang permintaan sesuai dengan unit_kerja kepala instalasi
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja) {
+            return redirect()
+                ->route('kepala-instalasi.index')
+                ->with('error', 'Anda hanya dapat melihat permintaan dari unit kerja ' . $user->unit_kerja);
+        }
+        
+        // Load relasi
         $permintaan->load(['user', 'notaDinas.disposisi']);
         
         // Get timeline tracking
@@ -143,6 +149,7 @@ class KepalaInstalasiController extends Controller
             'trackingStatus' => $permintaan->trackingStatus,
             'timeline' => $timeline,
             'progress' => $progress,
+            'userLogin' => $user,
         ]);
     }
 
@@ -230,12 +237,22 @@ class KepalaInstalasiController extends Controller
     }
 
     /**
-     * Approve permintaan - Teruskan ke Kepala Bidang
-     * Hanya bisa menyetujui permintaan untuk bagiannya sendiri
+     * Approve permintaan - Otomatis teruskan ke Kepala Bidang
+     * Membuat Nota Dinas DAN Disposisi secara otomatis
+     * Hanya bisa approve permintaan dari unit yang dipimpin
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();// Validasi input - bisa dengan atau tanpa catatan
+        $user = Auth::user();
+        
+        // Cek authorization - hanya bisa approve permintaan dari unit sendiri
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja) {
+            return redirect()
+                ->route('kepala-instalasi.index')
+                ->with('error', 'Anda hanya dapat menyetujui permintaan dari unit kerja ' . $user->unit_kerja);
+        }
+        
+        // Validasi input - bisa dengan atau tanpa catatan
         $data = $request->validate([
             'catatan' => 'nullable|string',
         ]);
@@ -247,16 +264,25 @@ class KepalaInstalasiController extends Controller
         ]);
 
         // Buat nota dinas ke Kepala Bidang
-        NotaDinas::create([
+        $notaDinas = NotaDinas::create([
             'permintaan_id' => $permintaan->permintaan_id,
             'no_nota' => $permintaan->no_nota_dinas ?? 'ND/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
-            'dari' => $user->unit_kerja ?? $user->jabatan,
+            'dari' => $user->unit_kerja ?? $user->jabatan ?? 'Kepala Instalasi',
             'kepada' => 'Kepala Bidang',
             'tanggal_nota' => Carbon::now(),
             'perihal' => 'Persetujuan Permintaan - ' . substr($permintaan->deskripsi, 0, 100),
         ]);
 
-        $message = 'Permintaan disetujui dan diteruskan ke Kepala Bidang';
+        // OTOMATIS BUAT DISPOSISI ke Kepala Bidang
+        Disposisi::create([
+            'nota_id' => $notaDinas->nota_id,
+            'jabatan_tujuan' => 'Kepala Bidang',
+            'tanggal_disposisi' => Carbon::now(),
+            'catatan' => $data['catatan'] ?? 'Mohon review dan persetujuan',
+            'status' => 'pending',
+        ]);
+
+        $message = 'Permintaan disetujui dan otomatis diteruskan ke Kepala Bidang';
         if (isset($data['catatan']) && $data['catatan']) {
             $message .= ' dengan catatan: ' . $data['catatan'];
         }
@@ -268,11 +294,20 @@ class KepalaInstalasiController extends Controller
 
     /**
      * Reject permintaan
-     * Hanya bisa menolak permintaan untuk bagiannya sendiri
+     * Hanya bisa menolak permintaan dari unit yang dipimpin
      */
     public function reject(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();$data = $request->validate([
+        $user = Auth::user();
+        
+        // Cek authorization - hanya bisa reject permintaan dari unit sendiri
+        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja) {
+            return redirect()
+                ->route('kepala-instalasi.index')
+                ->with('error', 'Anda hanya dapat menolak permintaan dari unit kerja ' . $user->unit_kerja);
+        }
+        
+        $data = $request->validate([
             'alasan' => 'required|string',
         ]);
 

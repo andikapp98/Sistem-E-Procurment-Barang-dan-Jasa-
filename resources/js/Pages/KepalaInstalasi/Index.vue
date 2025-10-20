@@ -28,7 +28,7 @@
                                 Daftar Permintaan untuk Review
                             </h3>
                             <p class="text-sm text-gray-600 mt-1">
-                                Unit Kerja: {{ userLogin.unit_kerja }}
+                                Unit Kerja: {{ userLogin.unit_kerja ?? 'Tidak ada unit' }}
                             </p>
                         </div>
                         

@@ -25,6 +25,10 @@ const sidebarOpen = ref(true);
                                 :href="
                                     $page.props.auth.user.role === 'kso' ? route('kso.dashboard') :
                                     $page.props.auth.user.role === 'pengadaan' ? route('pengadaan.dashboard') :
+                                    $page.props.auth.user.role === 'kepala_bidang' ? route('kepala-bidang.dashboard') :
+                                    $page.props.auth.user.role === 'wakil_direktur' ? route('wakil-direktur.dashboard') :
+                                    $page.props.auth.user.role === 'direktur' ? route('direktur.dashboard') :
+                                    $page.props.auth.user.role === 'staff_perencanaan' ? route('staff-perencanaan.dashboard') :
                                     route('dashboard')
                                 " 
                                 class="flex items-center space-x-3"
@@ -146,9 +150,14 @@ const sidebarOpen = ref(true);
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
-                        <!-- Dashboard - Semua Role kecuali KSO dan Pengadaan -->
+                        <!-- Dashboard - Semua Role kecuali KSO, Pengadaan, dan role khusus yang punya dashboard sendiri -->
                         <ResponsiveNavLink
-                            v-if="$page.props.auth.user.role !== 'kso' && $page.props.auth.user.role !== 'pengadaan'"
+                            v-if="$page.props.auth.user.role !== 'kso' && 
+                                  $page.props.auth.user.role !== 'pengadaan' &&
+                                  $page.props.auth.user.role !== 'kepala_bidang' &&
+                                  $page.props.auth.user.role !== 'wakil_direktur' &&
+                                  $page.props.auth.user.role !== 'direktur' &&
+                                  $page.props.auth.user.role !== 'staff_perencanaan'"
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
@@ -172,6 +181,28 @@ const sidebarOpen = ref(true);
                                 :active="route().current('kepala-instalasi.index')"
                             >
                                 Review Permintaan
+                            </ResponsiveNavLink>
+                        </template>
+
+                        <!-- Menu khusus Kepala Bidang -->
+                        <template v-if="$page.props.auth.user.role === 'kepala_bidang'">
+                            <ResponsiveNavLink
+                                :href="route('kepala-bidang.dashboard')"
+                                :active="route().current('kepala-bidang.dashboard')"
+                            >
+                                Dashboard
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                :href="route('kepala-bidang.index')"
+                                :active="route().current('kepala-bidang.index')"
+                            >
+                                Daftar Permintaan
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                :href="route('kepala-bidang.approved')"
+                                :active="route().current('kepala-bidang.approved')"
+                            >
+                                Tracking & History
                             </ResponsiveNavLink>
                         </template>
 
@@ -233,9 +264,14 @@ const sidebarOpen = ref(true);
                     class="bg-white border-r border-gray-200 min-h-screen transition-all duration-300 overflow-hidden hidden sm:block"
                 >
                     <nav class="mt-5 px-2">
-                        <!-- Dashboard - Semua Role kecuali KSO dan Pengadaan -->
+                        <!-- Dashboard - Semua Role kecuali KSO, Pengadaan, dan role khusus yang punya dashboard sendiri -->
                         <Link
-                            v-if="$page.props.auth.user.role !== 'kso' && $page.props.auth.user.role !== 'pengadaan'"
+                            v-if="$page.props.auth.user.role !== 'kso' && 
+                                  $page.props.auth.user.role !== 'pengadaan' &&
+                                  $page.props.auth.user.role !== 'kepala_bidang' &&
+                                  $page.props.auth.user.role !== 'wakil_direktur' &&
+                                  $page.props.auth.user.role !== 'direktur' &&
+                                  $page.props.auth.user.role !== 'staff_perencanaan'"
                             :href="route('dashboard')"
                             :class="route().current('dashboard') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
                             class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
@@ -271,6 +307,40 @@ const sidebarOpen = ref(true);
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                                 </svg>
                                 Review Permintaan
+                            </Link>
+                        </template>
+
+                        <!-- Menu khusus Kepala Bidang -->
+                        <template v-if="$page.props.auth.user.role === 'kepala_bidang'">
+                            <Link
+                                :href="route('kepala-bidang.dashboard')"
+                                :class="route().current('kepala-bidang.dashboard') ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-100'"
+                                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
+                            >
+                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                                Dashboard
+                            </Link>
+                            <Link
+                                :href="route('kepala-bidang.index')"
+                                :class="route().current('kepala-bidang.index') ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-100'"
+                                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
+                            >
+                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                </svg>
+                                Daftar Permintaan
+                            </Link>
+                            <Link
+                                :href="route('kepala-bidang.approved')"
+                                :class="route().current('kepala-bidang.approved') ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-100'"
+                                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
+                            >
+                                <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                Tracking & History
                             </Link>
                         </template>
 

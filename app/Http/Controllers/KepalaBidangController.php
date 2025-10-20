@@ -28,12 +28,17 @@ class KepalaBidangController extends Controller
     {
         $user = Auth::user();
         
-        // Ambil semua permintaan yang ditujukan ke Kepala Bidang
-        // HANYA yang statusnya proses atau disetujui (tidak termasuk yang ditolak)
-        $permintaans = Permintaan::with(['user', 'notaDinas'])
+        // Ambil permintaan yang memiliki disposisi ke Kepala Bidang atau pic_pimpinan = Kepala Bidang
+        $permintaans = Permintaan::with(['user', 'notaDinas.disposisi'])
             ->where(function($q) use ($user) {
+                // Cek berdasarkan pic_pimpinan
                 $q->where('pic_pimpinan', 'Kepala Bidang')
-                  ->orWhere('pic_pimpinan', $user->nama);
+                  ->orWhere('pic_pimpinan', $user->nama)
+                  // ATAU cek berdasarkan disposisi yang ditujukan ke Kepala Bidang
+                  ->orWhereHas('notaDinas.disposisi', function($query) {
+                      $query->where('jabatan_tujuan', 'Kepala Bidang')
+                            ->where('status', 'pending');
+                  });
             })
             ->whereIn('status', ['proses', 'disetujui'])
             ->get();
@@ -72,13 +77,18 @@ class KepalaBidangController extends Controller
     {
         $user = Auth::user();
         
-        // Query dasar - hanya permintaan yang ditujukan ke Kepala Bidang
-        $query = Permintaan::with(['user', 'notaDinas'])
+        // Query dasar - permintaan yang ditujukan ke Kepala Bidang atau memiliki disposisi ke Kepala Bidang
+        $query = Permintaan::with(['user', 'notaDinas.disposisi'])
             ->where(function($q) use ($user) {
+                // Cek berdasarkan pic_pimpinan
                 $q->where('pic_pimpinan', 'Kepala Bidang')
-                  ->orWhere('pic_pimpinan', $user->nama);
+                  ->orWhere('pic_pimpinan', $user->nama)
+                  // ATAU cek berdasarkan disposisi yang ditujukan ke Kepala Bidang
+                  ->orWhereHas('notaDinas.disposisi', function($query) {
+                      $query->where('jabatan_tujuan', 'Kepala Bidang')
+                            ->where('status', 'pending');
+                  });
             })
-            // Tambahkan filter: hanya tampilkan yang statusnya proses atau disetujui
             ->whereIn('status', ['proses', 'disetujui']);
 
         // Apply filters

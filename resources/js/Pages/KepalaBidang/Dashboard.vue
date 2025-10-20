@@ -83,7 +83,7 @@
                                 {{ stats.disetujui }}
                             </p>
                         </div>
-                    </div>
+                    </Link>
 
                     <!-- Ditolak -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-lg transition-shadow">

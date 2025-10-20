@@ -33,10 +33,13 @@
 
                 <!-- Table -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 border-b border-gray-200">
+                    <div class="p-6 border-b border-gray-200 flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-900">
-                            Semua Permintaan ({{ permintaans.length }})
+                            Semua Permintaan ({{ permintaans.total || permintaans.data?.length || 0 }})
                         </h3>
+                        <Link :href="route('kepala-bidang.dashboard')" class="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                            ← Kembali ke Dashboard
+                        </Link>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -67,7 +70,7 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <tr v-if="permintaans.length === 0">
+                                <tr v-if="(permintaans.data?.length || 0) === 0">
                                     <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                         <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
@@ -76,7 +79,7 @@
                                     </td>
                                 </tr>
                                 
-                                <tr v-for="permintaan in permintaans" :key="permintaan.permintaan_id" class="hover:bg-gray-50">
+                                <tr v-for="permintaan in permintaans.data" :key="permintaan.permintaan_id" class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         #{{ permintaan.permintaan_id }}
                                     </td>
@@ -122,6 +125,46 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Pagination -->
+                    <div v-if="permintaans.data && permintaans.data.length > 0" class="px-6 py-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-700">
+                                Menampilkan 
+                                <span class="font-medium">{{ permintaans.from }}</span>
+                                sampai
+                                <span class="font-medium">{{ permintaans.to }}</span>
+                                dari
+                                <span class="font-medium">{{ permintaans.total }}</span>
+                                permintaan
+                            </div>
+                            <div class="flex gap-2">
+                                <template v-for="link in permintaans.links" :key="link.label">
+                                    <Link
+                                        v-if="link.url"
+                                        :href="link.url"
+                                        :class="{
+                                            'bg-purple-600 text-white': link.active,
+                                            'bg-white text-gray-700 hover:bg-gray-50': !link.active
+                                        }"
+                                        class="px-3 py-2 text-sm border border-gray-300 rounded-md"
+                                        v-html="link.label"
+                                    >
+                                    </Link>
+                                    <span
+                                        v-else
+                                        :class="{
+                                            'bg-purple-600 text-white': link.active,
+                                            'bg-white text-gray-700': !link.active
+                                        }"
+                                        class="opacity-50 cursor-not-allowed px-3 py-2 text-sm border border-gray-300 rounded-md"
+                                        v-html="link.label"
+                                    >
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,7 +177,7 @@ import FilterBar from '@/Components/FilterBar.vue';
 import { Link } from '@inertiajs/vue3';
 
 defineProps({
-    permintaans: Array,
+    permintaans: Object, // Changed from Array to Object for pagination
     userLogin: Object,
     filters: {
         type: Object,
