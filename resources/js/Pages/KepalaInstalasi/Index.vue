@@ -42,7 +42,7 @@
 
                     <!-- Body -->
                     <div class="p-6 text-gray-900">
-                        <div v-if="permintaans.length" class="overflow-x-auto">
+                        <div v-if="permintaans.data && permintaans.data.length > 0" class="overflow-x-auto">
                             <table class="w-full table-auto text-sm border-collapse">
                                 <thead class="bg-gray-50">
                                     <tr class="text-xs uppercase tracking-wide text-gray-600 border-b border-gray-200">
@@ -58,7 +58,7 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
                                     <tr
-                                        v-for="permintaan in permintaans"
+                                        v-for="permintaan in permintaans.data"
                                         :key="permintaan.permintaan_id"
                                         class="hover:bg-gray-50 transition-colors"
                                     >
@@ -188,6 +188,46 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Pagination -->
+                        <div v-if="permintaans.data && permintaans.data.length > 0" class="mt-6 pt-6 border-t border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm text-gray-700">
+                                    Menampilkan 
+                                    <span class="font-medium">{{ permintaans.from }}</span>
+                                    sampai
+                                    <span class="font-medium">{{ permintaans.to }}</span>
+                                    dari
+                                    <span class="font-medium">{{ permintaans.total }}</span>
+                                    permintaan
+                                </div>
+                                <div class="flex gap-2">
+                                    <template v-for="link in permintaans.links" :key="link.label">
+                                        <Link
+                                            v-if="link.url"
+                                            :href="link.url"
+                                            :class="{
+                                                'bg-[#028174] text-white': link.active,
+                                                'bg-white text-gray-700 hover:bg-gray-50': !link.active
+                                            }"
+                                            class="px-3 py-2 text-sm border border-gray-300 rounded-md"
+                                            v-html="link.label"
+                                        >
+                                        </Link>
+                                        <span
+                                            v-else
+                                            :class="{
+                                                'bg-[#028174] text-white': link.active,
+                                                'bg-white text-gray-700': !link.active
+                                            }"
+                                            class="opacity-50 cursor-not-allowed px-3 py-2 text-sm border border-gray-300 rounded-md"
+                                            v-html="link.label"
+                                        >
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -201,7 +241,7 @@ import FilterBar from '@/Components/FilterBar.vue';
 import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
-    permintaans: Array,
+    permintaans: Object, // Changed from Array to Object for pagination
     userLogin: Object,
     filters: {
         type: Object,

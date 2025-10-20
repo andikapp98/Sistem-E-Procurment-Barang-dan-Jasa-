@@ -210,11 +210,24 @@ class KepalaInstalasiController extends Controller
         $user = Auth::user();
         
         // Cek apakah kepala instalasi berhak melihat permintaan ini
-        // Hanya boleh jika bidang permintaan sesuai dengan unit_kerja kepala instalasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja) {
-            return redirect()
-                ->route('kepala-instalasi.index')
-                ->with('error', 'Anda hanya dapat melihat permintaan dari unit kerja ' . $user->unit_kerja);
+        // Gunakan flexible matching seperti di index()
+        if ($user->unit_kerja) {
+            $variations = $this->getBidangVariations($user->unit_kerja);
+            $isAuthorized = false;
+            
+            foreach ($variations as $variation) {
+                if ($permintaan->bidang === $variation || 
+                    stripos($permintaan->bidang, $variation) !== false) {
+                    $isAuthorized = true;
+                    break;
+                }
+            }
+            
+            if (!$isAuthorized) {
+                return redirect()
+                    ->route('kepala-instalasi.index')
+                    ->with('error', 'Anda hanya dapat melihat permintaan dari unit kerja ' . $user->unit_kerja);
+            }
         }
         
         // Load relasi
