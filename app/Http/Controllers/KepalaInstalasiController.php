@@ -338,11 +338,24 @@ class KepalaInstalasiController extends Controller
     {
         $user = Auth::user();
         
-        // Cek authorization - hanya bisa approve permintaan dari unit sendiri
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja) {
-            return redirect()
-                ->route('kepala-instalasi.index')
-                ->with('error', 'Anda hanya dapat menyetujui permintaan dari unit kerja ' . $user->unit_kerja);
+        // Cek authorization dengan flexible matching
+        if ($user->unit_kerja) {
+            $variations = $this->getBidangVariations($user->unit_kerja);
+            $isAuthorized = false;
+            
+            foreach ($variations as $variation) {
+                if ($permintaan->bidang === $variation || 
+                    stripos($permintaan->bidang, $variation) !== false) {
+                    $isAuthorized = true;
+                    break;
+                }
+            }
+            
+            if (!$isAuthorized) {
+                return redirect()
+                    ->route('kepala-instalasi.index')
+                    ->with('error', 'Anda hanya dapat menyetujui permintaan dari unit kerja ' . $user->unit_kerja);
+            }
         }
         
         // Validasi input - bisa dengan atau tanpa catatan
@@ -393,11 +406,24 @@ class KepalaInstalasiController extends Controller
     {
         $user = Auth::user();
         
-        // Cek authorization - hanya bisa reject permintaan dari unit sendiri
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja) {
-            return redirect()
-                ->route('kepala-instalasi.index')
-                ->with('error', 'Anda hanya dapat menolak permintaan dari unit kerja ' . $user->unit_kerja);
+        // Cek authorization dengan flexible matching
+        if ($user->unit_kerja) {
+            $variations = $this->getBidangVariations($user->unit_kerja);
+            $isAuthorized = false;
+            
+            foreach ($variations as $variation) {
+                if ($permintaan->bidang === $variation || 
+                    stripos($permintaan->bidang, $variation) !== false) {
+                    $isAuthorized = true;
+                    break;
+                }
+            }
+            
+            if (!$isAuthorized) {
+                return redirect()
+                    ->route('kepala-instalasi.index')
+                    ->with('error', 'Anda hanya dapat menolak permintaan dari unit kerja ' . $user->unit_kerja);
+            }
         }
         
         $data = $request->validate([
@@ -432,7 +458,29 @@ class KepalaInstalasiController extends Controller
      */
     public function requestRevision(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();$data = $request->validate([
+        $user = Auth::user();
+        
+        // Cek authorization dengan flexible matching
+        if ($user->unit_kerja) {
+            $variations = $this->getBidangVariations($user->unit_kerja);
+            $isAuthorized = false;
+            
+            foreach ($variations as $variation) {
+                if ($permintaan->bidang === $variation || 
+                    stripos($permintaan->bidang, $variation) !== false) {
+                    $isAuthorized = true;
+                    break;
+                }
+            }
+            
+            if (!$isAuthorized) {
+                return redirect()
+                    ->route('kepala-instalasi.index')
+                    ->with('error', 'Anda hanya dapat meminta revisi permintaan dari unit kerja ' . $user->unit_kerja);
+            }
+        }
+        
+        $data = $request->validate([
             'catatan_revisi' => 'required|string|min:10',
         ]);
 

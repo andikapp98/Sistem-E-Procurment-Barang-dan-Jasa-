@@ -119,53 +119,72 @@ class PermintaanController extends Controller
     /** Show the form for editing the specified resource. */
     public function edit(Permintaan $permintaan)
     {
-        // Hanya bisa edit jika status ditolak (revisi)
-        if (strtolower($permintaan->status) !== 'ditolak') {
+        $user = Auth::user();
+        
+        // Admin bisa edit permintaan dengan status 'revisi' atau 'ditolak'
+        $allowedStatuses = ['revisi', 'ditolak'];
+        if (!in_array(strtolower($permintaan->status), $allowedStatuses)) {
             return redirect()->route('permintaan.show', $permintaan)
-                ->with('error', 'Permintaan hanya dapat diedit jika dalam status ditolak (revisi).');
+                ->with('error', 'Permintaan hanya dapat diedit jika dalam status Revisi atau Ditolak.');
         }
 
         $permintaan->load('user');
         return Inertia::render('Permintaan/Edit', [
             'permintaan' => $permintaan,
+            'userLogin' => $user,
         ]);
     }
 
     /** Update the specified resource in storage. */
     public function update(Request $request, Permintaan $permintaan)
     {
-        // Hanya bisa update jika status ditolak (revisi)
-        if (strtolower($permintaan->status) !== 'ditolak') {
+        // Admin bisa update permintaan dengan status 'revisi' atau 'ditolak'
+        $allowedStatuses = ['revisi', 'ditolak'];
+        if (!in_array(strtolower($permintaan->status), $allowedStatuses)) {
             return redirect()->route('permintaan.show', $permintaan)
-                ->with('error', 'Permintaan hanya dapat diupdate jika dalam status ditolak (revisi).');
+                ->with('error', 'Permintaan hanya dapat diupdate jika dalam status Revisi atau Ditolak.');
         }
 
         $data = $request->validate([
             'bidang' => 'nullable|string',
             'tanggal_permintaan' => 'nullable|date',
             'deskripsi' => 'required|string',
-            'status' => 'nullable|string',
             'pic_pimpinan' => 'nullable|string',
             'no_nota_dinas' => 'nullable|string',
             'link_scan' => 'nullable|url',
         ]);
 
+        // Set status ke 'diajukan' untuk resubmit
+        $data['status'] = 'diajukan';
+
         $permintaan->update($data);
 
-        return redirect()->route('permintaan.show', $permintaan)->with('success', 'Permintaan diperbarui.');
+        return redirect()->route('permintaan.show', $permintaan)
+            ->with('success', 'Permintaan berhasil diperbaiki dan diajukan kembali.');
     }
 
     /** Remove the specified resource from storage. */
     public function destroy(Permintaan $permintaan)
     {
-        // Hanya bisa delete jika status ditolak
-        if (strtolower($permintaan->status) !== 'ditolak') {
+        $user = Auth::user();
+        
+        // Hanya admin yang bisa delete
+        if ($user->role !== 'admin') {
             return redirect()->route('permintaan.index')
-                ->with('error', 'Permintaan hanya dapat dihapus jika dalam status ditolak.');
+                ->with('error', 'Anda tidak memiliki akses untuk menghapus permintaan.');
+        }
+        
+        // Hanya bisa delete jika status 'ditolak'
+        if (strtolower($permintaan->status) !== 'ditolak') {
+            return redirect()->route('permintaan.show', $permintaan)
+                ->with('error', 'Permintaan hanya dapat dihapus jika dalam status Ditolak.');
         }
 
+        $permintaanId = $permintaan->permintaan_id;
         $permintaan->delete();
-        return redirect()->route('permintaan.index')->with('success', 'Permintaan dihapus.');
+
+        return redirect()->route('permintaan.index')
+            ->with('success', "Permintaan #{$permintaanId} berhasil dihapus.");
     }
 
     /**
