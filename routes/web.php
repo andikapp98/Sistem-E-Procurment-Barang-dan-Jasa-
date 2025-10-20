@@ -83,6 +83,8 @@ Route::middleware(['auth', 'verified'])->prefix('kepala-bidang')->name('kepala-b
     Route::get('/dashboard', [KepalaBidangController::class, 'dashboard'])->name('dashboard');
     Route::get('/', [KepalaBidangController::class, 'index'])->name('index');
     Route::get('/permintaan/{permintaan}', [KepalaBidangController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/tracking', [KepalaBidangController::class, 'tracking'])->name('tracking');
+    Route::get('/approved', [KepalaBidangController::class, 'approved'])->name('approved');
     Route::get('/permintaan/{permintaan}/disposisi/create', [KepalaBidangController::class, 'createDisposisi'])->name('disposisi.create');
     Route::post('/permintaan/{permintaan}/disposisi', [KepalaBidangController::class, 'storeDisposisi'])->name('disposisi.store');
     Route::post('/permintaan/{permintaan}/approve', [KepalaBidangController::class, 'approve'])->name('approve');
@@ -95,6 +97,8 @@ Route::middleware(['auth', 'verified'])->prefix('wakil-direktur')->name('wakil-d
     Route::get('/dashboard', [WakilDirekturController::class, 'dashboard'])->name('dashboard');
     Route::get('/', [WakilDirekturController::class, 'index'])->name('index');
     Route::get('/permintaan/{permintaan}', [WakilDirekturController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/tracking', [WakilDirekturController::class, 'tracking'])->name('tracking');
+    Route::get('/approved', [WakilDirekturController::class, 'approved'])->name('approved');
     Route::get('/permintaan/{permintaan}/disposisi/create', [WakilDirekturController::class, 'createDisposisi'])->name('disposisi.create');
     Route::post('/permintaan/{permintaan}/disposisi', [WakilDirekturController::class, 'storeDisposisi'])->name('disposisi.store');
     Route::post('/permintaan/{permintaan}/approve', [WakilDirekturController::class, 'approve'])->name('approve');
@@ -107,6 +111,8 @@ Route::middleware(['auth', 'verified'])->prefix('direktur')->name('direktur.')->
     Route::get('/dashboard', [DirekturController::class, 'dashboard'])->name('dashboard');
     Route::get('/', [DirekturController::class, 'index'])->name('index');
     Route::get('/permintaan/{permintaan}', [DirekturController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/tracking', [DirekturController::class, 'tracking'])->name('tracking');
+    Route::get('/approved', [DirekturController::class, 'approved'])->name('approved');
     Route::get('/permintaan/{permintaan}/disposisi/create', [DirekturController::class, 'createDisposisi'])->name('disposisi.create');
     Route::post('/permintaan/{permintaan}/disposisi', [DirekturController::class, 'storeDisposisi'])->name('disposisi.store');
     Route::post('/permintaan/{permintaan}/approve', [DirekturController::class, 'approve'])->name('approve');
@@ -119,6 +125,8 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
     Route::get('/dashboard', [StaffPerencanaanController::class, 'dashboard'])->name('dashboard');
     Route::get('/', [StaffPerencanaanController::class, 'index'])->name('index');
     Route::get('/permintaan/{permintaan}', [StaffPerencanaanController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/tracking', [StaffPerencanaanController::class, 'tracking'])->name('tracking');
+    Route::get('/approved', [StaffPerencanaanController::class, 'approved'])->name('approved');
     Route::get('/permintaan/{permintaan}/perencanaan/create', [StaffPerencanaanController::class, 'createPerencanaan'])->name('perencanaan.create');
     Route::post('/permintaan/{permintaan}/perencanaan', [StaffPerencanaanController::class, 'storePerencanaan'])->name('perencanaan.store');
     Route::get('/permintaan/{permintaan}/disposisi/create', [StaffPerencanaanController::class, 'createDisposisi'])->name('disposisi.create');

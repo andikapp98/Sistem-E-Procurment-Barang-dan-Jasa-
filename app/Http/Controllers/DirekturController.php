@@ -130,11 +130,6 @@ class DirekturController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk melihat permintaan ini.');
-        }
-        
         $permintaan->load(['user', 'notaDinas.disposisi']);
         
         // Get timeline tracking
@@ -156,11 +151,6 @@ class DirekturController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk membuat disposisi permintaan ini.');
-        }
-        
         $permintaan->load(['user', 'notaDinas']);
         
         return Inertia::render('Direktur/CreateDisposisi', [
@@ -174,11 +164,6 @@ class DirekturController extends Controller
     public function storeDisposisi(Request $request, Permintaan $permintaan)
     {
         $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk membuat disposisi permintaan ini.');
-        }
         
         $data = $request->validate([
             'jabatan_tujuan' => 'required|string',
@@ -221,11 +206,6 @@ class DirekturController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk menyetujui permintaan ini.');
-        }
-
         $data = $request->validate([
             'catatan' => 'nullable|string',
         ]);
@@ -264,11 +244,6 @@ class DirekturController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk menolak permintaan ini.');
-        }
-        
         $data = $request->validate([
             'alasan' => 'required|string',
         ]);
@@ -305,11 +280,6 @@ class DirekturController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Direktur' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk meminta revisi permintaan ini.');
-        }
-        
         $data = $request->validate([
             'catatan_revisi' => 'required|string',
         ]);
@@ -323,5 +293,114 @@ class DirekturController extends Controller
         return redirect()
             ->route('direktur.index')
             ->with('success', 'Permintaan revisi telah dikirim ke pemohon');
+    }
+
+    /**
+     * Tampilkan timeline tracking untuk permintaan
+     * Untuk melihat progress permintaan yang sudah disetujui
+     */
+    public function tracking(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Load all relations untuk tracking
+        $permintaan->load([
+            'user',
+            'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima'
+        ]);
+
+        // Get timeline tracking lengkap
+        $timeline = $permintaan->getTimelineTracking();
+        $progress = $permintaan->getProgressPercentage();
+
+        // Tahapan yang belum dilalui
+        $allSteps = [
+            'Permintaan',
+            'Nota Dinas',
+            'Disposisi',
+            'Perencanaan',
+            'KSO',
+            'Pengadaan',
+            'Nota Penerimaan',
+            'Serah Terima',
+        ];
+
+        $completedSteps = array_column($timeline, 'tahapan');
+        $pendingSteps = array_diff($allSteps, $completedSteps);
+
+        return Inertia::render('Direktur/Tracking', [
+            'permintaan' => $permintaan,
+            'timeline' => $timeline,
+            'progress' => $progress,
+            'completedSteps' => $completedSteps,
+            'pendingSteps' => array_values($pendingSteps),
+            'userLogin' => $user,
+        ]);
+    }
+
+    /**
+     * Tampilkan daftar permintaan yang sudah disetujui (untuk tracking)
+     */
+    public function approved(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Query - ambil semua permintaan yang sudah pernah melalui Direktur
+        $query = Permintaan::with(['user', 'notaDinas.disposisi'])
+            ->whereHas('notaDinas.disposisi', function($q) use ($user) {
+                // Cari disposisi yang pernah ditujukan ke Direktur
+                $q->where('jabatan_tujuan', 'like', '%Direktur%')
+                  ->orWhere('jabatan_tujuan', $user->jabatan);
+            })
+            ->whereIn('status', ['proses', 'disetujui', 'ditolak', 'revisi']);
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('permintaan_id', 'like', "%{$search}%")
+                  ->orWhere('deskripsi', 'like', "%{$search}%")
+                  ->orWhere('no_nota_dinas', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('bidang')) {
+            $query->where('bidang', $request->bidang);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('tanggal_permintaan', '>=', $request->tanggal_dari);
+        }
+
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('tanggal_permintaan', '<=', $request->tanggal_sampai);
+        }
+
+        // Pagination
+        $perPage = $request->input('per_page', 10);
+        $permintaans = $query->orderByDesc('permintaan_id')
+            ->paginate($perPage)
+            ->through(function($permintaan) {
+                // Tambahkan tracking info
+                $permintaan->tracking_status = $permintaan->trackingStatus;
+                $permintaan->progress = $permintaan->getProgressPercentage();
+                $permintaan->timeline_count = count($permintaan->getTimelineTracking());
+                
+                // Cek tahap terakhir
+                $timeline = $permintaan->getTimelineTracking();
+                $permintaan->current_stage = !empty($timeline) ? $timeline[count($timeline) - 1]['tahapan'] : 'Permintaan';
+                
+                return $permintaan;
+            });
+
+        return Inertia::render('Direktur/Approved', [
+            'permintaans' => $permintaans,
+            'userLogin' => $user,
+            'filters' => $request->only(['search', 'bidang', 'status', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
+        ]);
     }
 }

@@ -257,7 +257,7 @@
                 </div>
 
                 <!-- Card Actions -->
-                <div v-if="canEdit || permintaan.status === 'ditolak'" class="bg-white overflow-hidden shadow-sm rounded-lg">
+                <div v-if="canEdit" class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -266,36 +266,32 @@
                                     <span v-if="permintaan.status === 'ditolak'" class="text-red-600 font-medium">
                                         ⚠️ Permintaan ditolak. Anda dapat mengedit dan mengajukan ulang.
                                     </span>
-                                    <span v-else>
-                                        Kelola permintaan Anda
-                                    </span>
                                 </p>
                             </div>
                             <div class="flex gap-3">
+                                <!-- Edit button - hanya untuk status ditolak -->
                                 <Link
                                     v-if="canEdit"
                                     :href="route('permintaan.edit', permintaan.permintaan_id)"
-                                    :class="[
-                                        'inline-flex items-center px-4 py-2 rounded-md font-semibold text-sm',
-                                        permintaan.status === 'ditolak' 
-                                            ? 'bg-red-600 text-white hover:bg-red-700 border-2 border-red-700'
-                                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                    ]"
+                                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white hover:bg-red-700 border-2 border-red-700 rounded-md font-semibold text-sm"
                                 >
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
-                                    {{ permintaan.status === 'ditolak' ? 'Edit & Ajukan Ulang' : 'Edit Permintaan' }}
+                                    Edit & Ajukan Ulang
                                 </Link>
+                                <!-- Delete button - hanya untuk status ditolak -->
                                 <button
-                                    v-if="canEdit && permintaan.status !== 'ditolak'"
+                                    v-if="canDelete"
                                     @click="deletePermintaan"
                                     class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold text-sm"
+                                    :disabled="deleting"
                                 >
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
-                                    Hapus
+                                    <span v-if="deleting">Menghapus...</span>
+                                    <span v-else>Hapus</span>
                                 </button>
                             </div>
                         </div>
@@ -389,20 +385,30 @@ const formatDateTime = (datetime) => {
     });
 };
 
-// Check if user can edit
+// Check if user can edit - hanya jika status ditolak
 const canEdit = computed(() => {
-    const user = props.permintaan?.user;
-    const userLogin = window.$page?.props?.auth?.user;
+    const userLogin = window.$page?.props?.userLogin;
     
     if (!userLogin) return false;
     
-    // Admin always can edit
-    if (userLogin.role === 'admin') return true;
+    // Hanya bisa edit jika admin dan status ditolak
+    const role = (userLogin.role || "").toLowerCase();
+    const isAdmin = role.includes("admin") || role.includes("rs");
     
-    // Owner can edit their own
-    if (user && user.user_id === userLogin.user_id) return true;
+    return isAdmin && props.permintaan?.status?.toLowerCase() === 'ditolak';
+});
+
+// Check if user can delete - hanya jika status ditolak
+const canDelete = computed(() => {
+    const userLogin = window.$page?.props?.userLogin;
     
-    return false;
+    if (!userLogin) return false;
+    
+    // Hanya bisa delete jika admin dan status ditolak
+    const role = (userLogin.role || "").toLowerCase();
+    const isAdmin = role.includes("admin") || role.includes("rs");
+    
+    return isAdmin && props.permintaan?.status?.toLowerCase() === 'ditolak';
 });
 
 const deletePermintaan = () => {

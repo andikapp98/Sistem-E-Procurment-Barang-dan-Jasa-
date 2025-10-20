@@ -64,7 +64,7 @@
                     </div>
 
                     <!-- Disetujui -->
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-lg transition-shadow">
+                    <Link :href="route('kepala-bidang.approved')" class="bg-white overflow-hidden shadow-sm sm:rounded-lg hover:shadow-lg transition-shadow cursor-pointer">
                         <div class="p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -72,9 +72,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                 </div>
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </div>
                             <h4 class="text-gray-600 text-sm font-medium mb-1">
-                                Disetujui
+                                Disetujui (Tracking)
                             </h4>
                             <p class="text-3xl font-bold text-green-600">
                                 {{ stats.disetujui }}

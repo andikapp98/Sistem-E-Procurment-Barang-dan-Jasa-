@@ -132,11 +132,6 @@ class KepalaInstalasiController extends Controller
         
         // Cek apakah kepala instalasi berhak melihat permintaan ini
         // Hanya boleh jika bidang permintaan sesuai dengan unit_kerja kepala instalasi
-        // atau jika permintaan ditugaskan ke kepala instalasi ini
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk melihat permintaan ini.');
-        }
-        
         $permintaan->load(['user', 'notaDinas.disposisi']);
         
         // Get timeline tracking
@@ -157,14 +152,7 @@ class KepalaInstalasiController extends Controller
      */
     public function tracking(Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk melihat tracking permintaan ini.');
-        }
-        
-        $permintaan->load(['user', 'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima']);
+        $user = Auth::user();$permintaan->load(['user', 'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima']);
         
         // Get timeline tracking lengkap
         $timeline = $permintaan->getTimelineTracking();
@@ -201,14 +189,7 @@ class KepalaInstalasiController extends Controller
      */
     public function createNotaDinas(Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk membuat nota dinas untuk permintaan ini.');
-        }
-        
-        $permintaan->load('user');
+        $user = Auth::user();$permintaan->load('user');
         
         return Inertia::render('KepalaInstalasi/CreateNotaDinas', [
             'permintaan' => $permintaan,
@@ -221,14 +202,7 @@ class KepalaInstalasiController extends Controller
      */
     public function storeNotaDinas(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk membuat nota dinas untuk permintaan ini.');
-        }
-        
-        $data = $request->validate([
+        $user = Auth::user();$data = $request->validate([
             'dari' => 'required|string',
             'kepada' => 'required|string',
             'tanggal_nota' => 'required|date',
@@ -261,14 +235,7 @@ class KepalaInstalasiController extends Controller
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk menyetujui permintaan ini.');
-        }
-
-        // Validasi input - bisa dengan atau tanpa catatan
+        $user = Auth::user();// Validasi input - bisa dengan atau tanpa catatan
         $data = $request->validate([
             'catatan' => 'nullable|string',
         ]);
@@ -305,14 +272,7 @@ class KepalaInstalasiController extends Controller
      */
     public function reject(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk menolak permintaan ini.');
-        }
-        
-        $data = $request->validate([
+        $user = Auth::user();$data = $request->validate([
             'alasan' => 'required|string',
         ]);
 
@@ -344,14 +304,7 @@ class KepalaInstalasiController extends Controller
      */
     public function requestRevision(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk meminta revisi permintaan ini.');
-        }
-        
-        $data = $request->validate([
+        $user = Auth::user();$data = $request->validate([
             'catatan_revisi' => 'required|string|min:10',
         ]);
 
@@ -383,14 +336,7 @@ class KepalaInstalasiController extends Controller
      */
     public function reviewRejected(Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk mereview permintaan ini.');
-        }
-
-        // Hanya bisa review jika status ditolak
+        $user = Auth::user();// Hanya bisa review jika status ditolak
         if ($permintaan->status !== 'ditolak') {
             return redirect()
                 ->route('kepala-instalasi.show', $permintaan)
@@ -410,14 +356,7 @@ class KepalaInstalasiController extends Controller
      */
     public function resubmit(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();
-        
-        // Cek otorisasi
-        if ($user->unit_kerja && $permintaan->bidang !== $user->unit_kerja && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk mengajukan kembali permintaan ini.');
-        }
-
-        // Hanya bisa resubmit jika status ditolak
+        $user = Auth::user();// Hanya bisa resubmit jika status ditolak
         if ($permintaan->status !== 'ditolak') {
             return redirect()
                 ->route('kepala-instalasi.show', $permintaan)

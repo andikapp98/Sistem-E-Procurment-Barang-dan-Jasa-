@@ -165,24 +165,26 @@
                                                 >
                                                     📊
                                                 </Link>
-                                                <template v-if="canEdit(item)">
-                                                    <Link
-                                                        :href="route('permintaan.edit', item.permintaan_id)"
-                                                        class="text-green-600 hover:text-green-900"
-                                                        title="Edit"
-                                                    >
-                                                        ✏️
-                                                    </Link>
-                                                    <button
-                                                        @click="destroy(item.permintaan_id)"
-                                                        class="text-red-600 hover:text-red-900 disabled:opacity-50"
-                                                        :disabled="deleting === item.permintaan_id"
-                                                        title="Hapus"
-                                                    >
-                                                        <span v-if="deleting === item.permintaan_id">⏳</span>
-                                                        <span v-else>🗑️</span>
-                                                    </button>
-                                                </template>
+                                                <!-- Edit hanya tersedia jika status ditolak -->
+                                                <Link
+                                                    v-if="canEdit(item)"
+                                                    :href="route('permintaan.edit', item.permintaan_id)"
+                                                    class="text-green-600 hover:text-green-900"
+                                                    title="Edit (Revisi)"
+                                                >
+                                                    ✏️
+                                                </Link>
+                                                <!-- Delete hanya tersedia jika status ditolak -->
+                                                <button
+                                                    v-if="canDelete(item)"
+                                                    @click="destroy(item.permintaan_id)"
+                                                    class="text-red-600 hover:text-red-900 disabled:opacity-50"
+                                                    :disabled="deleting === item.permintaan_id"
+                                                    title="Hapus"
+                                                >
+                                                    <span v-if="deleting === item.permintaan_id">⏳</span>
+                                                    <span v-else>🗑️</span>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -291,9 +293,14 @@ const isAdmin = computed(() => {
 
 const canEdit = (item) => {
     if (!userLogin) return false;
-    return (
-        isAdmin.value || (item.user && item.user.user_id === userLogin.user_id)
-    );
+    // Hanya bisa edit jika status ditolak (revisi)
+    return isAdmin.value && item.status && item.status.toLowerCase() === 'ditolak';
+};
+
+const canDelete = (item) => {
+    if (!userLogin) return false;
+    // Hanya bisa delete jika status ditolak
+    return isAdmin.value && item.status && item.status.toLowerCase() === 'ditolak';
 };
 
 const statusClass = (status) => {

@@ -140,23 +140,8 @@
 							</div>
 						</div>
 
-						<!-- Status -->
-						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-2">
-								Status <span class="text-red-500">*</span>
-							</label>
-							<select 
-								v-model="form.status" 
-								class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-								required
-							>
-								<option value="">-- Pilih Status --</option>
-								<option value="diajukan">🟡 Diajukan</option>
-								<option value="proses">🔄 Proses</option>
-								<option value="disetujui">✅ Disetujui</option>
-							</select>
-							<InputError :message="form.errors.status" class="mt-2" />
-						</div>
+						<!-- Status - Auto set untuk admin -->
+						<input type="hidden" v-model="form.status" />
 
 						<!-- Actions -->
 						<div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
@@ -196,7 +181,7 @@ const form = useForm({
 	pic_pimpinan: "",
 	no_nota_dinas: "",
 	link_scan: "",
-	status: "",
+	status: "diajukan", // Auto set status diajukan untuk admin
 });
 
 const submit = () => {

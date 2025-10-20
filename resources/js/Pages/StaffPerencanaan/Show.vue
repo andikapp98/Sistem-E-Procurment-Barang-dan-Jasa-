@@ -127,23 +127,30 @@
                         </div>
                         
                         <div class="flex gap-3">
-                            <button @click="showComingSoonModal = true"
-                                class="px-6 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors flex items-center gap-2 cursor-not-allowed opacity-75">
+                            <Link :href="route('staff-perencanaan.scan-berkas', permintaan.permintaan_id)"
+                                class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                 </svg>
                                 Scan Berkas
-                                <span class="text-xs bg-yellow-500 px-2 py-0.5 rounded-full">Coming Soon</span>
-                            </button>
+                                <span class="text-xs bg-white bg-opacity-25 px-2 py-0.5 rounded-full">Upload Dokumen</span>
+                            </Link>
                             
-                            <button @click="showComingSoonModal = true"
-                                class="px-6 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors flex items-center gap-2 cursor-not-allowed opacity-75">
+                            <Link :href="route('staff-perencanaan.perencanaan.create', permintaan.permintaan_id)"
+                                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Buat Perencanaan
+                            </Link>
+                            
+                            <Link :href="route('staff-perencanaan.disposisi.create', permintaan.permintaan_id)"
+                                class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                                 </svg>
                                 Buat Disposisi
-                                <span class="text-xs bg-yellow-500 px-2 py-0.5 rounded-full">Coming Soon</span>
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -210,39 +217,10 @@
 
             </div>
         </div>
-
-        <!-- Coming Soon Modal -->
-        <div v-if="showComingSoonModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="showComingSoonModal = false">
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="fixed inset-0 bg-black opacity-50"></div>
-                
-                <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                    <div class="text-center">
-                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
-                            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                            Fitur Coming Soon
-                        </h3>
-                        <p class="text-sm text-gray-600 mb-6">
-                            Fitur "Scan Berkas" dan "Buat Disposisi" sedang dalam pengembangan dan akan segera tersedia. 
-                            Untuk saat ini, permintaan akan otomatis dilanjutkan ke bagian terkait.
-                        </p>
-                        <button @click="showComingSoonModal = false"
-                            class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            Mengerti
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </AuthenticatedLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Link } from '@inertiajs/vue3';
 
@@ -252,6 +230,4 @@ const props = defineProps({
     timeline: Array,
     progress: Number,
 });
-
-const showComingSoonModal = ref(false);
 </script>

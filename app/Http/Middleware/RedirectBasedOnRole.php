@@ -20,6 +20,11 @@ class RedirectBasedOnRole
         if (Auth::check()) {
             $user = Auth::user();
             
+            // Admin can access all routes without redirection
+            if ($user->role === 'admin') {
+                return $next($request);
+            }
+            
             // If accessing generic /dashboard, redirect based on role
             if ($request->is('dashboard')) {
                 switch($user->role) {

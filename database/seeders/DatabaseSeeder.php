@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
         // Seed users
         $this->call([
             UserSeeder::class,
+            KepalaBidangSeeder::class,
+            KepalaInstalasiPermintaanSeeder::class,
+            PermintaanToKabidWorkflowSeeder::class,
         ]);
     }
 }

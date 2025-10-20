@@ -9,20 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class PermintaanController extends Controller
 {
-    /**
-     * Constructor - Add middleware to prevent KSO and Pengadaan access
-     */
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            $user = Auth::user();
-            if ($user && in_array($user->role, ['kso', 'pengadaan'])) {
-                abort(403, 'Akses ditolak. Silakan gunakan dashboard role Anda.');
-            }
-            return $next($request);
-        });
-    }
-
     /** Display a listing of the resource. */
     public function index(Request $request)
     {
@@ -93,6 +79,11 @@ class PermintaanController extends Controller
             'link_scan' => 'nullable|url',
         ]);
 
+        // Auto set status ke 'diajukan' jika tidak ada atau kosong
+        if (empty($data['status'])) {
+            $data['status'] = 'diajukan';
+        }
+
         // attach current user if available
         if (Auth::check()) {
             $data['user_id'] = Auth::id();
@@ -128,6 +119,12 @@ class PermintaanController extends Controller
     /** Show the form for editing the specified resource. */
     public function edit(Permintaan $permintaan)
     {
+        // Hanya bisa edit jika status ditolak (revisi)
+        if (strtolower($permintaan->status) !== 'ditolak') {
+            return redirect()->route('permintaan.show', $permintaan)
+                ->with('error', 'Permintaan hanya dapat diedit jika dalam status ditolak (revisi).');
+        }
+
         $permintaan->load('user');
         return Inertia::render('Permintaan/Edit', [
             'permintaan' => $permintaan,
@@ -137,6 +134,12 @@ class PermintaanController extends Controller
     /** Update the specified resource in storage. */
     public function update(Request $request, Permintaan $permintaan)
     {
+        // Hanya bisa update jika status ditolak (revisi)
+        if (strtolower($permintaan->status) !== 'ditolak') {
+            return redirect()->route('permintaan.show', $permintaan)
+                ->with('error', 'Permintaan hanya dapat diupdate jika dalam status ditolak (revisi).');
+        }
+
         $data = $request->validate([
             'bidang' => 'nullable|string',
             'tanggal_permintaan' => 'nullable|date',
@@ -155,6 +158,12 @@ class PermintaanController extends Controller
     /** Remove the specified resource from storage. */
     public function destroy(Permintaan $permintaan)
     {
+        // Hanya bisa delete jika status ditolak
+        if (strtolower($permintaan->status) !== 'ditolak') {
+            return redirect()->route('permintaan.index')
+                ->with('error', 'Permintaan hanya dapat dihapus jika dalam status ditolak.');
+        }
+
         $permintaan->delete();
         return redirect()->route('permintaan.index')->with('success', 'Permintaan dihapus.');
     }
