@@ -211,7 +211,8 @@ class KepalaBidangController extends Controller
     }
 
     /**
-     * Approve permintaan - Teruskan ke Wakil Direktur
+     * Approve permintaan - Teruskan LANGSUNG ke Direktur
+     * Workflow: Kepala Bidang → Direktur (skip Wakil Direktur)
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
@@ -228,24 +229,24 @@ class KepalaBidangController extends Controller
             return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
         }
 
-        // Buat disposisi otomatis ke Wakil Direktur
+        // Buat disposisi otomatis LANGSUNG ke Direktur (skip Wakil Direktur)
         Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
-            'jabatan_tujuan' => 'Wakil Direktur',
+            'jabatan_tujuan' => 'Direktur',
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => $data['catatan'] ?? 'Disetujui oleh Kepala Bidang, diteruskan ke Wakil Direktur',
+            'catatan' => $data['catatan'] ?? 'Disetujui oleh Kepala Bidang, diteruskan ke Direktur',
             'status' => 'disetujui',
         ]);
 
-        // Update status permintaan - teruskan ke Wakil Direktur
+        // Update status permintaan - teruskan LANGSUNG ke Direktur
         $permintaan->update([
             'status' => 'proses',
-            'pic_pimpinan' => 'Wakil Direktur',
+            'pic_pimpinan' => 'Direktur',
         ]);
 
         return redirect()
             ->route('kepala-bidang.index')
-            ->with('success', 'Permintaan disetujui dan diteruskan ke Wakil Direktur');
+            ->with('success', 'Permintaan disetujui dan diteruskan ke Direktur');
     }
 
     /**

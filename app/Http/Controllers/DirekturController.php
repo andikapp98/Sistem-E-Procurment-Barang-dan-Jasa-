@@ -14,7 +14,7 @@ use Carbon\Carbon;
  * Controller untuk Direktur
  * 
  * Tugas Direktur:
- * 1. Menerima permintaan dari Wakil Direktur
+ * 1. Menerima permintaan LANGSUNG dari Kepala Bidang (tanpa melalui Wakil Direktur)
  * 2. Review dan validasi final tingkat eksekutif tertinggi
  * 3. Approve dan disposisi kembali ke Kepala Bidang untuk perencanaan
  * 4. Reject jika tidak sesuai
@@ -201,6 +201,7 @@ class DirekturController extends Controller
 
     /**
      * Approve permintaan - Disposisi ke Staff Perencanaan
+     * Final Approval dari Direktur
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
@@ -214,7 +215,7 @@ class DirekturController extends Controller
         $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
         
         if (!$notaDinas) {
-            return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
+            return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan. Silakan hubungi administrator.']);
         }
 
         // Buat disposisi otomatis ke Staff Perencanaan
@@ -222,7 +223,7 @@ class DirekturController extends Controller
             'nota_id' => $notaDinas->nota_id,
             'jabatan_tujuan' => 'Staff Perencanaan',
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => $data['catatan'] ?? 'Disetujui oleh Direktur. Silakan lakukan perencanaan pengadaan.',
+            'catatan' => $data['catatan'] ?? 'Disetujui oleh Direktur (Final Approval). Silakan lakukan perencanaan pengadaan.',
             'status' => 'disetujui',
         ]);
 
@@ -234,25 +235,19 @@ class DirekturController extends Controller
 
         return redirect()
             ->route('direktur.index')
-            ->with('success', 'Permintaan disetujui dan didisposisi ke Staff Perencanaan untuk perencanaan pengadaan');
+            ->with('success', 'Permintaan disetujui (Final Approval) dan diteruskan ke Staff Perencanaan untuk perencanaan pengadaan.');
     }
 
     /**
      * Reject permintaan
+     * Direktur menolak permintaan dan menghentikan proses
      */
     public function reject(Request $request, Permintaan $permintaan)
     {
         $user = Auth::user();
         
         $data = $request->validate([
-            'alasan' => 'required|string',
-        ]);
-
-        // Update status permintaan
-        $permintaan->update([
-            'status' => 'ditolak',
-            'pic_pimpinan' => $user->nama,
-            'deskripsi' => $permintaan->deskripsi . "\n\n[DITOLAK oleh Direktur] " . $data['alasan'],
+            'alasan' => 'required|string|min:10',
         ]);
 
         // Ambil nota dinas terakhir dan buat disposisi penolakan
@@ -263,36 +258,59 @@ class DirekturController extends Controller
                 'nota_id' => $notaDinas->nota_id,
                 'jabatan_tujuan' => $permintaan->user->jabatan ?? 'Unit Pemohon',
                 'tanggal_disposisi' => Carbon::now(),
-                'catatan' => $data['alasan'],
+                'catatan' => '[DITOLAK oleh Direktur] ' . $data['alasan'],
                 'status' => 'ditolak',
             ]);
         }
 
+        // Update status permintaan
+        $permintaan->update([
+            'status' => 'ditolak',
+            'pic_pimpinan' => 'Unit Pemohon',
+            'deskripsi' => $permintaan->deskripsi . "\n\n---\n[DITOLAK oleh Direktur]\nAlasan: " . $data['alasan'] . "\nTanggal: " . Carbon::now()->format('d-m-Y H:i:s'),
+        ]);
+
         return redirect()
             ->route('direktur.index')
-            ->with('success', 'Permintaan ditolak dan dikembalikan ke unit pemohon');
+            ->with('success', 'Permintaan ditolak. Proses dihentikan dan dikembalikan ke unit pemohon.');
     }
 
     /**
-     * Request revisi dari pemohon
+     * Request revisi - Kembalikan ke Kepala Bidang untuk diperbaiki
+     * Direktur meminta revisi dan mengembalikan ke level sebelumnya
      */
     public function requestRevision(Request $request, Permintaan $permintaan)
     {
         $user = Auth::user();
         
         $data = $request->validate([
-            'catatan_revisi' => 'required|string',
+            'catatan_revisi' => 'required|string|min:10',
         ]);
 
-        // Update status permintaan
+        // Ambil nota dinas terakhir
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if ($notaDinas) {
+            // Buat disposisi revisi ke Kepala Bidang
+            Disposisi::create([
+                'nota_id' => $notaDinas->nota_id,
+                'jabatan_tujuan' => 'Kepala Bidang',
+                'tanggal_disposisi' => Carbon::now(),
+                'catatan' => '[REVISI dari Direktur] ' . $data['catatan_revisi'],
+                'status' => 'revisi',
+            ]);
+        }
+
+        // Update status permintaan - kembalikan ke Kepala Bidang
         $permintaan->update([
             'status' => 'revisi',
-            'deskripsi' => $permintaan->deskripsi . "\n\n[CATATAN REVISI dari Direktur] " . $data['catatan_revisi'],
+            'pic_pimpinan' => 'Kepala Bidang',
+            'deskripsi' => $permintaan->deskripsi . "\n\n---\n[CATATAN REVISI dari Direktur]\n" . $data['catatan_revisi'] . "\nTanggal: " . Carbon::now()->format('d-m-Y H:i:s'),
         ]);
 
         return redirect()
             ->route('direktur.index')
-            ->with('success', 'Permintaan revisi telah dikirim ke pemohon');
+            ->with('success', 'Permintaan revisi telah dikirim ke Kepala Bidang untuk diperbaiki.');
     }
 
     /**

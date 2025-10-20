@@ -57,7 +57,13 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+        
+        // Clear all session data
+        $request->session()->flush();
+        
+        // Force forget all session data
+        $request->session()->forget('_token');
 
-        return redirect('/');
+        return redirect('/login');
     }
 }
