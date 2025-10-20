@@ -22,6 +22,70 @@ use Carbon\Carbon;
 class KepalaInstalasiController extends Controller
 {
     /**
+     * Mapping abbreviasi unit kerja ke nama lengkap
+     * Untuk matching bidang permintaan dengan unit_kerja kepala instalasi
+     */
+    private function getUnitMapping()
+    {
+        return [
+            'IGD' => 'Instalasi Gawat Darurat',
+            'IRJ' => 'Instalasi Rawat Jalan',
+            'IRNA' => 'Instalasi Rawat Inap',
+            'IBS' => 'Instalasi Bedah Sentral',
+            'ICU' => 'Instalasi Intensif Care',
+            'Farmasi' => 'Instalasi Farmasi',
+            'Lab' => 'Instalasi Laboratorium Patologi Klinik',
+            'Radiologi' => 'Instalasi Radiologi',
+            'Rehab Medik' => 'Instalasi Rehabilitasi Medik',
+            'Gizi' => 'Instalasi Gizi',
+            'Forensik' => 'Instalasi Kedokteran Forensik dan Medikolegal',
+            'Hemodialisa' => 'Unit Hemodialisa',
+            'Bank Darah' => 'Unit Bank Darah Rumah Sakit',
+            'Patologi Anatomi' => 'Unit Laboratorium Patologi Anatomi',
+            'Sterilisasi' => 'Unit Sterilisasi Sentral',
+            'Endoskopi' => 'Unit Endoskopi',
+            'Pemasaran' => 'Unit Pemasaran dan Promosi Kesehatan Rumah Sakit',
+            'Rekam Medik' => 'Unit Rekam Medik',
+            'Pendidikan' => 'Instalasi Pendidikan dan Penelitian',
+            'Pemeliharaan' => 'Instalasi Pemeliharaan Sarana',
+            'Sanitasi' => 'Instalasi Penyehatan Lingkungan',
+            'IT' => 'Unit Teknologi Informasi',
+            'K3' => 'Unit Keselamatan dan Kesehatan Kerja Rumah Sakit',
+            'Pengadaan' => 'Unit Pengadaan',
+            'Logistik' => 'Unit Aset & Logistik',
+            'Penjaminan' => 'Unit Penjaminan',
+            'Pengaduan' => 'Unit Pengaduan',
+        ];
+    }
+
+    /**
+     * Get bidang variations untuk matching
+     * Menghasilkan array kemungkinan nama bidang berdasarkan unit_kerja
+     */
+    private function getBidangVariations($unitKerja)
+    {
+        if (!$unitKerja) {
+            return [];
+        }
+
+        $mapping = $this->getUnitMapping();
+        $variations = [$unitKerja]; // Tambahkan unit_kerja original
+
+        // Jika unit_kerja adalah abbreviasi, tambahkan nama lengkapnya
+        if (isset($mapping[$unitKerja])) {
+            $variations[] = $mapping[$unitKerja];
+        }
+
+        // Jika unit_kerja adalah nama lengkap, tambahkan abbreviasinya
+        $reversedMapping = array_flip($mapping);
+        if (isset($reversedMapping[$unitKerja])) {
+            $variations[] = $reversedMapping[$unitKerja];
+        }
+
+        return $variations;
+    }
+
+    /**
      * Dashboard Kepala Instalasi
      */
     public function dashboard()
@@ -33,8 +97,16 @@ class KepalaInstalasiController extends Controller
         $permintaans = Permintaan::with(['user', 'notaDinas'])
             ->where(function($query) use ($user) {
                 if ($user->unit_kerja) {
-                    // Filter berdasarkan bidang yang sesuai dengan unit_kerja kepala instalasi
-                    $query->where('bidang', $user->unit_kerja);
+                    // Get all possible bidang variations
+                    $variations = $this->getBidangVariations($user->unit_kerja);
+                    
+                    // Match dengan salah satu variasi
+                    $query->where(function($q) use ($variations, $user) {
+                        foreach ($variations as $variation) {
+                            $q->orWhere('bidang', $variation)
+                              ->orWhere('bidang', 'LIKE', '%' . $variation . '%');
+                        }
+                    });
                 }
             })
             ->get();
@@ -77,8 +149,16 @@ class KepalaInstalasiController extends Controller
         $query = Permintaan::with(['user', 'notaDinas'])
             ->where(function($q) use ($user) {
                 if ($user->unit_kerja) {
-                    // Hanya tampilkan permintaan dari unit kerja kepala instalasi
-                    $q->where('bidang', $user->unit_kerja);
+                    // Get all possible bidang variations
+                    $variations = $this->getBidangVariations($user->unit_kerja);
+                    
+                    // Match dengan salah satu variasi
+                    $q->where(function($subQuery) use ($variations) {
+                        foreach ($variations as $variation) {
+                            $subQuery->orWhere('bidang', $variation)
+                                    ->orWhere('bidang', 'LIKE', '%' . $variation . '%');
+                        }
+                    });
                 }
             });
 
