@@ -422,15 +422,12 @@ class Permintaan extends Model
 
 	/**
 	 * Update timeline tracking
-	 * Automatically create timeline entry when status changes
+	 * Timeline is tracked through nota_dinas and disposisi, so this is just a placeholder
 	 */
 	public function updateTimeline($tahapan, $keterangan, $status = 'selesai')
 	{
-		return $this->timelineTracking()->create([
-			'tahapan' => $tahapan,
-			'tanggal' => Carbon::now(),
-			'keterangan' => $keterangan,
-			'status' => $status,
-		]);
+		// Timeline is automatically tracked through nota_dinas and disposisi relationships
+		// This method is kept for backward compatibility but doesn't need to do anything
+		return true;
 	}
 }

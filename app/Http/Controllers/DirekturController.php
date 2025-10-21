@@ -198,9 +198,8 @@ class DirekturController extends Controller
     }
 
     /**
-     * Approve permintaan - Disposisi BALIK ke Kepala Bidang
-     * Final Approval dari Direktur, kemudian dikembalikan ke Kepala Bidang
-     * untuk diteruskan ke Staff Perencanaan
+     * Approve permintaan - Kembali ke Kepala Bidang untuk disposisi ke Staff Perencanaan
+     * Final Approval dari Direktur, dikembalikan ke Kepala Bidang untuk proses disposisi
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
@@ -217,31 +216,24 @@ class DirekturController extends Controller
             return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan. Silakan hubungi administrator.']);
         }
 
-        // Buat disposisi BALIK ke Kepala Bidang
+        // Buat disposisi kembali ke Kepala Bidang
         Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
             'jabatan_tujuan' => 'Kepala Bidang',
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => $data['catatan'] ?? 'Disetujui oleh Direktur (Final Approval). Silakan disposisi ke Staff Perencanaan untuk perencanaan pengadaan.',
-            'status' => 'disetujui',
+            'catatan' => 'Disetujui oleh Direktur (Final Approval). ' . ($data['catatan'] ?? 'Silakan disposisi ke Staff Perencanaan untuk perencanaan pengadaan.'),
+            'status' => 'selesai',
         ]);
 
-        // Update status permintaan - kembalikan ke Kepala Bidang
+        // Update status permintaan - kembali ke Kepala Bidang untuk disposisi
         $permintaan->update([
-            'status' => 'disetujui',
+            'status' => 'proses',
             'pic_pimpinan' => 'Kepala Bidang',
         ]);
 
-        // Update timeline
-        $permintaan->updateTimeline(
-            'Persetujuan Direktur',
-            'Permintaan disetujui oleh Direktur (Final Approval). ' . ($data['catatan'] ?? ''),
-            'disetujui'
-        );
-
         return redirect()
             ->route('direktur.index')
-            ->with('success', 'Permintaan disetujui (Final Approval) dan didisposisi balik ke Kepala Bidang untuk diteruskan ke Staff Perencanaan.');
+            ->with('success', 'Permintaan disetujui (Final Approval) dan dikembalikan ke Kepala Bidang untuk disposisi ke Staff Perencanaan.');
     }
 
     /**
@@ -275,13 +267,6 @@ class DirekturController extends Controller
             'pic_pimpinan' => 'Unit Pemohon',
             'deskripsi' => $permintaan->deskripsi . "\n\n---\n[DITOLAK oleh Direktur]\nAlasan: " . $data['alasan'] . "\nTanggal: " . Carbon::now()->format('d-m-Y H:i:s'),
         ]);
-
-        // Update timeline
-        $permintaan->updateTimeline(
-            'Penolakan Direktur',
-            'Permintaan ditolak oleh Direktur. Alasan: ' . $data['alasan'],
-            'ditolak'
-        );
 
         return redirect()
             ->route('direktur.index')
@@ -320,13 +305,6 @@ class DirekturController extends Controller
             'pic_pimpinan' => 'Kepala Bidang',
             'deskripsi' => $permintaan->deskripsi . "\n\n---\n[CATATAN REVISI dari Direktur]\n" . $data['catatan_revisi'] . "\nTanggal: " . Carbon::now()->format('d-m-Y H:i:s'),
         ]);
-
-        // Update timeline
-        $permintaan->updateTimeline(
-            'Revisi dari Direktur',
-            'Direktur meminta revisi. Catatan: ' . $data['catatan_revisi'],
-            'revisi'
-        );
 
         return redirect()
             ->route('direktur.index')
@@ -373,20 +351,24 @@ class DirekturController extends Controller
     }
 
     /**
-     * Tampilkan daftar permintaan yang sudah disetujui (untuk tracking)
+     * Tampilkan daftar permintaan yang sudah diproses Direktur
+     * Menampilkan semua permintaan yang sudah di-approve, reject, atau revisi oleh Direktur
      */
     public function approved(Request $request)
     {
         $user = Auth::user();
         
-        // Query - ambil semua permintaan yang sudah pernah melalui Direktur
+        // Query - ambil permintaan yang sudah diproses Direktur
+        // Cari dari disposisi dengan catatan mengandung tanda keputusan Direktur
         $query = Permintaan::with(['user', 'notaDinas.disposisi'])
-            ->whereHas('notaDinas.disposisi', function($q) use ($user) {
-                // Cari disposisi yang pernah ditujukan ke Direktur
-                $q->where('jabatan_tujuan', 'like', '%Direktur%')
-                  ->orWhere('jabatan_tujuan', $user->jabatan);
-            })
-            ->whereIn('status', ['proses', 'disetujui', 'ditolak', 'revisi']);
+            ->whereHas('notaDinas.disposisi', function($q) {
+                // Cari disposisi yang dibuat DARI Direktur (setelah approve/reject/revisi)
+                $q->where(function($subQ) {
+                    $subQ->where('catatan', 'like', '%Disetujui oleh Direktur%')
+                         ->orWhere('catatan', 'like', '%DITOLAK oleh Direktur%')
+                         ->orWhere('catatan', 'like', '%REVISI dari Direktur%');
+                });
+            });
 
         // Apply filters
         if ($request->filled('search')) {
@@ -394,7 +376,7 @@ class DirekturController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('permintaan_id', 'like', "%{$search}%")
                   ->orWhere('deskripsi', 'like', "%{$search}%")
-                  ->orWhere('no_nota_dinas', 'like', "%{$search}%");
+                  ->orWhere('bidang', 'like', "%{$search}%");
             });
         }
 
@@ -424,15 +406,68 @@ class DirekturController extends Controller
                 $permintaan->progress = $permintaan->getProgressPercentage();
                 $permintaan->timeline_count = count($permintaan->getTimelineTracking());
                 
-                // Cek tahap terakhir
-                $timeline = $permintaan->getTimelineTracking();
-                $permintaan->current_stage = !empty($timeline) ? $timeline[count($timeline) - 1]['tahapan'] : 'Permintaan';
+                // Cek keputusan Direktur dari disposisi
+                $direkturDisposisi = null;
+                if ($permintaan->notaDinas && $permintaan->notaDinas->count() > 0) {
+                    $direkturDisposisi = $permintaan->notaDinas->flatMap->disposisi
+                        ->filter(function($disp) {
+                            // Cari disposisi yang mengandung keputusan Direktur
+                            return stripos($disp->catatan ?? '', 'Disetujui oleh Direktur') !== false
+                                || stripos($disp->catatan ?? '', 'DITOLAK oleh Direktur') !== false
+                                || stripos($disp->catatan ?? '', 'REVISI dari Direktur') !== false;
+                        })
+                        ->last();
+                }
+                
+                if ($direkturDisposisi) {
+                    if (stripos($direkturDisposisi->catatan, 'DITOLAK oleh Direktur') !== false) {
+                        $permintaan->direktur_decision = 'Ditolak';
+                        $permintaan->direktur_decision_class = 'rejected';
+                    } elseif (stripos($direkturDisposisi->catatan, 'REVISI dari Direktur') !== false) {
+                        $permintaan->direktur_decision = 'Revisi';
+                        $permintaan->direktur_decision_class = 'revision';
+                    } elseif (stripos($direkturDisposisi->catatan, 'Disetujui oleh Direktur') !== false) {
+                        $permintaan->direktur_decision = 'Disetujui';
+                        $permintaan->direktur_decision_class = 'approved';
+                    } else {
+                        $permintaan->direktur_decision = '-';
+                        $permintaan->direktur_decision_class = 'unknown';
+                    }
+                    $permintaan->direktur_date = $direkturDisposisi->tanggal_disposisi;
+                    $permintaan->direktur_notes = $direkturDisposisi->catatan;
+                } else {
+                    $permintaan->direktur_decision = '-';
+                    $permintaan->direktur_decision_class = 'unknown';
+                    $permintaan->direktur_date = null;
+                    $permintaan->direktur_notes = null;
+                }
                 
                 return $permintaan;
             });
 
+        // Statistics
+        $stats = [
+            'total' => Permintaan::whereHas('notaDinas.disposisi', function($q) {
+                $q->where(function($subQ) {
+                    $subQ->where('catatan', 'like', '%Disetujui oleh Direktur%')
+                         ->orWhere('catatan', 'like', '%DITOLAK oleh Direktur%')
+                         ->orWhere('catatan', 'like', '%REVISI dari Direktur%');
+                });
+            })->count(),
+            'approved' => Permintaan::whereHas('notaDinas.disposisi', function($q) {
+                $q->where('catatan', 'like', '%Disetujui oleh Direktur%');
+            })->count(),
+            'rejected' => Permintaan::whereHas('notaDinas.disposisi', function($q) {
+                $q->where('catatan', 'like', '%DITOLAK oleh Direktur%');
+            })->count(),
+            'revision' => Permintaan::whereHas('notaDinas.disposisi', function($q) {
+                $q->where('catatan', 'like', '%REVISI dari Direktur%');
+            })->count(),
+        ];
+
         return Inertia::render('Direktur/Approved', [
             'permintaans' => $permintaans,
+            'stats' => $stats,
             'userLogin' => $user,
             'filters' => $request->only(['search', 'bidang', 'status', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
         ]);

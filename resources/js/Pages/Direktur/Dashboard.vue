@@ -77,10 +77,13 @@
                                 </svg>
                             </div>
                             <h4 class="text-gray-600 text-sm font-medium mb-1">
-                                Disetujui (Tracking)
+                                Riwayat Keputusan
                             </h4>
                             <p class="text-3xl font-bold text-green-600">
                                 {{ stats.disetujui }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Klik untuk lihat detail
                             </p>
                         </div>
                     </Link>
