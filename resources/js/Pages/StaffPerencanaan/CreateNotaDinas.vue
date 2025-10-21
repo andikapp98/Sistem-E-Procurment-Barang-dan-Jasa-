@@ -219,15 +219,18 @@
                                     <span class="text-gray-500 sm:text-sm">Rp</span>
                                 </div>
                                 <input
-                                    type="number"
+                                    type="text"
                                     id="pagu_anggaran"
-                                    v-model="form.pagu_anggaran"
+                                    v-model="paguAnggaranFormatted"
+                                    @input="handlePaguAnggaranInput"
                                     class="pl-12 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     :class="{ 'border-red-500': errors.pagu_anggaran }"
                                     placeholder="0"
-                                    step="0.01"
                                 />
                             </div>
+                            <p v-if="form.pagu_anggaran" class="mt-1 text-xs text-gray-500">
+                                {{ formatRupiahTerbilang(form.pagu_anggaran) }}
+                            </p>
                             <p v-if="errors.pagu_anggaran" class="mt-1 text-sm text-red-600">{{ errors.pagu_anggaran }}</p>
                         </div>
 
@@ -437,7 +440,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 
@@ -471,6 +474,49 @@ const form = useForm({
 
 const processing = ref(false);
 const errors = ref({});
+
+// Format rupiah with thousand separators
+const formatRupiah = (value) => {
+    if (!value) return '';
+    const number = value.toString().replace(/[^,\d]/g, '');
+    const split = number.split(',');
+    const sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+    if (ribuan) {
+        const separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+
+    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    return rupiah;
+};
+
+// Format terbilang
+const formatRupiahTerbilang = (value) => {
+    if (!value || value == 0) return '';
+    const angka = parseInt(value);
+    if (angka < 1000) return `${angka} rupiah`;
+    if (angka < 1000000) return `${(angka/1000).toFixed(1)} ribu rupiah`;
+    if (angka < 1000000000) return `${(angka/1000000).toFixed(2)} juta rupiah`;
+    return `${(angka/1000000000).toFixed(2)} miliar rupiah`;
+};
+
+// Pagu Anggaran formatted display
+const paguAnggaranFormatted = computed({
+    get() {
+        return formatRupiah(form.pagu_anggaran);
+    },
+    set(value) {
+        // Not used, handled by handlePaguAnggaranInput
+    }
+});
+
+const handlePaguAnggaranInput = (event) => {
+    const value = event.target.value.replace(/\./g, '').replace(/,/g, '.');
+    form.pagu_anggaran = value;
+};
 
 const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -511,8 +557,6 @@ const submit = () => {
             processing.value = false;
         },
         onError: (err) => {
-            errors.value = err;
-            processing.value = false;
         },
     });
 };

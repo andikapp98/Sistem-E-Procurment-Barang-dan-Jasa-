@@ -64,6 +64,6 @@ class AuthenticatedSessionController extends Controller
         // Force forget all session data
         $request->session()->forget('_token');
 
-        return redirect('/login');
+        return redirect()->route('login');
     }
 }

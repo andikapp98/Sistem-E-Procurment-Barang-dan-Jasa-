@@ -7,6 +7,8 @@ use App\Models\NotaDinas;
 use App\Models\Disposisi;
 use App\Models\DokumenPengadaan;
 use App\Models\Perencanaan;
+use App\Models\Hps;
+use App\Models\HpsItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -513,9 +515,85 @@ class StaffPerencanaanController extends Controller
     }
 
     /**
+     * Form membuat HPS (Harga Perkiraan Satuan)
+     */
+    public function createHPS(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $permintaan->load('user');
+        
+        return Inertia::render('StaffPerencanaan/CreateHPS', [
+            'permintaan' => $permintaan,
+        ]);
+    }
+
+    /**
+     * Store HPS (Harga Perkiraan Satuan)
+     */
+    public function storeHPS(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $data = $request->validate([
+            'ppk' => 'required|string',
+            'surat_penawaran_harga' => 'required|string',
+            'items' => 'required|array|min:1',
+            'items.*.nama_item' => 'required|string',
+            'items.*.volume' => 'required|integer|min:1',
+            'items.*.satuan' => 'required|string',
+            'items.*.harga_satuan' => 'required|numeric|min:0',
+            'items.*.type' => 'nullable|string',
+            'items.*.merk' => 'nullable|string',
+            'items.*.total' => 'required|numeric|min:0',
+        ]);
+
+        // Hitung grand total
+        $grandTotal = 0;
+        foreach ($data['items'] as $item) {
+            $grandTotal += $item['total'];
+        }
+
+        // Buat HPS header
+        $hps = Hps::create([
+            'permintaan_id' => $permintaan->permintaan_id,
+            'ppk' => $data['ppk'],
+            'surat_penawaran_harga' => $data['surat_penawaran_harga'],
+            'grand_total' => $grandTotal,
+        ]);
+
+        // Buat HPS items
+        foreach ($data['items'] as $item) {
+            HpsItem::create([
+                'hps_id' => $hps->hps_id,
+                'nama_item' => $item['nama_item'],
+                'volume' => $item['volume'],
+                'satuan' => $item['satuan'],
+                'harga_satuan' => $item['harga_satuan'],
+                'type' => $item['type'] ?? null,
+                'merk' => $item['merk'] ?? null,
+                'total' => $item['total'],
+            ]);
+        }
+
+        // Update permintaan
+        $permintaan->update([
+            'deskripsi' => $permintaan->deskripsi . "\n\n[HPS DIBUAT]\n" .
+                          "PPK: {$data['ppk']}\n" .
+                          "Surat Penawaran: {$data['surat_penawaran_harga']}\n" .
+                          "Total Item: " . count($data['items']) . "\n" .
+                          "Grand Total: Rp " . number_format($grandTotal, 0, ',', '.'),
+        ]);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Harga Perkiraan Satuan (HPS) berhasil dibuat dengan ' . count($data['items']) . ' item');
+    }
+
+    /**
      * Form disposisi manual
      */
-    public function createDisposisiOld(Permintaan $permintaan)
+    public function createDisposisiOld2(Permintaan $permintaan)
     {
         $user = Auth::user();
         

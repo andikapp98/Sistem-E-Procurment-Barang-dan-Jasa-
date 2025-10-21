@@ -221,15 +221,18 @@
                                             <span class="text-gray-500 sm:text-sm">Rp</span>
                                         </div>
                                         <input
-                                            type="number"
+                                            type="text"
                                             id="pagu_paket"
-                                            v-model="form.pagu_paket"
+                                            v-model="paguPaketFormatted"
+                                            @input="handlePaguPaketInput"
                                             class="pl-12 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             :class="{ 'border-red-500': errors.pagu_paket }"
                                             placeholder="0"
-                                            step="0.01"
                                         />
                                     </div>
+                                    <p v-if="form.pagu_paket" class="mt-1 text-xs text-gray-500">
+                                        {{ formatRupiahTerbilang(form.pagu_paket) }}
+                                    </p>
                                     <p v-if="errors.pagu_paket" class="mt-1 text-sm text-red-600">{{ errors.pagu_paket }}</p>
                                 </div>
                             </div>
@@ -244,15 +247,18 @@
                                         <span class="text-gray-500 sm:text-sm">Rp</span>
                                     </div>
                                     <input
-                                        type="number"
+                                        type="text"
                                         id="nilai_hps"
-                                        v-model="form.nilai_hps"
+                                        v-model="nilaiHpsFormatted"
+                                        @input="handleNilaiHpsInput"
                                         class="pl-12 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         :class="{ 'border-red-500': errors.nilai_hps }"
                                         placeholder="0"
-                                        step="0.01"
                                     />
                                 </div>
+                                <p v-if="form.nilai_hps" class="mt-1 text-xs text-gray-500">
+                                    {{ formatRupiahTerbilang(form.nilai_hps) }}
+                                </p>
                                 <p v-if="errors.nilai_hps" class="mt-1 text-sm text-red-600">{{ errors.nilai_hps }}</p>
                             </div>
 
@@ -433,7 +439,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 
@@ -472,6 +478,64 @@ const form = useForm({
 
 const processing = ref(false);
 const errors = ref({});
+
+// Format rupiah with thousand separators
+const formatRupiah = (value) => {
+    if (!value) return '';
+    const number = value.toString().replace(/[^,\d]/g, '');
+    const split = number.split(',');
+    const sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    const ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+    if (ribuan) {
+        const separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+
+    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    return rupiah;
+};
+
+// Format terbilang
+const formatRupiahTerbilang = (value) => {
+    if (!value || value == 0) return '';
+    const angka = parseInt(value);
+    if (angka < 1000) return `${angka} rupiah`;
+    if (angka < 1000000) return `${(angka/1000).toFixed(1)} ribu rupiah`;
+    if (angka < 1000000000) return `${(angka/1000000).toFixed(2)} juta rupiah`;
+    return `${(angka/1000000000).toFixed(2)} miliar rupiah`;
+};
+
+// Pagu Paket formatted display
+const paguPaketFormatted = computed({
+    get() {
+        return formatRupiah(form.pagu_paket);
+    },
+    set(value) {
+        // Not used, handled by handlePaguPaketInput
+    }
+});
+
+const handlePaguPaketInput = (event) => {
+    const value = event.target.value.replace(/\./g, '').replace(/,/g, '.');
+    form.pagu_paket = value;
+};
+
+// Nilai HPS formatted display
+const nilaiHpsFormatted = computed({
+    get() {
+        return formatRupiah(form.nilai_hps);
+    },
+    set(value) {
+        // Not used, handled by handleNilaiHpsInput
+    }
+});
+
+const handleNilaiHpsInput = (event) => {
+    const value = event.target.value.replace(/\./g, '').replace(/,/g, '.');
+    form.nilai_hps = value;
+};
 
 const submit = () => {
     // Reset errors

@@ -150,6 +150,10 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
     // Routes untuk DPP (Dokumen Persiapan Pengadaan)
     Route::get('/permintaan/{permintaan}/dpp/create', [StaffPerencanaanController::class, 'createDPP'])->name('dpp.create');
     Route::post('/permintaan/{permintaan}/dpp', [StaffPerencanaanController::class, 'storeDPP'])->name('dpp.store');
+    
+    // Routes untuk HPS (Harga Perkiraan Satuan)
+    Route::get('/permintaan/{permintaan}/hps/create', [StaffPerencanaanController::class, 'createHPS'])->name('hps.create');
+    Route::post('/permintaan/{permintaan}/hps', [StaffPerencanaanController::class, 'storeHPS'])->name('hps.store');
 });
 
 // Routes untuk Bagian KSO
