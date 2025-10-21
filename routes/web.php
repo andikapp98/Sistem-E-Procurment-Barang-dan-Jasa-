@@ -138,6 +138,18 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
     // Routes untuk Nota Dinas
     Route::get('/permintaan/{permintaan}/nota-dinas/create', [StaffPerencanaanController::class, 'createNotaDinas'])->name('nota-dinas.create');
     Route::post('/permintaan/{permintaan}/nota-dinas', [StaffPerencanaanController::class, 'storeNotaDinas'])->name('nota-dinas.store');
+    
+    // Routes untuk Nota Dinas Pembelian
+    Route::get('/permintaan/{permintaan}/nota-dinas-pembelian/create', [StaffPerencanaanController::class, 'createNotaDinasPembelian'])->name('nota-dinas-pembelian.create');
+    Route::post('/permintaan/{permintaan}/nota-dinas-pembelian', [StaffPerencanaanController::class, 'storeNotaDinasPembelian'])->name('nota-dinas-pembelian.store');
+    
+    // Routes untuk Scan Berkas / Upload Dokumen
+    Route::get('/permintaan/{permintaan}/scan-berkas', [StaffPerencanaanController::class, 'uploadDokumen'])->name('scan-berkas');
+    Route::post('/permintaan/{permintaan}/dokumen', [StaffPerencanaanController::class, 'storeDokumen'])->name('dokumen.store');
+    
+    // Routes untuk DPP (Dokumen Persiapan Pengadaan)
+    Route::get('/permintaan/{permintaan}/dpp/create', [StaffPerencanaanController::class, 'createDPP'])->name('dpp.create');
+    Route::post('/permintaan/{permintaan}/dpp', [StaffPerencanaanController::class, 'storeDPP'])->name('dpp.store');
 });
 
 // Routes untuk Bagian KSO

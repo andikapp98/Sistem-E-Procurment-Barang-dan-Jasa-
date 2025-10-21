@@ -6,6 +6,7 @@ use App\Models\Permintaan;
 use App\Models\NotaDinas;
 use App\Models\Disposisi;
 use App\Models\DokumenPengadaan;
+use App\Models\Perencanaan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -338,9 +339,183 @@ class StaffPerencanaanController extends Controller
     }
 
     /**
+     * Form membuat Nota Dinas Pembelian
+     */
+    public function createNotaDinasPembelian(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $permintaan->load('user');
+        
+        return Inertia::render('StaffPerencanaan/CreateNotaDinasPembelian', [
+            'permintaan' => $permintaan,
+        ]);
+    }
+
+    /**
+     * Store Nota Dinas Pembelian
+     */
+    public function storeNotaDinasPembelian(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $data = $request->validate([
+            'nomor_nota_dinas' => 'required|string',
+            'tanggal_nota' => 'required|date',
+            'usulan_ruangan' => 'required|string',
+            'sifat' => 'required|in:Sangat Segera,Segera,Biasa,Rahasia',
+            'perihal' => 'required|string',
+            'dari' => 'required|string',
+            'kepada' => 'required|string',
+            'isi_nota' => 'nullable|string',
+            'tipe_nota' => 'nullable|string',
+        ]);
+
+        // Buat nota dinas dengan tipe pembelian
+        $notaDinas = NotaDinas::create([
+            'permintaan_id' => $permintaan->permintaan_id,
+            'nomor' => $data['nomor_nota_dinas'],
+            'tanggal_nota' => $data['tanggal_nota'],
+            'dari' => $data['dari'],
+            'kepada' => $data['kepada'],
+            'sifat' => $data['sifat'],
+            'perihal' => $data['perihal'],
+            'uraian' => $data['isi_nota'] ?? '',
+            'unit_instalasi' => $data['usulan_ruangan'],
+            'pagu_anggaran' => 0, // Set default atau bisa diisi nanti
+        ]);
+
+        // Buat disposisi ke tujuan
+        Disposisi::create([
+            'nota_id' => $notaDinas->nota_id,
+            'jabatan_tujuan' => $data['kepada'],
+            'tanggal_disposisi' => Carbon::now(),
+            'catatan' => "Nota Dinas Pembelian telah dibuat.\nUsulan dari: {$data['usulan_ruangan']}\nPerihal: {$data['perihal']}",
+            'status' => 'dalam_proses',
+        ]);
+
+        // Update status permintaan
+        $permintaan->update([
+            'status' => 'proses',
+            'pic_pimpinan' => $data['kepada'],
+            'deskripsi' => $permintaan->deskripsi . "\n\n[NOTA DINAS PEMBELIAN]\n" . 
+                          "Nomor: {$data['nomor_nota_dinas']}\n" .
+                          "Tanggal: " . Carbon::parse($data['tanggal_nota'])->format('d/m/Y') . "\n" .
+                          "Usulan Ruangan: {$data['usulan_ruangan']}\n" .
+                          "Perihal: {$data['perihal']}",
+        ]);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Nota Dinas Pembelian berhasil dibuat dan dikirim ke ' . $data['kepada']);
+    }
+
+    /**
      * Form disposisi manual
      */
     public function createDisposisi(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $permintaan->load(['user', 'notaDinas']);
+        
+        return Inertia::render('StaffPerencanaan/CreateDisposisi', [
+            'permintaan' => $permintaan,
+        ]);
+    }
+
+    /**
+     * Form membuat DPP (Dokumen Persiapan Pengadaan)
+     */
+    public function createDPP(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $permintaan->load('user');
+        
+        return Inertia::render('StaffPerencanaan/CreateDPP', [
+            'permintaan' => $permintaan,
+        ]);
+    }
+
+    /**
+     * Store DPP (Dokumen Persiapan Pengadaan)
+     */
+    public function storeDPP(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $data = $request->validate([
+            // PPK dan Identifikasi
+            'ppk_ditunjuk' => 'required|string',
+            'nama_paket' => 'required|string',
+            'lokasi' => 'required|string',
+            
+            // Program dan Kegiatan
+            'uraian_program' => 'required|string',
+            'uraian_kegiatan' => 'required|string',
+            'sub_kegiatan' => 'nullable|string',
+            'sub_sub_kegiatan' => 'nullable|string',
+            'kode_rekening' => 'required|string',
+            
+            // Anggaran dan HPS
+            'sumber_dana' => 'required|string',
+            'pagu_paket' => 'required|numeric|min:0',
+            'nilai_hps' => 'required|numeric|min:0',
+            'sumber_data_survei_hps' => 'required|string',
+            
+            // Kontrak dan Pelaksanaan
+            'jenis_kontrak' => 'required|string',
+            'kualifikasi' => 'required|string',
+            'jangka_waktu_pelaksanaan' => 'required|integer|min:1',
+            
+            // Detail Pengadaan
+            'nama_kegiatan' => 'required|string',
+            'jenis_pengadaan' => 'required|string',
+        ]);
+
+        // Ambil nota dinas terakhir untuk membuat disposisi
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
+        }
+
+        // Buat disposisi untuk DPP
+        $disposisi = Disposisi::create([
+            'nota_id' => $notaDinas->nota_id,
+            'jabatan_tujuan' => 'Bagian Pengadaan', // Default atau bisa disesuaikan
+            'tanggal_disposisi' => Carbon::now(),
+            'catatan' => "DPP telah dibuat untuk paket: {$data['nama_paket']}",
+            'status' => 'dalam_proses',
+        ]);
+
+        // Simpan DPP ke tabel perencanaan
+        $data['disposisi_id'] = $disposisi->disposisi_id;
+        $data['rencana_kegiatan'] = $data['nama_kegiatan'];
+        $data['anggaran'] = $data['pagu_paket'];
+        
+        Perencanaan::create($data);
+
+        // Update status permintaan
+        $permintaan->update([
+            'status' => 'proses',
+            'pic_pimpinan' => 'Bagian Pengadaan',
+            'deskripsi' => $permintaan->deskripsi . "\n\n[DPP DIBUAT]\n" .
+                          "Nama Paket: {$data['nama_paket']}\n" .
+                          "PPK: {$data['ppk_ditunjuk']}\n" .
+                          "Nilai HPS: Rp " . number_format($data['nilai_hps'], 0, ',', '.'),
+        ]);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Dokumen Persiapan Pengadaan (DPP) berhasil dibuat');
+    }
+
+    /**
+     * Form disposisi manual
+     */
+    public function createDisposisiOld(Permintaan $permintaan)
     {
         $user = Auth::user();
         
