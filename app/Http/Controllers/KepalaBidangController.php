@@ -147,11 +147,28 @@ class KepalaBidangController extends Controller
         $timeline = $permintaan->getTimelineTracking();
         $progress = $permintaan->getProgressPercentage();
         
+        // Cek apakah ini disposisi balik dari Direktur
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        $isDisposisiDariDirektur = false;
+        
+        if ($notaDinas) {
+            $isDisposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
+                ->where('jabatan_tujuan', 'Kepala Bidang')
+                ->where('status', 'disetujui')
+                ->whereHas('notaDinas', function($q) {
+                    $q->whereHas('disposisi', function($query) {
+                        $query->where('jabatan_tujuan', 'Direktur');
+                    });
+                })
+                ->exists();
+        }
+        
         return Inertia::render('KepalaBidang/Show', [
             'permintaan' => $permintaan,
             'trackingStatus' => $permintaan->trackingStatus,
             'timeline' => $timeline,
             'progress' => $progress,
+            'isDisposisiDariDirektur' => $isDisposisiDariDirektur || $permintaan->status === 'disetujui',
         ]);
     }
 
@@ -211,8 +228,9 @@ class KepalaBidangController extends Controller
     }
 
     /**
-     * Approve permintaan - Teruskan LANGSUNG ke Direktur
-     * Workflow: Kepala Bidang → Direktur (skip Wakil Direktur)
+     * Approve permintaan - Ada 2 skenario:
+     * 1. Pertama kali dari Kepala Instalasi → Teruskan ke Direktur
+     * 2. Disposisi balik dari Direktur → Teruskan ke Staff Perencanaan
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
@@ -229,6 +247,41 @@ class KepalaBidangController extends Controller
             return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
         }
 
+        // Cek apakah ini disposisi balik dari Direktur atau permintaan baru dari Kepala Instalasi
+        // Dengan cara cek apakah ada disposisi dari Direktur ke Kepala Bidang dengan status disetujui
+        $disposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
+            ->where('jabatan_tujuan', 'Kepala Bidang')
+            ->where('status', 'disetujui')
+            ->whereHas('notaDinas', function($q) {
+                $q->whereHas('disposisi', function($query) {
+                    $query->where('jabatan_tujuan', 'Direktur');
+                });
+            })
+            ->exists();
+
+        // Skenario 1: Disposisi balik dari Direktur - Teruskan ke Staff Perencanaan
+        if ($disposisiDariDirektur || $permintaan->status === 'disetujui') {
+            // Buat disposisi ke Staff Perencanaan
+            Disposisi::create([
+                'nota_id' => $notaDinas->nota_id,
+                'jabatan_tujuan' => 'Staff Perencanaan',
+                'tanggal_disposisi' => Carbon::now(),
+                'catatan' => $data['catatan'] ?? 'Sudah disetujui Direktur. Mohon lakukan perencanaan pengadaan.',
+                'status' => 'disetujui',
+            ]);
+
+            // Update status permintaan - teruskan ke Staff Perencanaan
+            $permintaan->update([
+                'status' => 'disetujui',
+                'pic_pimpinan' => 'Staff Perencanaan',
+            ]);
+
+            return redirect()
+                ->route('kepala-bidang.index')
+                ->with('success', 'Permintaan diteruskan ke Staff Perencanaan untuk perencanaan pengadaan');
+        }
+
+        // Skenario 2: Permintaan baru dari Kepala Instalasi - Teruskan ke Direktur
         // Buat disposisi otomatis LANGSUNG ke Direktur (skip Wakil Direktur)
         Disposisi::create([
             'nota_id' => $notaDinas->nota_id,

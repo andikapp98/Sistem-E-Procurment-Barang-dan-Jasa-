@@ -200,8 +200,9 @@ class DirekturController extends Controller
     }
 
     /**
-     * Approve permintaan - Disposisi ke Staff Perencanaan
-     * Final Approval dari Direktur
+     * Approve permintaan - Disposisi BALIK ke Kepala Bidang
+     * Final Approval dari Direktur, kemudian dikembalikan ke Kepala Bidang
+     * untuk diteruskan ke Staff Perencanaan
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
@@ -218,24 +219,24 @@ class DirekturController extends Controller
             return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan. Silakan hubungi administrator.']);
         }
 
-        // Buat disposisi otomatis ke Staff Perencanaan
+        // Buat disposisi BALIK ke Kepala Bidang
         Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
-            'jabatan_tujuan' => 'Staff Perencanaan',
+            'jabatan_tujuan' => 'Kepala Bidang',
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => $data['catatan'] ?? 'Disetujui oleh Direktur (Final Approval). Silakan lakukan perencanaan pengadaan.',
+            'catatan' => $data['catatan'] ?? 'Disetujui oleh Direktur (Final Approval). Silakan disposisi ke Staff Perencanaan untuk perencanaan pengadaan.',
             'status' => 'disetujui',
         ]);
 
-        // Update status permintaan - teruskan ke Staff Perencanaan
+        // Update status permintaan - kembalikan ke Kepala Bidang
         $permintaan->update([
             'status' => 'disetujui',
-            'pic_pimpinan' => 'Staff Perencanaan',
+            'pic_pimpinan' => 'Kepala Bidang',
         ]);
 
         return redirect()
             ->route('direktur.index')
-            ->with('success', 'Permintaan disetujui (Final Approval) dan diteruskan ke Staff Perencanaan untuk perencanaan pengadaan.');
+            ->with('success', 'Permintaan disetujui (Final Approval) dan didisposisi balik ke Kepala Bidang untuk diteruskan ke Staff Perencanaan.');
     }
 
     /**

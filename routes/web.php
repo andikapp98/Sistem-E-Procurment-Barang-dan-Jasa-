@@ -120,8 +120,8 @@ Route::middleware(['auth', 'verified'])->prefix('direktur')->name('direktur.')->
     Route::get('/approved', [DirekturController::class, 'approved'])->name('approved');
     Route::get('/permintaan/{permintaan}/disposisi/create', [DirekturController::class, 'createDisposisi'])->name('disposisi.create');
     Route::post('/permintaan/{permintaan}/disposisi', [DirekturController::class, 'storeDisposisi'])->name('disposisi.store');
-    Route::post('/permintaan/{permintaan}/approve', [DirekturController::class, 'approve'])->name('approve');
-    Route::post('/permintaan/{permintaan}/reject', [DirekturController::class, 'reject'])->name('reject');
+    Route::post('/permintaan/{permintaan}/setujui', [DirekturController::class, 'approve'])->name('approve');
+    Route::post('/permintaan/{permintaan}/tolak', [DirekturController::class, 'reject'])->name('reject');
     Route::post('/permintaan/{permintaan}/revisi', [DirekturController::class, 'requestRevision'])->name('revisi');
 });
 
