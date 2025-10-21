@@ -209,4 +209,214 @@ class Permintaan extends Model
 		
 		return round(($completedSteps / $totalSteps) * 100);
 	}
+
+	/**
+	 * Get next step information
+	 * Return informasi tahapan berikutnya yang perlu dilakukan
+	 */
+	public function getNextStep()
+	{
+		$allSteps = [
+			[
+				'step' => 1,
+				'tahapan' => 'Permintaan',
+				'description' => 'Permintaan dibuat oleh unit',
+				'responsible' => 'Unit/Admin',
+			],
+			[
+				'step' => 2,
+				'tahapan' => 'Nota Dinas',
+				'description' => 'Kepala Instalasi membuat nota dinas',
+				'responsible' => 'Kepala Instalasi',
+			],
+			[
+				'step' => 3,
+				'tahapan' => 'Disposisi',
+				'description' => 'Disposisi oleh pimpinan (Kepala Bidang → Direktur)',
+				'responsible' => 'Kepala Bidang / Direktur',
+			],
+			[
+				'step' => 4,
+				'tahapan' => 'Perencanaan',
+				'description' => 'Staff Perencanaan membuat rencana pengadaan',
+				'responsible' => 'Staff Perencanaan',
+			],
+			[
+				'step' => 5,
+				'tahapan' => 'KSO',
+				'description' => 'Kerja Sama Operasional dengan vendor',
+				'responsible' => 'Bagian KSO',
+			],
+			[
+				'step' => 6,
+				'tahapan' => 'Pengadaan',
+				'description' => 'Proses pengadaan dan pembelian',
+				'responsible' => 'Bagian Pengadaan',
+			],
+			[
+				'step' => 7,
+				'tahapan' => 'Nota Penerimaan',
+				'description' => 'Penerimaan barang/jasa dari vendor',
+				'responsible' => 'Bagian Serah Terima',
+			],
+			[
+				'step' => 8,
+				'tahapan' => 'Serah Terima',
+				'description' => 'Serah terima kepada unit pemohon',
+				'responsible' => 'Bagian Serah Terima',
+			],
+		];
+
+		$completedTimeline = $this->getTimelineTracking();
+		$currentStep = count($completedTimeline);
+
+		// Jika semua tahap selesai
+		if ($currentStep >= 8) {
+			return [
+				'step' => 8,
+				'tahapan' => 'Selesai',
+				'description' => 'Semua tahapan telah selesai',
+				'responsible' => '-',
+				'completed' => true,
+			];
+		}
+
+		// Return tahap berikutnya
+		$nextStep = $allSteps[$currentStep];
+		$nextStep['completed'] = false;
+		return $nextStep;
+	}
+
+	/**
+	 * Get all remaining steps
+	 * Return array semua tahapan yang belum dilalui
+	 */
+	public function getRemainingSteps()
+	{
+		$allSteps = [
+			'Permintaan',
+			'Nota Dinas',
+			'Disposisi',
+			'Perencanaan',
+			'KSO',
+			'Pengadaan',
+			'Nota Penerimaan',
+			'Serah Terima',
+		];
+
+		$completedTimeline = $this->getTimelineTracking();
+		$completedSteps = array_column($completedTimeline, 'tahapan');
+
+		return array_values(array_diff($allSteps, $completedSteps));
+	}
+
+	/**
+	 * Get complete tracking with next steps
+	 * Return timeline lengkap termasuk tahapan yang belum dilalui
+	 */
+	public function getCompleteTracking()
+	{
+		$allSteps = [
+			[
+				'step' => 1,
+				'tahapan' => 'Permintaan',
+				'description' => 'Permintaan dibuat oleh unit',
+				'responsible' => 'Unit/Admin',
+				'icon' => 'document',
+			],
+			[
+				'step' => 2,
+				'tahapan' => 'Nota Dinas',
+				'description' => 'Kepala Instalasi membuat nota dinas',
+				'responsible' => 'Kepala Instalasi',
+				'icon' => 'mail',
+			],
+			[
+				'step' => 3,
+				'tahapan' => 'Disposisi',
+				'description' => 'Disposisi oleh pimpinan',
+				'responsible' => 'Kepala Bidang / Direktur',
+				'icon' => 'clipboard',
+			],
+			[
+				'step' => 4,
+				'tahapan' => 'Perencanaan',
+				'description' => 'Staff Perencanaan membuat rencana pengadaan',
+				'responsible' => 'Staff Perencanaan',
+				'icon' => 'chart',
+			],
+			[
+				'step' => 5,
+				'tahapan' => 'KSO',
+				'description' => 'Kerja Sama Operasional dengan vendor',
+				'responsible' => 'Bagian KSO',
+				'icon' => 'handshake',
+			],
+			[
+				'step' => 6,
+				'tahapan' => 'Pengadaan',
+				'description' => 'Proses pengadaan dan pembelian',
+				'responsible' => 'Bagian Pengadaan',
+				'icon' => 'shopping-cart',
+			],
+			[
+				'step' => 7,
+				'tahapan' => 'Nota Penerimaan',
+				'description' => 'Penerimaan barang/jasa dari vendor',
+				'responsible' => 'Bagian Serah Terima',
+				'icon' => 'inbox',
+			],
+			[
+				'step' => 8,
+				'tahapan' => 'Serah Terima',
+				'description' => 'Serah terima kepada unit pemohon',
+				'responsible' => 'Bagian Serah Terima',
+				'icon' => 'check-circle',
+			],
+		];
+
+		$completedTimeline = $this->getTimelineTracking();
+		$result = [];
+
+		foreach ($allSteps as $stepInfo) {
+			// Cari apakah tahap ini sudah ada di completed timeline
+			$completed = null;
+			foreach ($completedTimeline as $item) {
+				if ($item['tahapan'] === $stepInfo['tahapan']) {
+					$completed = $item;
+					break;
+				}
+			}
+
+			if ($completed) {
+				// Tahap sudah selesai
+				$result[] = [
+					'step' => $stepInfo['step'],
+					'tahapan' => $stepInfo['tahapan'],
+					'description' => $stepInfo['description'],
+					'responsible' => $stepInfo['responsible'],
+					'icon' => $stepInfo['icon'],
+					'tanggal' => $completed['tanggal'],
+					'status' => $completed['status'],
+					'keterangan' => $completed['keterangan'],
+					'completed' => true,
+				];
+			} else {
+				// Tahap belum dilalui
+				$result[] = [
+					'step' => $stepInfo['step'],
+					'tahapan' => $stepInfo['tahapan'],
+					'description' => $stepInfo['description'],
+					'responsible' => $stepInfo['responsible'],
+					'icon' => $stepInfo['icon'],
+					'tanggal' => null,
+					'status' => 'pending',
+					'keterangan' => 'Belum dilaksanakan',
+					'completed' => false,
+				];
+			}
+		}
+
+		return $result;
+	}
 }

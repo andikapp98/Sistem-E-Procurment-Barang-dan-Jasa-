@@ -28,20 +28,22 @@ class DirekturController extends Controller
     {
         $user = Auth::user();
         
-        // Ambil semua permintaan yang ditujukan ke Direktur
-        // HANYA yang statusnya proses atau disetujui
+        // Ambil permintaan yang SEDANG di tangan Direktur (pic_pimpinan = Direktur DAN status = proses)
+        // Setelah Direktur approve/reject/revisi, pic_pimpinan berubah sehingga tidak muncul lagi
         $permintaans = Permintaan::with(['user', 'notaDinas'])
             ->where(function($q) use ($user) {
                 $q->where('pic_pimpinan', 'Direktur')
                   ->orWhere('pic_pimpinan', $user->nama);
             })
-            ->whereIn('status', ['proses', 'disetujui'])
+            ->where('status', 'proses') // HANYA yang sedang proses
             ->get();
 
         $stats = [
             'total' => $permintaans->count(),
             'menunggu' => $permintaans->where('status', 'proses')->count(),
-            'disetujui' => $permintaans->where('status', 'disetujui')->count(),
+            'disetujui' => Permintaan::where('status', 'disetujui')
+                ->where('deskripsi', 'like', '%disetujui oleh Direktur%')
+                ->count(),
             'ditolak' => Permintaan::where('status', 'ditolak')
                 ->where('deskripsi', 'like', '%DITOLAK oleh Direktur%')
                 ->count(),
@@ -72,13 +74,13 @@ class DirekturController extends Controller
     {
         $user = Auth::user();
         
-        // Query dasar - hanya permintaan yang ditujukan ke Direktur
+        // Query dasar - HANYA permintaan yang SEDANG di tangan Direktur (status = proses)
         $query = Permintaan::with(['user', 'notaDinas'])
             ->where(function($q) use ($user) {
                 $q->where('pic_pimpinan', 'Direktur')
                   ->orWhere('pic_pimpinan', $user->nama);
             })
-            ->whereIn('status', ['proses', 'disetujui']);
+            ->where('status', 'proses'); // HANYA yang sedang proses
 
         // Apply filters
         if ($request->filled('search')) {
@@ -87,10 +89,6 @@ class DirekturController extends Controller
                 $q->where('permintaan_id', 'like', "%{$search}%")
                   ->orWhere('deskripsi', 'like', "%{$search}%");
             });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
         }
 
         if ($request->filled('bidang')) {
@@ -328,31 +326,27 @@ class DirekturController extends Controller
             'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima'
         ]);
 
-        // Get timeline tracking lengkap
-        $timeline = $permintaan->getTimelineTracking();
+        // Get complete tracking (termasuk tahapan yang belum dilalui)
+        $completeTracking = $permintaan->getCompleteTracking();
         $progress = $permintaan->getProgressPercentage();
+        $nextStep = $permintaan->getNextStep();
 
-        // Tahapan yang belum dilalui
-        $allSteps = [
-            'Permintaan',
-            'Nota Dinas',
-            'Disposisi',
-            'Perencanaan',
-            'KSO',
-            'Pengadaan',
-            'Nota Penerimaan',
-            'Serah Terima',
-        ];
-
-        $completedSteps = array_column($timeline, 'tahapan');
-        $pendingSteps = array_diff($allSteps, $completedSteps);
+        // Pisahkan completed dan pending steps
+        $completedSteps = array_filter($completeTracking, function($item) {
+            return $item['completed'];
+        });
+        
+        $pendingSteps = array_filter($completeTracking, function($item) {
+            return !$item['completed'];
+        });
 
         return Inertia::render('Direktur/Tracking', [
             'permintaan' => $permintaan,
-            'timeline' => $timeline,
-            'progress' => $progress,
-            'completedSteps' => $completedSteps,
+            'completeTracking' => array_values($completeTracking),
+            'completedSteps' => array_values($completedSteps),
             'pendingSteps' => array_values($pendingSteps),
+            'nextStep' => $nextStep,
+            'progress' => $progress,
             'userLogin' => $user,
         ]);
     }

@@ -128,16 +128,30 @@
                                             </div>
                                         </td>
                                         <td class="py-3 px-3">
-                                            <div class="text-xs">
-                                                <div class="flex items-center gap-1 mb-1">
-                                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                                        <div class="bg-indigo-600 h-1.5 rounded-full" :style="{ width: item.progress + '%' }"></div>
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-1 mb-1">
+                                                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                                            <div class="bg-indigo-600 h-1.5 rounded-full transition-all" :style="{ width: item.progress + '%' }"></div>
+                                                        </div>
+                                                        <span class="text-xs font-medium text-gray-700 min-w-[35px]">{{ item.progress }}%</span>
                                                     </div>
-                                                    <span class="text-xs font-medium text-gray-700 min-w-[35px]">{{ item.progress }}%</span>
+                                                    <div class="text-xs text-gray-600">
+                                                        {{ item.tracking_status }}
+                                                    </div>
+                                                    <div class="text-xs text-gray-500">
+                                                        ({{ item.timeline_count }}/8 tahap)
+                                                    </div>
                                                 </div>
-                                                <div class="text-gray-600">
-                                                    {{ item.tracking_status }} ({{ item.timeline_count }}/8)
-                                                </div>
+                                                <Link
+                                                    :href="route('permintaan.tracking', item.permintaan_id)"
+                                                    class="ml-2 text-blue-600 hover:text-blue-900 flex-shrink-0"
+                                                    title="Lihat Timeline Lengkap"
+                                                >
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                                    </svg>
+                                                </Link>
                                             </div>
                                         </td>
                                         <td class="py-3 px-3 whitespace-nowrap">
@@ -153,37 +167,37 @@
                                             <div class="flex items-center gap-2">
                                                 <Link
                                                     :href="route('permintaan.show', item.permintaan_id)"
-                                                    class="text-indigo-600 hover:text-indigo-900"
+                                                    class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-900 text-xs"
                                                     title="Lihat Detail"
                                                 >
-                                                    👁️
-                                                </Link>
-                                                <Link
-                                                    :href="route('permintaan.tracking', item.permintaan_id)"
-                                                    class="text-blue-600 hover:text-blue-900"
-                                                    title="Lihat Tracking"
-                                                >
-                                                    📊
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
                                                 </Link>
                                                 <!-- Edit hanya tersedia jika status ditolak -->
                                                 <Link
                                                     v-if="canEdit(item)"
                                                     :href="route('permintaan.edit', item.permintaan_id)"
-                                                    class="text-green-600 hover:text-green-900"
+                                                    class="inline-flex items-center gap-1 text-green-600 hover:text-green-900 text-xs"
                                                     title="Edit (Revisi)"
                                                 >
-                                                    ✏️
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
                                                 </Link>
                                                 <!-- Delete hanya tersedia jika status ditolak -->
                                                 <button
                                                     v-if="canDelete(item)"
                                                     @click="destroy(item.permintaan_id)"
-                                                    class="text-red-600 hover:text-red-900 disabled:opacity-50"
+                                                    class="inline-flex items-center gap-1 text-red-600 hover:text-red-900 disabled:opacity-50 text-xs"
                                                     :disabled="deleting === item.permintaan_id"
                                                     title="Hapus"
                                                 >
-                                                    <span v-if="deleting === item.permintaan_id">⏳</span>
-                                                    <span v-else>🗑️</span>
+                                                    <svg v-if="deleting !== item.permintaan_id" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                    <span v-else class="animate-spin">⏳</span>
                                                 </button>
                                             </div>
                                         </td>

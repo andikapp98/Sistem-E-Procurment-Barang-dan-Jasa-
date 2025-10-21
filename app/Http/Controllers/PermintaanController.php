@@ -199,31 +199,27 @@ class PermintaanController extends Controller
             'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima'
         ]);
 
-        // Get timeline tracking lengkap
-        $timeline = $permintaan->getTimelineTracking();
+        // Get complete tracking (termasuk tahapan yang belum dilalui)
+        $completeTracking = $permintaan->getCompleteTracking();
         $progress = $permintaan->getProgressPercentage();
+        $nextStep = $permintaan->getNextStep();
 
-        // Tahapan yang belum dilalui
-        $allSteps = [
-            'Permintaan',
-            'Nota Dinas',
-            'Disposisi',
-            'Perencanaan',
-            'KSO',
-            'Pengadaan',
-            'Nota Penerimaan',
-            'Serah Terima',
-        ];
-
-        $completedSteps = array_column($timeline, 'tahapan');
-        $pendingSteps = array_diff($allSteps, $completedSteps);
+        // Pisahkan completed dan pending steps
+        $completedSteps = array_filter($completeTracking, function($item) {
+            return $item['completed'];
+        });
+        
+        $pendingSteps = array_filter($completeTracking, function($item) {
+            return !$item['completed'];
+        });
 
         return Inertia::render('Permintaan/Tracking', [
             'permintaan' => $permintaan,
-            'timeline' => $timeline,
-            'progress' => $progress,
-            'completedSteps' => $completedSteps,
+            'completeTracking' => array_values($completeTracking),
+            'completedSteps' => array_values($completedSteps),
             'pendingSteps' => array_values($pendingSteps),
+            'nextStep' => $nextStep,
+            'progress' => $progress,
             'userLogin' => Auth::user(),
         ]);
     }

@@ -28,17 +28,12 @@ class KepalaBidangController extends Controller
     {
         $user = Auth::user();
         
-        // Ambil permintaan yang memiliki disposisi ke Kepala Bidang atau pic_pimpinan = Kepala Bidang
+        // Ambil permintaan yang SEDANG di tangan Kepala Bidang
         $permintaans = Permintaan::with(['user', 'notaDinas.disposisi'])
             ->where(function($q) use ($user) {
-                // Cek berdasarkan pic_pimpinan
+                // Cek berdasarkan pic_pimpinan = Kepala Bidang
                 $q->where('pic_pimpinan', 'Kepala Bidang')
-                  ->orWhere('pic_pimpinan', $user->nama)
-                  // ATAU cek berdasarkan disposisi yang ditujukan ke Kepala Bidang
-                  ->orWhereHas('notaDinas.disposisi', function($query) {
-                      $query->where('jabatan_tujuan', 'Kepala Bidang')
-                            ->where('status', 'pending');
-                  });
+                  ->orWhere('pic_pimpinan', $user->nama);
             })
             ->whereIn('status', ['proses', 'disetujui'])
             ->get();
@@ -77,17 +72,12 @@ class KepalaBidangController extends Controller
     {
         $user = Auth::user();
         
-        // Query dasar - permintaan yang ditujukan ke Kepala Bidang atau memiliki disposisi ke Kepala Bidang
+        // Query dasar - permintaan yang SEDANG di tangan Kepala Bidang
         $query = Permintaan::with(['user', 'notaDinas.disposisi'])
             ->where(function($q) use ($user) {
-                // Cek berdasarkan pic_pimpinan
+                // Cek berdasarkan pic_pimpinan = Kepala Bidang
                 $q->where('pic_pimpinan', 'Kepala Bidang')
-                  ->orWhere('pic_pimpinan', $user->nama)
-                  // ATAU cek berdasarkan disposisi yang ditujukan ke Kepala Bidang
-                  ->orWhereHas('notaDinas.disposisi', function($query) {
-                      $query->where('jabatan_tujuan', 'Kepala Bidang')
-                            ->where('status', 'pending');
-                  });
+                  ->orWhere('pic_pimpinan', $user->nama);
             })
             ->whereIn('status', ['proses', 'disetujui']);
 
