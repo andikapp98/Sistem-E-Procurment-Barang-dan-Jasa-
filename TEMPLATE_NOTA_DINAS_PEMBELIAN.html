@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contoh Nota Dinas Pembelian - Staff Perencanaan</title>
+    <style>
+        @page { 
+            size: A4; 
+            margin: 2.5cm;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        td {
+            padding: 2px 0;
+        }
+        .field-label {
+            width: 150px;
+            vertical-align: top;
+        }
+        .separator {
+            width: 20px;
+        }
+        .content {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .section-content {
+            margin-left: 20px;
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+        .signature {
+            margin-top: 40px;
+            text-align: right;
+        }
+        .signature-box {
+            display: inline-block;
+            text-align: center;
+        }
+        .signature-space {
+            margin-bottom: 80px;
+        }
+        .line-separator {
+            border-top: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        .urgent {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>NOTA DINAS PEMBELIAN</h2>
+
+    <table>
+        <tr>
+            <td class="field-label">Tanggal</td>
+            <td class="separator">:</td>
+            <td>25 Oktober 2025</td>
+        </tr>
+        <tr>
+            <td class="field-label">Nomor</td>
+            <td class="separator">:</td>
+            <td>ND/PEMB/008/X/2025</td>
+        </tr>
+        <tr>
+            <td class="field-label">Usulan Ruangan</td>
+            <td class="separator">:</td>
+            <td><strong>IGD (Instalasi Gawat Darurat)</strong></td>
+        </tr>
+        <tr>
+            <td class="field-label">Sifat</td>
+            <td class="separator">:</td>
+            <td><strong class="urgent">SANGAT SEGERA</strong></td>
+        </tr>
+        <tr>
+            <td class="field-label">Kepada</td>
+            <td class="separator">:</td>
+            <td>Yth. Kepala Bagian Pengadaan</td>
+        </tr>
+        <tr>
+            <td class="field-label">Dari</td>
+            <td class="separator">:</td>
+            <td>Staff Perencanaan / Bagian Perencanaan</td>
+        </tr>
+        <tr>
+            <td class="field-label">Perihal</td>
+            <td class="separator">:</td>
+            <td><strong>Pembelian Alat Kesehatan untuk IGD</strong></td>
+        </tr>
+    </table>
+
+    <div class="line-separator"></div>
+
+    <div class="content">
+        <div class="section-title">DASAR:</div>
+        <div class="section-content">
+            1. Nota Dinas Usulan Nomor ND/PEREN/015/X/2025 tanggal 21 Oktober 2025 yang telah disetujui Direktur<br>
+            2. Surat Persetujuan Direktur Nomor SP/DIR/032/X/2025 tanggal 23 Oktober 2025<br>
+            3. Alokasi Anggaran RKAP Tahun 2026 pos Belanja Modal - Alat Kesehatan<br>
+            4. Hasil Rapat Koordinasi Tim Pengadaan tanggal 24 Oktober 2025
+        </div>
+    </div>
+
+    <div class="content">
+        <p style="text-align: justify; margin-bottom: 15px;">
+            Sehubungan dengan <strong>pelaksanaan pembelian alat kesehatan untuk IGD yang telah 
+            mendapat persetujuan Direktur</strong>, bersama ini kami sampaikan hal-hal sebagai berikut:
+        </p>
+    </div>
+
+    <div class="content">
+        <div class="section-title">URAIAN:</div>
+        <div class="section-content">
+            <p style="margin-bottom: 10px;">
+                Berdasarkan persetujuan yang telah diberikan, Bagian Perencanaan menginstruksikan 
+                Bagian Pengadaan untuk <strong>segera melaksanakan proses pembelian</strong> dengan 
+                detail sebagai berikut:
+            </p>
+            
+            <p style="margin-bottom: 10px;"><strong>A. Spesifikasi Alat Kesehatan (Final):</strong></p>
+            <table style="margin-left: 20px; margin-bottom: 15px; width: 95%;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #000;">
+                        <th style="text-align: left; padding: 5px; width: 40px;">No</th>
+                        <th style="text-align: left; padding: 5px; width: 250px;">Nama Alat</th>
+                        <th style="text-align: left; padding: 5px; width: 80px;">Jumlah</th>
+                        <th style="text-align: left; padding: 5px;">Spesifikasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 5px;">1.</td>
+                        <td style="padding: 5px;">Monitor Pasien Multi-Parameter</td>
+                        <td style="padding: 5px;">5 unit</td>
+                        <td style="padding: 5px;">Touch screen 15", ECG 12-lead, IBP 2-channel</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;">2.</td>
+                        <td style="padding: 5px;">Ventilator Portable</td>
+                        <td style="padding: 5px;">2 unit</td>
+                        <td style="padding: 5px;">Mode SIMV, CPAP, pressure support, battery backup</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;">3.</td>
+                        <td style="padding: 5px;">Defibrillator</td>
+                        <td style="padding: 5px;">1 unit</td>
+                        <td style="padding: 5px;">Biphasic, AED mode, external pacing, recorder</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;">4.</td>
+                        <td style="padding: 5px;">Syringe Pump</td>
+                        <td style="padding: 5px;">10 unit</td>
+                        <td style="padding: 5px;">0.1-999 ml/hr, pressure alarm, battery 8 hours</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;">5.</td>
+                        <td style="padding: 5px;">Suction Pump</td>
+                        <td style="padding: 5px;">3 unit</td>
+                        <td style="padding: 5px;">Electric portable, vacuum -80 kPa, 1L jar</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p style="margin-bottom: 10px;"><strong>B. Vendor & Harga (Sudah Disetujui):</strong></p>
+            <table style="margin-left: 20px; margin-bottom: 15px; border-collapse: collapse; width: 95%;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #000; background-color: #f3f4f6;">
+                        <th style="text-align: left; padding: 8px;">Nama Alat</th>
+                        <th style="text-align: left; padding: 8px;">Vendor</th>
+                        <th style="text-align: right; padding: 8px;">Harga Satuan</th>
+                        <th style="text-align: right; padding: 8px;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px;">Monitor Pasien (5 unit)</td>
+                        <td style="padding: 8px;">PT Mitra Medika</td>
+                        <td style="text-align: right; padding: 8px;">45.000.000</td>
+                        <td style="text-align: right; padding: 8px;">225.000.000</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px;">Ventilator (2 unit)</td>
+                        <td style="padding: 8px;">PT Alkes Nusantara</td>
+                        <td style="text-align: right; padding: 8px;">85.000.000</td>
+                        <td style="text-align: right; padding: 8px;">170.000.000</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px;">Defibrillator (1 unit)</td>
+                        <td style="padding: 8px;">PT Mitra Medika</td>
+                        <td style="text-align: right; padding: 8px;">65.000.000</td>
+                        <td style="text-align: right; padding: 8px;">65.000.000</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px;">Syringe Pump (10 unit)</td>
+                        <td style="padding: 8px;">PT Medikal Indonesia</td>
+                        <td style="text-align: right; padding: 8px;">12.000.000</td>
+                        <td style="text-align: right; padding: 8px;">120.000.000</td>
+                    </tr>
+                    <tr style="border-bottom: 2px solid #000;">
+                        <td style="padding: 8px;">Suction Pump (3 unit)</td>
+                        <td style="padding: 8px;">PT Medikal Indonesia</td>
+                        <td style="text-align: right; padding: 8px;">15.000.000</td>
+                        <td style="text-align: right; padding: 8px;">45.000.000</td>
+                    </tr>
+                    <tr style="background-color: #fef3c7;">
+                        <td colspan="3" style="padding: 8px; text-align: right;"><strong>GRAND TOTAL:</strong></td>
+                        <td style="text-align: right; padding: 8px;"><strong>625.000.000</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="margin-left: 20px; margin-bottom: 15px; font-style: italic; color: #666;">
+                * Harga sudah termasuk PPN 11%, instalasi, training, dan garansi 1 tahun
+            </p>
+
+            <p style="margin-bottom: 10px;"><strong>C. Timeline Pengadaan:</strong></p>
+            <table style="margin-left: 20px; margin-bottom: 15px;">
+                <tr>
+                    <td style="width: 250px; padding: 3px 0;">Purchase Order (PO)</td>
+                    <td style="padding: 3px 5px;">:</td>
+                    <td style="padding: 3px 0;">26 Oktober 2025 (H+1)</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Konfirmasi Vendor</td>
+                    <td style="padding: 3px 5px;">:</td>
+                    <td style="padding: 3px 0;">27 Oktober 2025</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Pengiriman Barang</td>
+                    <td style="padding: 3px 5px;">:</td>
+                    <td style="padding: 3px 0;">5-10 November 2025</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Instalasi & Testing</td>
+                    <td style="padding: 3px 5px;">:</td>
+                    <td style="padding: 3px 0;">11-15 November 2025</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;">Training Staff IGD</td>
+                    <td style="padding: 3px 5px;">:</td>
+                    <td style="padding: 3px 0;">16-17 November 2025</td>
+                </tr>
+                <tr>
+                    <td style="padding: 3px 0;"><strong>Target Operasional</strong></td>
+                    <td style="padding: 3px 5px;">:</td>
+                    <td style="padding: 3px 0;"><strong>18 November 2025</strong></td>
+                </tr>
+            </table>
+
+            <p style="margin-bottom: 10px;"><strong>D. Anggaran & Pembayaran:</strong></p>
+            <ul style="margin-left: 40px; margin-bottom: 15px;">
+                <li style="margin-bottom: 5px;">Total Budget: <strong>Rp 625.000.000,- (Enam Ratus Dua Puluh Lima Juta Rupiah)</strong></li>
+                <li style="margin-bottom: 5px;">Sumber Dana: RKAP 2026 - Belanja Modal</li>
+                <li style="margin-bottom: 5px;">Metode Pembayaran: 30% DP, 70% setelah instalasi selesai</li>
+                <li style="margin-bottom: 5px;">Koordinasi Pembayaran: Bagian Keuangan</li>
+            </ul>
+
+            <p style="margin-bottom: 10px;"><strong>E. Dokumen Pendukung (Terlampir):</strong></p>
+            <ol style="margin-left: 40px; margin-bottom: 15px;">
+                <li style="margin-bottom: 5px;">Surat Persetujuan Direktur</li>
+                <li style="margin-bottom: 5px;">Quotation dari Vendor</li>
+                <li style="margin-bottom: 5px;">Spesifikasi Teknis Detail</li>
+                <li style="margin-bottom: 5px;">Sertifikat & Izin Edar Alkes</li>
+                <li style="margin-bottom: 5px;">Draft Kontrak Pembelian</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="section-title">REKOMENDASI:</div>
+        <div class="section-content">
+            <p style="margin-bottom: 10px;">
+                Mengingat <strong class="urgent">SIFAT SANGAT SEGERA</strong> dari pengadaan ini 
+                (terkait peningkatan layanan IGD yang menjadi prioritas RS), kami mohon Bagian 
+                Pengadaan untuk:
+            </p>
+            
+            <ol style="margin-left: 20px; margin-bottom: 15px;">
+                <li style="margin-bottom: 8px;">
+                    <strong>Segera menerbitkan Purchase Order (PO)</strong> kepada vendor terpilih 
+                    selambat-lambatnya <strong>26 Oktober 2025</strong>;
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Melakukan konfirmasi detail pengiriman</strong> dan memastikan vendor 
+                    dapat memenuhi timeline yang telah ditetapkan;
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Koordinasi dengan Bagian Keuangan</strong> untuk proses pencairan DP 
+                    segera setelah PO diterbitkan;
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Koordinasi dengan Kepala IGD</strong> untuk persiapan lokasi instalasi 
+                    dan jadwal training staff;
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Membuat jadwal monitoring delivery</strong> dan memberikan update progress 
+                    kepada Bagian Perencanaan setiap 3 hari;
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <strong>Memastikan dokumen serah terima</strong> dan aktivasi garansi dilakukan 
+                    dengan benar saat instalasi selesai.
+                </li>
+            </ol>
+
+            <p style="margin-top: 15px; padding: 10px; background-color: #fef3c7; border-left: 4px solid #f59e0b;">
+                <strong>Catatan Penting:</strong> Mengingat urgensi kebutuhan IGD, mohon proses 
+                pembelian ini diprioritaskan dan tidak mengalami hambatan administratif yang dapat 
+                menunda timeline yang telah ditetapkan.
+            </p>
+        </div>
+    </div>
+
+    <div class="content" style="text-align: justify; margin-top: 30px;">
+        Demikian nota dinas pembelian ini kami sampaikan untuk dapat <strong>segera ditindaklanjuti</strong>. 
+        Atas perhatian, kerjasama, dan pelaksanaan yang cepat kami ucapkan terima kasih.
+    </div>
+
+    <div class="signature">
+        <div class="signature-box">
+            <p style="margin-bottom: 5px;">Staff Perencanaan</p>
+            <div class="signature-space"></div>
+            <p style="margin: 0; text-decoration: underline;"><strong>Dr. Ahmad Fauzi, S.KM., M.Kes</strong></p>
+            <p style="margin: 0;">Staff Perencanaan</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 50px; border-top: 1px solid #ccc; padding-top: 20px; font-size: 10pt; color: #666;">
+        <p style="margin: 0;"><em>Tembusan:</em></p>
+        <ol style="margin: 5px 0 0 20px; padding: 0;">
+            <li>Direktur Rumah Sakit</li>
+            <li>Wakil Direktur Pelayanan</li>
+            <li>Kepala Bidang Perencanaan</li>
+            <li>Kepala Instalasi Gawat Darurat (IGD)</li>
+            <li>Bagian Keuangan</li>
+            <li>Arsip</li>
+        </ol>
+    </div>
+
+</body>
+</html>

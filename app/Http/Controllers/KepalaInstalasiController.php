@@ -283,51 +283,6 @@ class KepalaInstalasiController extends Controller
         ]);
     }
 
-    /**
-     * Form untuk membuat Nota Dinas dari permintaan
-     * Hanya bisa membuat nota dinas untuk permintaan bagiannya sendiri
-     */
-    public function createNotaDinas(Permintaan $permintaan)
-    {
-        $user = Auth::user();$permintaan->load('user');
-        
-        return Inertia::render('KepalaInstalasi/CreateNotaDinas', [
-            'permintaan' => $permintaan,
-        ]);
-    }
-
-    /**
-     * Store Nota Dinas
-     * Hanya bisa menyimpan nota dinas untuk permintaan bagiannya sendiri
-     */
-    public function storeNotaDinas(Request $request, Permintaan $permintaan)
-    {
-        $user = Auth::user();$data = $request->validate([
-            'dari' => 'required|string',
-            'kepada' => 'required|string',
-            'tanggal_nota' => 'required|date',
-            'perihal' => 'nullable|string',
-        ]);
-
-        $data['permintaan_id'] = $permintaan->permintaan_id;
-        
-        // Set default perihal jika tidak ada
-        if (!isset($data['perihal'])) {
-            $data['perihal'] = 'Permintaan Pengadaan - ' . $permintaan->no_nota_dinas;
-        }
-
-        $notaDinas = NotaDinas::create($data);
-
-        // Update status permintaan
-        $permintaan->update([
-            'status' => 'proses',
-            'pic_pimpinan' => $data['kepada'],
-        ]);
-
-        return redirect()
-            ->route('kepala-instalasi.show', $permintaan)
-            ->with('success', 'Nota Dinas berhasil dibuat dan dikirim ke ' . $data['kepada']);
-    }
 
     /**
      * Approve permintaan - Otomatis teruskan ke Kepala Bidang

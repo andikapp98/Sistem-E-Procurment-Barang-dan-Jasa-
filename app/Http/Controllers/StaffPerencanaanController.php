@@ -173,6 +173,7 @@ class StaffPerencanaanController extends Controller
             'trackingStatus' => $permintaan->trackingStatus,
             'timeline' => $timeline,
             'progress' => $progress,
+            'userLogin' => $user,
         ]);
     }
 
@@ -260,6 +261,80 @@ class StaffPerencanaanController extends Controller
         return redirect()
             ->route('staff-perencanaan.index')
             ->with('success', 'Perencanaan berhasil dibuat dan didisposisi ke ' . $data['disposisi_ke']);
+    }
+
+    /**
+     * Form membuat Nota Dinas Usulan
+     */
+    public function createNotaDinas(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $permintaan->load('user');
+        
+        return Inertia::render('StaffPerencanaan/CreateNotaDinas', [
+            'permintaan' => $permintaan,
+        ]);
+    }
+
+    /**
+     * Store Nota Dinas Usulan
+     */
+    public function storeNotaDinas(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        $data = $request->validate([
+            'tanggal_nota' => 'required|date',
+            'nomor' => 'nullable|string',
+            'penerima' => 'nullable|string',
+            'dari' => 'required|string',
+            'kepada' => 'required|string',
+            'sifat' => 'nullable|in:Sangat Segera,Segera,Biasa,Rahasia',
+            'kode_program' => 'nullable|string',
+            'kode_kegiatan' => 'nullable|string',
+            'kode_rekening' => 'nullable|string',
+            'uraian' => 'nullable|string',
+            'pagu_anggaran' => 'required|numeric|min:0',
+            'pph' => 'nullable|numeric|min:0',
+            'ppn' => 'nullable|numeric|min:0',
+            'pph_21' => 'nullable|numeric|min:0',
+            'pph_4_2' => 'nullable|numeric|min:0',
+            'pph_22' => 'nullable|numeric|min:0',
+            'unit_instalasi' => 'nullable|string',
+            'no_faktur_pajak' => 'nullable|string',
+            'no_kwitansi' => 'nullable|string',
+            'tanggal_faktur_pajak' => 'nullable|date',
+            'perihal' => 'nullable|string',
+        ]);
+
+        $data['permintaan_id'] = $permintaan->permintaan_id;
+        
+        // Set default perihal jika tidak ada
+        if (!isset($data['perihal'])) {
+            $data['perihal'] = 'Nota Dinas Usulan Pengadaan - ' . $permintaan->deskripsi;
+        }
+
+        // Generate nomor nota otomatis jika kosong
+        if (empty($data['nomor'])) {
+            $lastNota = NotaDinas::whereYear('tanggal_nota', date('Y'))
+                ->orderBy('nota_id', 'desc')
+                ->first();
+            $nextNumber = $lastNota ? (intval(substr($lastNota->nomor, 0, 3)) + 1) : 1;
+            $data['nomor'] = sprintf('%03d/ND-SP/%s', $nextNumber, date('Y'));
+        }
+
+        $notaDinas = NotaDinas::create($data);
+
+        // Update status permintaan
+        $permintaan->update([
+            'status' => 'proses',
+            'pic_pimpinan' => $data['kepada'],
+        ]);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Nota Dinas Usulan berhasil dibuat dan dikirim ke ' . $data['kepada']);
     }
 
     /**

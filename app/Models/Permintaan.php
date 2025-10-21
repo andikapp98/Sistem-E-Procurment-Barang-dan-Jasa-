@@ -419,4 +419,18 @@ class Permintaan extends Model
 
 		return $result;
 	}
+
+	/**
+	 * Update timeline tracking
+	 * Automatically create timeline entry when status changes
+	 */
+	public function updateTimeline($tahapan, $keterangan, $status = 'selesai')
+	{
+		return $this->timelineTracking()->create([
+			'tahapan' => $tahapan,
+			'tanggal' => Carbon::now(),
+			'keterangan' => $keterangan,
+			'status' => $status,
+		]);
+	}
 }

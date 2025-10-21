@@ -67,8 +67,6 @@ Route::middleware(['auth', 'verified'])->prefix('kepala-instalasi')->name('kepal
     Route::get('/', [KepalaInstalasiController::class, 'index'])->name('index');
     Route::get('/permintaan/{permintaan}', [KepalaInstalasiController::class, 'show'])->name('show');
     Route::get('/permintaan/{permintaan}/tracking', [KepalaInstalasiController::class, 'tracking'])->name('tracking');
-    Route::get('/permintaan/{permintaan}/nota-dinas/create', [KepalaInstalasiController::class, 'createNotaDinas'])->name('nota-dinas.create');
-    Route::post('/permintaan/{permintaan}/nota-dinas', [KepalaInstalasiController::class, 'storeNotaDinas'])->name('nota-dinas.store');
     Route::post('/permintaan/{permintaan}/approve', [KepalaInstalasiController::class, 'approve'])->name('approve');
     Route::post('/permintaan/{permintaan}/reject', [KepalaInstalasiController::class, 'reject'])->name('reject');
     Route::post('/permintaan/{permintaan}/revisi', [KepalaInstalasiController::class, 'requestRevision'])->name('revisi');
@@ -137,11 +135,9 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
     Route::get('/permintaan/{permintaan}/disposisi/create', [StaffPerencanaanController::class, 'createDisposisi'])->name('disposisi.create');
     Route::post('/permintaan/{permintaan}/disposisi', [StaffPerencanaanController::class, 'storeDisposisi'])->name('disposisi.store');
     
-    // Routes untuk Scan Berkas
-    Route::get('/permintaan/{permintaan}/scan-berkas', [StaffPerencanaanController::class, 'uploadDokumen'])->name('scan-berkas');
-    Route::post('/permintaan/{permintaan}/dokumen', [StaffPerencanaanController::class, 'storeDokumen'])->name('dokumen.store');
-    Route::get('/permintaan/{permintaan}/dokumen/{dokumen}/download', [StaffPerencanaanController::class, 'downloadDokumen'])->name('dokumen.download');
-    Route::delete('/permintaan/{permintaan}/dokumen/{dokumen}', [StaffPerencanaanController::class, 'deleteDokumen'])->name('dokumen.delete');
+    // Routes untuk Nota Dinas
+    Route::get('/permintaan/{permintaan}/nota-dinas/create', [StaffPerencanaanController::class, 'createNotaDinas'])->name('nota-dinas.create');
+    Route::post('/permintaan/{permintaan}/nota-dinas', [StaffPerencanaanController::class, 'storeNotaDinas'])->name('nota-dinas.store');
 });
 
 // Routes untuk Bagian KSO

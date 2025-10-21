@@ -232,6 +232,13 @@ class DirekturController extends Controller
             'pic_pimpinan' => 'Kepala Bidang',
         ]);
 
+        // Update timeline
+        $permintaan->updateTimeline(
+            'Persetujuan Direktur',
+            'Permintaan disetujui oleh Direktur (Final Approval). ' . ($data['catatan'] ?? ''),
+            'disetujui'
+        );
+
         return redirect()
             ->route('direktur.index')
             ->with('success', 'Permintaan disetujui (Final Approval) dan didisposisi balik ke Kepala Bidang untuk diteruskan ke Staff Perencanaan.');
@@ -268,6 +275,13 @@ class DirekturController extends Controller
             'pic_pimpinan' => 'Unit Pemohon',
             'deskripsi' => $permintaan->deskripsi . "\n\n---\n[DITOLAK oleh Direktur]\nAlasan: " . $data['alasan'] . "\nTanggal: " . Carbon::now()->format('d-m-Y H:i:s'),
         ]);
+
+        // Update timeline
+        $permintaan->updateTimeline(
+            'Penolakan Direktur',
+            'Permintaan ditolak oleh Direktur. Alasan: ' . $data['alasan'],
+            'ditolak'
+        );
 
         return redirect()
             ->route('direktur.index')
@@ -306,6 +320,13 @@ class DirekturController extends Controller
             'pic_pimpinan' => 'Kepala Bidang',
             'deskripsi' => $permintaan->deskripsi . "\n\n---\n[CATATAN REVISI dari Direktur]\n" . $data['catatan_revisi'] . "\nTanggal: " . Carbon::now()->format('d-m-Y H:i:s'),
         ]);
+
+        // Update timeline
+        $permintaan->updateTimeline(
+            'Revisi dari Direktur',
+            'Direktur meminta revisi. Catatan: ' . $data['catatan_revisi'],
+            'revisi'
+        );
 
         return redirect()
             ->route('direktur.index')
