@@ -77,6 +77,19 @@ class PermintaanController extends Controller
             'pic_pimpinan' => 'nullable|string',
             'no_nota_dinas' => 'nullable|string',
             'link_scan' => 'nullable|url',
+            'disposisi_tujuan' => 'required|string',
+            'catatan_disposisi' => 'nullable|string',
+            'wadir_tujuan' => 'nullable|string',
+            // Nota Dinas fields
+            'nota_kepada' => 'required|string',
+            'nota_dari' => 'required|string',
+            'nota_tanggal_nota' => 'required|date',
+            'nota_no_nota' => 'required|string',
+            'nota_sifat' => 'nullable|string',
+            'nota_lampiran' => 'nullable|string',
+            'nota_perihal' => 'required|string',
+            'nota_detail' => 'nullable|string',
+            'nota_mengetahui' => 'nullable|string',
         ]);
 
         // Auto set status ke 'diajukan' jika tidak ada atau kosong
@@ -89,9 +102,39 @@ class PermintaanController extends Controller
             $data['user_id'] = Auth::id();
         }
 
+        // Extract nota dinas data
+        $notaDinasData = [
+            'kepada' => $data['nota_kepada'],
+            'dari' => $data['nota_dari'],
+            'tanggal_nota' => $data['nota_tanggal_nota'],
+            'no_nota' => $data['nota_no_nota'],
+            'sifat' => $data['nota_sifat'] ?? null,
+            'lampiran' => $data['nota_lampiran'] ?? $data['link_scan'] ?? null,
+            'perihal' => $data['nota_perihal'],
+            'detail' => $data['nota_detail'] ?? null,
+            'mengetahui' => $data['nota_mengetahui'] ?? null,
+        ];
+
+        // Remove nota dinas fields from permintaan data
+        unset(
+            $data['nota_kepada'], 
+            $data['nota_dari'], 
+            $data['nota_tanggal_nota'], 
+            $data['nota_no_nota'],
+            $data['nota_sifat'],
+            $data['nota_lampiran'],
+            $data['nota_perihal'],
+            $data['nota_detail'],
+            $data['nota_mengetahui']
+        );
+
+        // Create permintaan
         $permintaan = Permintaan::create($data);
 
-        return redirect()->route('permintaan.index')->with('success', 'Permintaan berhasil dibuat.');
+        // Create nota dinas
+        $permintaan->notaDinas()->create($notaDinasData);
+
+        return redirect()->route('permintaan.index')->with('success', 'Permintaan dan Nota Dinas berhasil dibuat.');
     }
 
     /** Display the specified resource. */
@@ -152,6 +195,9 @@ class PermintaanController extends Controller
             'pic_pimpinan' => 'nullable|string',
             'no_nota_dinas' => 'nullable|string',
             'link_scan' => 'nullable|url',
+            'disposisi_tujuan' => 'nullable|string',
+            'catatan_disposisi' => 'nullable|string',
+            'wadir_tujuan' => 'nullable|string',
         ]);
 
         // Set status ke 'diajukan' untuk resubmit
@@ -221,6 +267,30 @@ class PermintaanController extends Controller
             'nextStep' => $nextStep,
             'progress' => $progress,
             'userLogin' => Auth::user(),
+        ]);
+    }
+
+    /**
+     * Cetak Nota Dinas
+     * Generate HTML untuk cetak nota dinas
+     */
+    public function cetakNotaDinas(Permintaan $permintaan)
+    {
+        // Load nota dinas terkait
+        $permintaan->load(['notaDinas', 'user']);
+        
+        // Ambil nota dinas pertama (atau yang terbaru)
+        $notaDinas = $permintaan->notaDinas()->latest('created_at')->first();
+        
+        if (!$notaDinas) {
+            return redirect()->route('permintaan.show', $permintaan)
+                ->with('error', 'Nota Dinas tidak ditemukan untuk permintaan ini.');
+        }
+
+        // Return view untuk cetak
+        return view('cetak.nota-dinas', [
+            'permintaan' => $permintaan,
+            'notaDinas' => $notaDinas,
         ]);
     }
 }

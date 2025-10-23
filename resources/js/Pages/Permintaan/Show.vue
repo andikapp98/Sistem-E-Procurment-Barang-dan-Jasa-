@@ -10,12 +10,27 @@
                         {{ permintaan.bidang }}
                     </p>
                 </div>
-                <Link
-                    :href="route('permintaan.index')"
-                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    ← Kembali
-                </Link>
+                <div class="flex gap-3">
+                    <!-- Tombol Cetak Nota Dinas -->
+                    <a
+                        v-if="permintaan.nota_dinas && permintaan.nota_dinas.length > 0"
+                        :href="route('permintaan.cetak-nota-dinas', permintaan.permintaan_id)"
+                        target="_blank"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    >
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Cetak Nota Dinas
+                    </a>
+                    
+                    <Link
+                        :href="route('permintaan.index')"
+                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                        ← Kembali
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -155,7 +170,103 @@
                                     {{ permintaan.deskripsi }}
                                 </dd>
                             </div>
+
+                            <!-- Disposisi Tujuan -->
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 mb-1">Disposisi</dt>
+                                <dd class="text-base text-gray-900 font-semibold">
+                                    {{ permintaan.disposisi_tujuan ?? "-" }}
+                                </dd>
+                            </div>
+
+                            <!-- Wadir Tujuan -->
+                            <div v-if="permintaan.wadir_tujuan">
+                                <dt class="text-sm font-medium text-gray-500 mb-1">Wakil Direktur</dt>
+                                <dd class="text-base text-gray-900 font-semibold">
+                                    {{ permintaan.wadir_tujuan }}
+                                </dd>
+                            </div>
+
+                            <!-- Catatan Disposisi -->
+                            <div class="md:col-span-2" v-if="permintaan.catatan_disposisi">
+                                <dt class="text-sm font-medium text-gray-500 mb-1">Detail / Catatan Disposisi</dt>
+                                <dd class="text-base text-gray-900 bg-gray-50 p-3 rounded border border-gray-200">
+                                    {{ permintaan.catatan_disposisi }}
+                                </dd>
+                            </div>
                         </dl>
+                    </div>
+                </div>
+
+                <!-- Card Nota Dinas (jika ada) -->
+                <div v-if="permintaan.nota_dinas && permintaan.nota_dinas.length > 0" class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Nota Dinas</h3>
+                                <p class="text-sm text-gray-600 mt-1">Informasi nota dinas terkait permintaan</p>
+                            </div>
+                            <a
+                                :href="route('permintaan.cetak-nota-dinas', permintaan.permintaan_id)"
+                                target="_blank"
+                                class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                            >
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                                </svg>
+                                Cetak Nota Dinas
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div v-for="nota in permintaan.nota_dinas" :key="nota.nota_id" class="mb-4 last:mb-0">
+                            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Kepada</dt>
+                                    <dd class="text-base text-gray-900 font-semibold">{{ nota.kepada }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Dari</dt>
+                                    <dd class="text-base text-gray-900">{{ nota.dari }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Tanggal</dt>
+                                    <dd class="text-base text-gray-900">{{ formatDate(nota.tanggal_nota) }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Nomor</dt>
+                                    <dd class="text-base text-gray-900 font-semibold">{{ nota.no_nota }}</dd>
+                                </div>
+                                <div v-if="nota.sifat">
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Sifat</dt>
+                                    <dd class="text-base text-gray-900">{{ nota.sifat }}</dd>
+                                </div>
+                                <div v-if="nota.lampiran">
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Lampiran</dt>
+                                    <dd class="text-base">
+                                        <a :href="nota.lampiran" target="_blank" class="text-indigo-600 hover:text-indigo-900 hover:underline inline-flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                            </svg>
+                                            Lihat Dokumen
+                                        </a>
+                                    </dd>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Perihal</dt>
+                                    <dd class="text-base text-gray-900 font-semibold">{{ nota.perihal }}</dd>
+                                </div>
+                                <div class="md:col-span-2" v-if="nota.detail">
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Detail</dt>
+                                    <dd class="text-base text-gray-900 bg-white p-3 rounded border border-gray-200 whitespace-pre-line">{{ nota.detail }}</dd>
+                                </div>
+                                <div class="md:col-span-2" v-if="nota.mengetahui">
+                                    <dt class="text-sm font-medium text-gray-500 mb-1">Mengetahui</dt>
+                                    <dd class="text-base text-gray-900 font-medium">{{ nota.mengetahui }}</dd>
+                                </div>
+                            </dl>
+                        </div>
                     </div>
                 </div>
 

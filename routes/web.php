@@ -56,9 +56,10 @@ Route::middleware(['auth', 'verified'])->prefix('permintaan')->group(function ()
     // Additional protection will be handled in the controller
 });
 
-// Route tracking untuk admin di permintaan
+// Route tracking dan cetak untuk admin di permintaan
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/permintaan/{permintaan}/tracking', [PermintaanController::class, 'tracking'])->name('permintaan.tracking');
+    Route::get('/permintaan/{permintaan}/cetak-nota-dinas', [PermintaanController::class, 'cetakNotaDinas'])->name('permintaan.cetak-nota-dinas');
 });
 
 // Routes untuk Kepala Instalasi

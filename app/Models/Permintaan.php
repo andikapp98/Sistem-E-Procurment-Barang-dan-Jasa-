@@ -44,7 +44,10 @@ class Permintaan extends Model
 		'status',
 		'pic_pimpinan',
 		'no_nota_dinas',
-		'link_scan'
+		'link_scan',
+		'disposisi_tujuan',
+		'catatan_disposisi',
+		'wadir_tujuan'
 	];
 
 	/**
