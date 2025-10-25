@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Permintaan;
+use App\Models\NotaDinas;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PermintaanController extends Controller
 {
@@ -292,5 +294,29 @@ class PermintaanController extends Controller
             'permintaan' => $permintaan,
             'notaDinas' => $notaDinas,
         ]);
+    }
+
+    /**
+     * Lihat/Download Lampiran Nota Dinas
+     */
+    public function lihatLampiran(NotaDinas $notaDinas)
+    {
+        // Validasi apakah nota dinas punya lampiran
+        if (!$notaDinas->lampiran) {
+            return redirect()->back()->with('error', 'Lampiran tidak ditemukan untuk nota dinas ini.');
+        }
+
+        // Jika lampiran adalah URL (http/https), redirect ke URL tersebut
+        if (filter_var($notaDinas->lampiran, FILTER_VALIDATE_URL)) {
+            return redirect($notaDinas->lampiran);
+        }
+
+        // Jika lampiran adalah file path di storage
+        if (Storage::exists($notaDinas->lampiran)) {
+            return Storage::download($notaDinas->lampiran);
+        }
+
+        // Jika file tidak ditemukan
+        return redirect()->back()->with('error', 'File lampiran tidak ditemukan.');
     }
 }

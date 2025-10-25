@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified'])->prefix('permintaan')->group(function ()
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/permintaan/{permintaan}/tracking', [PermintaanController::class, 'tracking'])->name('permintaan.tracking');
     Route::get('/permintaan/{permintaan}/cetak-nota-dinas', [PermintaanController::class, 'cetakNotaDinas'])->name('permintaan.cetak-nota-dinas');
+    Route::get('/nota-dinas/{notaDinas}/lampiran', [PermintaanController::class, 'lihatLampiran'])->name('nota-dinas.lampiran');
 });
 
 // Routes untuk Kepala Instalasi

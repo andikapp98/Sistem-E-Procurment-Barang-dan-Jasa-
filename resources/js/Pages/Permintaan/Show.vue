@@ -242,14 +242,21 @@
                                     <dt class="text-sm font-medium text-gray-500 mb-1">Sifat</dt>
                                     <dd class="text-base text-gray-900">{{ nota.sifat }}</dd>
                                 </div>
-                                <div v-if="nota.lampiran">
-                                    <dt class="text-sm font-medium text-gray-500 mb-1">Lampiran</dt>
-                                    <dd class="text-base">
-                                        <a :href="nota.lampiran" target="_blank" class="text-indigo-600 hover:text-indigo-900 hover:underline inline-flex items-center">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div v-if="nota.lampiran" class="md:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500 mb-2">Lampiran</dt>
+                                    <dd>
+                                        <a 
+                                            :href="route('nota-dinas.lampiran', nota.nota_id)" 
+                                            target="_blank" 
+                                            class="inline-flex items-center px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-colors duration-150"
+                                        >
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                            </svg>
+                                            <span class="font-medium">Lihat Lampiran</span>
+                                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                             </svg>
-                                            Lihat Dokumen
                                         </a>
                                     </dd>
                                 </div>

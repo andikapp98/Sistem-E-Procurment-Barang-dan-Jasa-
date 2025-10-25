@@ -252,7 +252,9 @@ class KepalaInstalasiController extends Controller
      */
     public function tracking(Permintaan $permintaan)
     {
-        $user = Auth::user();$permintaan->load(['user', 'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima']);
+        $user = Auth::user();
+        
+        $permintaan->load(['user', 'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima']);
         
         // Get timeline tracking lengkap
         $timeline = $permintaan->getTimelineTracking();
@@ -467,7 +469,9 @@ class KepalaInstalasiController extends Controller
      */
     public function reviewRejected(Permintaan $permintaan)
     {
-        $user = Auth::user();// Hanya bisa review jika status ditolak
+        $user = Auth::user();
+        
+        // Hanya bisa review jika status ditolak
         if ($permintaan->status !== 'ditolak') {
             return redirect()
                 ->route('kepala-instalasi.show', $permintaan)
@@ -487,7 +491,9 @@ class KepalaInstalasiController extends Controller
      */
     public function resubmit(Request $request, Permintaan $permintaan)
     {
-        $user = Auth::user();// Hanya bisa resubmit jika status ditolak
+        $user = Auth::user();
+        
+        // Hanya bisa resubmit jika status ditolak
         if ($permintaan->status !== 'ditolak') {
             return redirect()
                 ->route('kepala-instalasi.show', $permintaan)
