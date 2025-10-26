@@ -76,6 +76,10 @@ Route::middleware(['auth', 'verified'])->prefix('kepala-instalasi')->name('kepal
     // Routes untuk review dan resubmit permintaan yang ditolak
     Route::get('/permintaan/{permintaan}/review-rejected', [KepalaInstalasiController::class, 'reviewRejected'])->name('review-rejected');
     Route::post('/permintaan/{permintaan}/resubmit', [KepalaInstalasiController::class, 'resubmit'])->name('resubmit');
+    
+    // Routes untuk cetak dan lampiran nota dinas (sama seperti admin)
+    Route::get('/permintaan/{permintaan}/cetak-nota-dinas', [KepalaInstalasiController::class, 'cetakNotaDinas'])->name('cetak-nota-dinas');
+    Route::get('/nota-dinas/{notaDinas}/lampiran', [KepalaInstalasiController::class, 'lihatLampiran'])->name('lampiran');
 });
 
 // Routes untuk Kepala Bidang

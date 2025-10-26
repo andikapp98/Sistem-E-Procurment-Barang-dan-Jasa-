@@ -97,7 +97,7 @@
                             
                             <div class="sm:col-span-2">
                                 <dt class="text-sm font-medium text-gray-500 mb-2">Deskripsi</dt>
-                                <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-4 rounded-lg whitespace-pre-line">{{ permintaan.deskripsi }}</dd>
+                                <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-4 rounded-lg whitespace-pre-line">{{ cleanDeskripsi }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -306,7 +306,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { Link, router } from '@inertiajs/vue3';
@@ -316,6 +316,22 @@ const props = defineProps({
     trackingStatus: String,
     timeline: Array,
     progress: Number,
+});
+
+// Computed property untuk membersihkan deskripsi dari catatan revisi/penolakan
+const cleanDeskripsi = computed(() => {
+    if (!props.permintaan || !props.permintaan.deskripsi) {
+        return '';
+    }
+    
+    let deskripsi = props.permintaan.deskripsi;
+    
+    // Hapus semua catatan yang dimulai dengan [DITOLAK atau [CATATAN REVISI
+    // Pattern: \n\n[DITOLAK...] atau \n\n[CATATAN REVISI...]
+    deskripsi = deskripsi.replace(/\n\n\[DITOLAK oleh [^\]]+\].*/g, '');
+    deskripsi = deskripsi.replace(/\n\n\[CATATAN REVISI dari [^\]]+\].*/g, '');
+    
+    return deskripsi.trim();
 });
 
 const showApproveModal = ref(false);

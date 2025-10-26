@@ -97,7 +97,7 @@
                             
                             <div class="sm:col-span-2">
                                 <dt class="text-sm font-medium text-gray-500 mb-2">Deskripsi</dt>
-                                <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-4 rounded-lg whitespace-pre-line">{{ permintaan.deskripsi }}</dd>
+                                <dd class="mt-1 text-sm text-gray-900 bg-gray-50 p-4 rounded-lg whitespace-pre-line">{{ cleanDeskripsi }}</dd>
                             </div>
                         </dl>
                     </div>
@@ -152,31 +152,6 @@
                                 </svg>
                                 Minta Revisi
                             </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Nota Dinas -->
-                <div v-if="permintaan.nota_dinas && permintaan.nota_dinas.length > 0" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            Riwayat Nota Dinas
-                        </h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-4">
-                            <div v-for="nota in permintaan.nota_dinas" :key="nota.nota_id"
-                                class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-start justify-between">
-                                    <div>
-                                        <p class="font-medium text-gray-900">{{ nota.dari_unit }} → {{ nota.ke_jabatan }}</p>
-                                        <p class="text-sm text-gray-600 mt-1">{{ new Date(nota.tanggal_nota).toLocaleDateString('id-ID') }}</p>
-                                    </div>
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        {{ nota.status }}
-                                    </span>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -293,7 +268,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
 import { Link, router } from '@inertiajs/vue3';
@@ -304,6 +279,22 @@ const props = defineProps({
     timeline: Array,
     progress: Number,
     isDisposisiDariDirektur: Boolean,
+});
+
+// Computed property untuk membersihkan deskripsi dari catatan revisi/penolakan
+const cleanDeskripsi = computed(() => {
+    if (!props.permintaan || !props.permintaan.deskripsi) {
+        return '';
+    }
+    
+    let deskripsi = props.permintaan.deskripsi;
+    
+    // Hapus semua catatan yang dimulai dengan [DITOLAK atau [CATATAN REVISI
+    // Pattern: \n\n[DITOLAK...] atau \n\n[CATATAN REVISI...]
+    deskripsi = deskripsi.replace(/\n\n\[DITOLAK oleh [^\]]+\].*/g, '');
+    deskripsi = deskripsi.replace(/\n\n\[CATATAN REVISI dari [^\]]+\].*/g, '');
+    
+    return deskripsi.trim();
 });
 
 const showApproveModal = ref(false);

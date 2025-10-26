@@ -307,8 +307,8 @@ const isAdmin = computed(() => {
 
 const canEdit = (item) => {
     if (!userLogin) return false;
-    // Hanya bisa edit jika status ditolak (revisi)
-    return isAdmin.value && item.status && item.status.toLowerCase() === 'ditolak';
+    // Hanya bisa edit jika status revisi (bukan ditolak)
+    return isAdmin.value && item.status && item.status.toLowerCase() === 'revisi';
 };
 
 const canDelete = (item) => {
@@ -326,8 +326,10 @@ const statusClass = (status) => {
         case "diproses":
         case "proses":
             return "bg-blue-100 text-blue-800 border border-blue-300";
+        case "revisi":
+            return "bg-orange-100 text-orange-800 border border-orange-300"; // Status revisi
         case "ditolak":
-            return "bg-red-100 text-red-800 border border-red-300"; // ✅ MERAH untuk ditolak
+            return "bg-red-100 text-red-800 border border-red-300"; // Status ditolak
         default:
             return "bg-gray-100 text-gray-800 border border-gray-300";
     }
@@ -342,6 +344,8 @@ const getStatusIcon = (status) => {
         case "diproses":
         case "proses":
             return "🔄";
+        case "revisi":
+            return "🔄"; // Icon untuk revisi
         case "ditolak":
             return "❌";
         default:

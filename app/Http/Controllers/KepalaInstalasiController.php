@@ -437,30 +437,41 @@ class KepalaInstalasiController extends Controller
             }
         }
         
+        // Validasi dengan min 5 karakter agar lebih fleksibel
         $data = $request->validate([
-            'catatan_revisi' => 'required|string|min:10',
+            'catatan_revisi' => 'required|string|min:5',
+        ], [
+            'catatan_revisi.required' => 'Catatan revisi wajib diisi',
+            'catatan_revisi.min' => 'Catatan revisi minimal 5 karakter',
         ]);
 
-        // Update status permintaan ke revisi
-        $permintaan->update([
-            'status' => 'revisi',
-            'pic_pimpinan' => $permintaan->user->name ?? 'Staff Unit', // Kembalikan ke pembuat permintaan
-            'deskripsi' => $permintaan->deskripsi . "\n\n[CATATAN REVISI dari {$user->jabatan} - " . Carbon::now()->format('d/m/Y H:i') . "] " . $data['catatan_revisi'],
-        ]);
+        try {
+            // Update status permintaan ke revisi
+            $permintaan->update([
+                'status' => 'revisi',
+                'pic_pimpinan' => $permintaan->user->name ?? 'Staff Unit', // Kembalikan ke pembuat permintaan
+                'deskripsi' => $permintaan->deskripsi . "\n\n[CATATAN REVISI dari {$user->jabatan} - " . Carbon::now()->format('d/m/Y H:i') . "] " . $data['catatan_revisi'],
+            ]);
 
-        // Buat Nota Dinas untuk dokumentasi permintaan revisi
-        NotaDinas::create([
-            'permintaan_id' => $permintaan->permintaan_id,
-            'no_nota' => 'ND/REVISI/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
-            'dari' => $user->unit_kerja ?? $user->jabatan,
-            'kepada' => $permintaan->user->jabatan ?? 'Staff Unit',
-            'tanggal_nota' => Carbon::now(),
-            'perihal' => 'Permintaan Revisi - ' . substr($data['catatan_revisi'], 0, 100),
-        ]);
+            // Buat Nota Dinas untuk dokumentasi permintaan revisi
+            NotaDinas::create([
+                'permintaan_id' => $permintaan->permintaan_id,
+                'no_nota' => 'ND/REVISI/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
+                'dari' => $user->unit_kerja ?? $user->jabatan ?? 'Kepala Instalasi',
+                'kepada' => $permintaan->user->jabatan ?? $permintaan->user->name ?? 'Staff Unit',
+                'tanggal_nota' => Carbon::now(),
+                'perihal' => 'Permintaan Revisi - ' . substr($data['catatan_revisi'], 0, 100),
+                'detail' => $data['catatan_revisi'],
+            ]);
 
-        return redirect()
-            ->route('kepala-instalasi.index')
-            ->with('success', 'Permintaan revisi telah dikirim ke ' . ($permintaan->user->name ?? 'pemohon') . ' untuk diperbaiki');
+            return redirect()
+                ->route('kepala-instalasi.index')
+                ->with('success', 'Permintaan revisi telah dikirim ke ' . ($permintaan->user->name ?? 'pemohon') . ' untuk diperbaiki');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -532,6 +543,57 @@ class KepalaInstalasiController extends Controller
         return redirect()
             ->route('kepala-instalasi.index')
             ->with('success', 'Permintaan berhasil diajukan kembali ke Kepala Bidang setelah diperbaiki');
+    }
+
+    /**
+     * Cetak Nota Dinas
+     * Generate HTML untuk cetak nota dinas (sama seperti admin)
+     */
+    public function cetakNotaDinas(Permintaan $permintaan)
+    {
+        // Load nota dinas terkait
+        $permintaan->load(['notaDinas', 'user']);
+
+        // Ambil nota dinas pertama (atau yang terbaru)
+        $notaDinas = $permintaan->notaDinas()->latest('created_at')->first();
+
+        if (!$notaDinas) {
+            return redirect()->route('kepala-instalasi.show', $permintaan)
+                ->with('error', 'Nota Dinas tidak ditemukan untuk permintaan ini.');
+        }
+
+        // Return view untuk cetak
+        return view('cetak.nota-dinas', [
+            'permintaan' => $permintaan,
+            'notaDinas' => $notaDinas,
+        ]);
+    }
+
+    /**
+     * Lihat/Download Lampiran Nota Dinas
+     * (sama seperti admin)
+     */
+    public function lihatLampiran(NotaDinas $notaDinas)
+    {
+        // Validasi apakah nota dinas punya lampiran
+        if (!$notaDinas->lampiran) {
+            return redirect()->back()->with('error', 'Lampiran tidak ditemukan untuk nota dinas ini.');
+        }
+
+        // Jika lampiran adalah URL (http/https), redirect ke URL tersebut
+        if (filter_var($notaDinas->lampiran, FILTER_VALIDATE_URL)) {
+            return redirect($notaDinas->lampiran);
+        }
+
+        // Jika lampiran adalah file path, coba untuk menampilkan atau download
+        $filePath = storage_path('app/public/' . $notaDinas->lampiran);
+        
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'File lampiran tidak ditemukan di server.');
+        }
+
+        // Return file untuk di-download atau ditampilkan
+        return response()->file($filePath);
     }
 }
 

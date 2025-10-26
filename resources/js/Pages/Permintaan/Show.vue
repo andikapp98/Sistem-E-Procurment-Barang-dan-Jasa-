@@ -56,13 +56,14 @@
                                 <p class="text-sm text-gray-600">
                                     {{ permintaan.status === 'revisi' 
                                         ? 'Anda dapat mengedit permintaan ini untuk memperbaikinya dan mengajukan kembali.' 
-                                        : 'Anda dapat mengedit untuk mengajukan ulang atau menghapus permintaan ini.' 
+                                        : 'Permintaan ini telah ditolak. Anda hanya dapat menghapus permintaan ini.' 
                                     }}
                                 </p>
                             </div>
                             <div class="flex gap-3">
-                                <!-- Edit Button -->
+                                <!-- Edit Button - Hanya untuk status Revisi -->
                                 <Link
+                                    v-if="permintaan.status === 'revisi'"
                                     :href="route('permintaan.edit', permintaan.permintaan_id)"
                                     class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                                 >
@@ -280,148 +281,85 @@
                 <!-- Card Tracking Tahapan -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">Timeline Tracking</h3>
-                        <p class="text-sm text-gray-600 mt-1">Progres tahapan pengadaan</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Timeline Tracking</h3>
+                                <p class="text-sm text-gray-600 mt-1">Progres tahapan pengadaan</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-indigo-600">{{ progress }}%</p>
+                                <p class="text-xs text-gray-500">{{ timeline.length }}/8 Tahapan</p>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="p-6">
+                        <!-- Progress Bar -->
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                                <span>Progress Keseluruhan</span>
+                                <span class="font-medium">{{ progress }}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="bg-indigo-600 h-3 rounded-full transition-all duration-500" 
+                                     :style="{ width: progress + '%' }"></div>
+                            </div>
+                        </div>
+
                         <!-- Timeline Vertical -->
-                        <div class="relative">
+                        <div v-if="timeline && timeline.length > 0" class="relative">
                             <!-- Vertical Line -->
                             <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
                             <!-- Timeline Items -->
                             <div class="space-y-6">
-                                <!-- 1. Permintaan -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 border-4 border-white z-10">
-                                        <span class="text-xl">✅</span>
+                                <div v-for="(item, index) in timeline" :key="index" class="relative flex items-start">
+                                    <div :class="[
+                                        'flex items-center justify-center w-12 h-12 rounded-full border-4 border-white z-10',
+                                        item.completed ? 'bg-green-100' : 'bg-gray-100'
+                                    ]">
+                                        <span class="text-xl">{{ getIconForStep(item.tahapan) }}</span>
                                     </div>
                                     <div class="ml-6 flex-1">
-                                        <div class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                                        <div :class="[
+                                            'rounded-lg border p-4',
+                                            item.completed ? 'bg-white border-green-200 shadow-sm' : 'bg-gray-50 border-gray-200'
+                                        ]">
                                             <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-900">Permintaan</h4>
-                                                <span class="text-xs text-gray-500">{{ formatDate(permintaan.tanggal_permintaan) }}</span>
+                                                <h4 :class="[
+                                                    'text-base font-semibold',
+                                                    item.completed ? 'text-gray-900' : 'text-gray-500'
+                                                ]">
+                                                    {{ item.tahapan }}
+                                                </h4>
+                                                <span :class="[
+                                                    'text-xs px-2 py-1 rounded-full',
+                                                    item.completed ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+                                                ]">
+                                                    {{ item.completed ? item.status : 'Menunggu' }}
+                                                </span>
                                             </div>
-                                            <p class="text-sm text-gray-600">
-                                                Status: <span class="font-medium text-green-600">{{ permintaan.status }}</span>
+                                            <p :class="[
+                                                'text-sm',
+                                                item.completed ? 'text-gray-600' : 'text-gray-400'
+                                            ]">
+                                                {{ item.completed ? item.keterangan : 'Tahapan belum dilaksanakan' }}
+                                            </p>
+                                            <p v-if="item.tanggal" class="text-xs text-gray-500 mt-2">
+                                                📅 {{ formatDate(item.tanggal) }}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- 2. Nota Dinas -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border-4 border-white z-10">
-                                        <span class="text-xl">📄</span>
-                                    </div>
-                                    <div class="ml-6 flex-1">
-                                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-700">Nota Dinas</h4>
-                                                <span class="text-xs text-gray-400">Menunggu</span>
-                                            </div>
-                                            <p class="text-sm text-gray-500">Belum ada data</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 3. Disposisi -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border-4 border-white z-10">
-                                        <span class="text-xl">📋</span>
-                                    </div>
-                                    <div class="ml-6 flex-1">
-                                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-700">Disposisi</h4>
-                                                <span class="text-xs text-gray-400">Menunggu</span>
-                                            </div>
-                                            <p class="text-sm text-gray-500">Belum ada data</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 4. Perencanaan -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border-4 border-white z-10">
-                                        <span class="text-xl">📊</span>
-                                    </div>
-                                    <div class="ml-6 flex-1">
-                                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-700">Perencanaan</h4>
-                                                <span class="text-xs text-gray-400">Menunggu</span>
-                                            </div>
-                                            <p class="text-sm text-gray-500">Belum ada data</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 5. KSO -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border-4 border-white z-10">
-                                        <span class="text-xl">🤝</span>
-                                    </div>
-                                    <div class="ml-6 flex-1">
-                                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-700">KSO</h4>
-                                                <span class="text-xs text-gray-400">Menunggu</span>
-                                            </div>
-                                            <p class="text-sm text-gray-500">Belum ada data</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 6. Pengadaan -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border-4 border-white z-10">
-                                        <span class="text-xl">🛒</span>
-                                    </div>
-                                    <div class="ml-6 flex-1">
-                                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-700">Pengadaan</h4>
-                                                <span class="text-xs text-gray-400">Menunggu</span>
-                                            </div>
-                                            <p class="text-sm text-gray-500">Belum ada data</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 7. Nota Penerimaan -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border-4 border-white z-10">
-                                        <span class="text-xl">📦</span>
-                                    </div>
-                                    <div class="ml-6 flex-1">
-                                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-700">Nota Penerimaan</h4>
-                                                <span class="text-xs text-gray-400">Menunggu</span>
-                                            </div>
-                                            <p class="text-sm text-gray-500">Belum ada data</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 8. Serah Terima -->
-                                <div class="relative flex items-start">
-                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border-4 border-white z-10">
-                                        <span class="text-xl">🎯</span>
-                                    </div>
-                                    <div class="ml-6 flex-1">
-                                        <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <h4 class="text-base font-semibold text-gray-700">Serah Terima</h4>
-                                                <span class="text-xs text-gray-400">Menunggu</span>
-                                            </div>
-                                            <p class="text-sm text-gray-500">Belum ada data</p>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <p class="mt-2 text-sm text-gray-500">Belum ada tracking data</p>
                         </div>
                     </div>
                 </div>
@@ -444,6 +382,21 @@ const props = defineProps({
 });
 
 const deleting = ref(false);
+
+// Helper function untuk icon berdasarkan tahapan
+const getIconForStep = (tahapan) => {
+    const iconMap = {
+        'Permintaan': '📝',
+        'Nota Dinas': '📄',
+        'Disposisi': '📋',
+        'Perencanaan': '📊',
+        'KSO': '🤝',
+        'Pengadaan': '🛒',
+        'Nota Penerimaan': '📦',
+        'Serah Terima': '✅'
+    };
+    return iconMap[tahapan] || '⏳';
+};
 
 const statusClass = (status) => {
     switch ((status || "").toLowerCase()) {

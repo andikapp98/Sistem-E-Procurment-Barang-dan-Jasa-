@@ -148,8 +148,8 @@ class PermintaanController extends Controller
             'notaDinas.disposisi.perencanaan.kso.pengadaan.notaPenerimaan.serahTerima'
         ]);
         
-        // Get timeline tracking untuk admin
-        $timeline = $permintaan->getTimelineTracking();
+        // Get complete timeline tracking (8 tahapan) untuk admin
+        $timeline = $permintaan->getCompleteTracking();
         $progress = $permintaan->getProgressPercentage();
         
         return Inertia::render('Permintaan/Show', [

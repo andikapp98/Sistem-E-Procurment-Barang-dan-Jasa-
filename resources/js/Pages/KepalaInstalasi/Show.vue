@@ -27,6 +27,19 @@
                     <span class="block sm:inline">{{ $page.props.flash.success }}</span>
                 </div>
 
+                <!-- Error notification -->
+                <div v-if="$page.props.flash?.error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ $page.props.flash.error }}</span>
+                </div>
+
+                <!-- Validation errors -->
+                <div v-if="Object.keys($page.props.errors || {}).length > 0" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Terdapat kesalahan!</strong>
+                    <ul class="list-disc list-inside mt-2">
+                        <li v-for="(error, key) in $page.props.errors" :key="key">{{ error }}</li>
+                    </ul>
+                </div>
+
                 <!-- Card Informasi Utama -->
                 <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                     <div class="p-6 border-b border-gray-200">
@@ -132,7 +145,7 @@
                                     <dt class="text-sm font-medium text-gray-500 mb-2">Lampiran</dt>
                                     <dd>
                                         <a 
-                                            :href="route('nota-dinas.lampiran', nota.nota_id)" 
+                                            :href="route('kepala-instalasi.lampiran', nota.nota_id)" 
                                             target="_blank" 
                                             class="inline-flex items-center px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-colors duration-150"
                                         >
@@ -270,19 +283,25 @@
                 <div class="mt-3">
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Minta Revisi</h3>
                     <div class="mt-2 px-7 py-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Revisi</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Revisi <span class="text-red-500">*</span></label>
                         <textarea
                             v-model="revisiForm.catatan_revisi"
                             rows="4"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            placeholder="Masukkan catatan revisi..."
+                            placeholder="Masukkan catatan revisi (minimal 5 karakter)..."
                         ></textarea>
+                        <p v-if="revisiForm.catatan_revisi && revisiForm.catatan_revisi.length < 5" class="text-xs text-red-500 mt-1">
+                            Minimal 5 karakter ({{ revisiForm.catatan_revisi.length }}/5)
+                        </p>
+                        <p v-if="$page.props.errors?.catatan_revisi" class="text-xs text-red-500 mt-1">
+                            {{ $page.props.errors.catatan_revisi }}
+                        </p>
                     </div>
                     <div class="flex gap-3 px-4 py-3">
                         <button
                             @click="requestRevision"
-                            :disabled="!revisiForm.catatan_revisi"
-                            class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+                            :disabled="!revisiForm.catatan_revisi || revisiForm.catatan_revisi.length < 5"
+                            class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Kirim Revisi
                         </button>
@@ -384,9 +403,20 @@ const reject = () => {
 };
 
 const requestRevision = () => {
+    // Validasi minimal 5 karakter sebelum submit
+    if (!revisiForm.value.catatan_revisi || revisiForm.value.catatan_revisi.trim().length < 5) {
+        alert('Catatan revisi minimal 5 karakter');
+        return;
+    }
+    
     router.post(route('kepala-instalasi.revisi', props.permintaan.permintaan_id), revisiForm.value, {
         onSuccess: () => {
             showRevisiModal.value = false;
+            revisiForm.value.catatan_revisi = ''; // Reset form
+        },
+        onError: (errors) => {
+            console.error('Error:', errors);
+            // Modal tetap terbuka jika ada error
         }
     });
 };
