@@ -10,7 +10,7 @@ Data dari Direktur setelah approve tidak masuk ke Staff Perencanaan.
 
 ## Perbaikan yang Dilakukan
 
-### 1. KepalaBidangController.php (Line 240-251)
+### 1. KepalaBidangController.php - Method approve() (Line 240-251)
 **Sebelum:**
 ```php
 $disposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
@@ -40,7 +40,44 @@ $disposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
 - Cek berdasarkan catatan disposisi yang berisi "Disetujui oleh Direktur"
 - Atau cek status 'selesai' yang menandakan final approval dari Direktur
 
-### 2. Workflow yang Sudah Benar di DirekturController.php (Line 219-226)
+### 2. KepalaBidangController.php - Method show() (Line 145-153)
+**Sebelum:**
+```php
+$isDisposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
+    ->where('jabatan_tujuan', 'Kepala Bidang')
+    ->where('status', 'disetujui')
+    ->whereHas('notaDinas', function($q) {
+        $q->whereHas('disposisi', function($query) {
+            $query->where('jabatan_tujuan', 'Direktur');
+        });
+    })
+    ->exists();
+
+// Return dengan kondisi tambahan
+'isDisposisiDariDirektur' => $isDisposisiDariDirektur || $permintaan->status === 'disetujui',
+```
+
+**Sesudah:**
+```php
+// Gunakan logic yang sama dengan approve method
+$isDisposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
+    ->where('jabatan_tujuan', 'Kepala Bidang')
+    ->where(function($q) {
+        $q->where('catatan', 'like', '%Disetujui oleh Direktur%')
+          ->orWhere('status', 'selesai');
+    })
+    ->exists();
+
+// Return tanpa kondisi tambahan
+'isDisposisiDariDirektur' => $isDisposisiDariDirektur,
+```
+
+**Penjelasan:**
+- Konsisten dengan logic di method approve()
+- Menghapus kondisi `|| $permintaan->status === 'disetujui'` yang bisa false positive
+- Sekarang hanya berdasarkan disposisi dari Direktur saja
+
+### 3. Workflow yang Sudah Benar di DirekturController.php (Line 219-226)
 ```php
 Disposisi::create([
     'nota_id' => $notaDinas->nota_id,
@@ -51,7 +88,7 @@ Disposisi::create([
 ]);
 ```
 
-### 3. KepalaBidangController approve() - Sudah Benar (Line 254-267)
+### 4. KepalaBidangController approve() - Sudah Benar (Line 254-267)
 Ketika mendeteksi disposisi dari Direktur, otomatis:
 ```php
 // Buat disposisi ke Staff Perencanaan
@@ -130,7 +167,17 @@ Query filter:
    - Verify: Bisa buat perencanaan/DPP/HPS
 
 ## Files Modified
-1. `app/Http/Controllers/KepalaBidangController.php` - Line 240-251
+1. `app/Http/Controllers/KepalaBidangController.php`
+   - Line 145-153: Method show() - Fixed isDisposisiDariDirektur detection
+   - Line 240-251: Method approve() - Fixed disposisi detection logic
+
+## Root Cause
+Ada 2 masalah:
+1. Logic deteksi disposisi dari Direktur terlalu kompleks dan tidak match dengan data yang dibuat oleh DirekturController
+2. Method `show()` menggunakan logic berbeda dengan method `approve()` sehingga UI menampilkan info yang salah
+
+## Solution
+Menyamakan logic deteksi di kedua method dengan cara sederhana: cek catatan disposisi yang mengandung "Disetujui oleh Direktur" atau status 'selesai'.
 
 ## Status
 ✅ **FIXED** - Workflow sudah diperbaiki dengan deteksi yang lebih sederhana dan akurat

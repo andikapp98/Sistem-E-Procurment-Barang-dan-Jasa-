@@ -104,7 +104,98 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // 6b. Kepala Instalasi (Generic Account)
+        // 6b. Kepala Instalasi Rawat Inap
+        User::updateOrCreate(
+            ['email' => 'kepala.ranap@rsud.id'],
+            [
+                'name' => 'Ns. Siti Aminah, S.Kep, M.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_instalasi',
+                'jabatan' => 'Kepala Instalasi',
+                'unit_kerja' => 'Rawat Inap',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c. Kepala Instalasi Rawat Jalan
+        User::updateOrCreate(
+            ['email' => 'kepala.rajal@rsud.id'],
+            [
+                'name' => 'Dr. Putri Handayani, Sp.PD',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_instalasi',
+                'jabatan' => 'Kepala Instalasi',
+                'unit_kerja' => 'Rawat Jalan',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6d. Kepala Instalasi ICU/ICCU
+        User::updateOrCreate(
+            ['email' => 'kepala.icu@rsud.id'],
+            [
+                'name' => 'Dr. Muhammad Fajar, Sp.An',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_instalasi',
+                'jabatan' => 'Kepala Instalasi',
+                'unit_kerja' => 'ICU/ICCU',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6e. Kepala Instalasi Rekam Medis
+        User::updateOrCreate(
+            ['email' => 'kepala.rm@rsud.id'],
+            [
+                'name' => 'Ns. Retno Wulan, S.KM, M.Kes',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_instalasi',
+                'jabatan' => 'Kepala Instalasi',
+                'unit_kerja' => 'Rekam Medis',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6f. Kepala Instalasi Gizi
+        User::updateOrCreate(
+            ['email' => 'kepala.gizi@rsud.id'],
+            [
+                'name' => 'Nurhayati, S.Gz, M.Gizi',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_instalasi',
+                'jabatan' => 'Kepala Instalasi',
+                'unit_kerja' => 'Gizi',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6g. Kepala Instalasi Sanitasi & Pemeliharaan
+        User::updateOrCreate(
+            ['email' => 'kepala.sanitasi@rsud.id'],
+            [
+                'name' => 'Ir. Bambang Susilo, M.T',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_instalasi',
+                'jabatan' => 'Kepala Instalasi',
+                'unit_kerja' => 'Sanitasi & Pemeliharaan',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6h. Kepala Instalasi Laundry & Linen
+        User::updateOrCreate(
+            ['email' => 'kepala.laundry@rsud.id'],
+            [
+                'name' => 'Sri Wahyuni, S.T',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_instalasi',
+                'jabatan' => 'Kepala Instalasi',
+                'unit_kerja' => 'Laundry & Linen',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6i. Kepala Instalasi (Generic Account)
         User::updateOrCreate(
             ['email' => 'kepala_instalasi@rsud.id'],
             [
@@ -331,7 +422,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        $this->command->info('✅ 23 users berhasil dibuat!');
+        $this->command->info('✅ 30 users berhasil dibuat!');
         $this->command->info('');
         $this->command->info('📋 Daftar Akun:');
         $this->command->info('═══════════════════════════════════════════════════════════════════════════════════════');
@@ -344,6 +435,13 @@ class UserSeeder extends Seeder
         $this->command->info('Kepala Instalasi    | kepala.lab@rsud.id           | password      | Laboratorium');
         $this->command->info('Kepala Instalasi    | kepala.radiologi@rsud.id     | password      | Radiologi');
         $this->command->info('Kepala Instalasi    | kepala.bedah@rsud.id         | password      | Bedah Sentral');
+        $this->command->info('Kepala Instalasi    | kepala.ranap@rsud.id         | password      | Rawat Inap');
+        $this->command->info('Kepala Instalasi    | kepala.rajal@rsud.id         | password      | Rawat Jalan');
+        $this->command->info('Kepala Instalasi    | kepala.icu@rsud.id           | password      | ICU/ICCU');
+        $this->command->info('Kepala Instalasi    | kepala.rm@rsud.id            | password      | Rekam Medis');
+        $this->command->info('Kepala Instalasi    | kepala.gizi@rsud.id          | password      | Gizi');
+        $this->command->info('Kepala Instalasi    | kepala.sanitasi@rsud.id      | password      | Sanitasi');
+        $this->command->info('Kepala Instalasi    | kepala.laundry@rsud.id       | password      | Laundry & Linen');
         $this->command->info('Kepala Instalasi    | kepala_instalasi@rsud.id     | password123   | Instalasi');
         $this->command->info('Staff Pengadaan     | pengadaan@rsud.id            | password      | Bagian Pengadaan');
         $this->command->info('Kepala Bagian       | keuangan@rsud.id             | password      | Keuangan');

@@ -142,13 +142,12 @@ class KepalaBidangController extends Controller
         $isDisposisiDariDirektur = false;
         
         if ($notaDinas) {
+            // Gunakan logic yang sama dengan approve method
             $isDisposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
                 ->where('jabatan_tujuan', 'Kepala Bidang')
-                ->where('status', 'disetujui')
-                ->whereHas('notaDinas', function($q) {
-                    $q->whereHas('disposisi', function($query) {
-                        $query->where('jabatan_tujuan', 'Direktur');
-                    });
+                ->where(function($q) {
+                    $q->where('catatan', 'like', '%Disetujui oleh Direktur%')
+                      ->orWhere('status', 'selesai');
                 })
                 ->exists();
         }
@@ -158,7 +157,7 @@ class KepalaBidangController extends Controller
             'trackingStatus' => $permintaan->trackingStatus,
             'timeline' => $timeline,
             'progress' => $progress,
-            'isDisposisiDariDirektur' => $isDisposisiDariDirektur || $permintaan->status === 'disetujui',
+            'isDisposisiDariDirektur' => $isDisposisiDariDirektur,
         ]);
     }
 
