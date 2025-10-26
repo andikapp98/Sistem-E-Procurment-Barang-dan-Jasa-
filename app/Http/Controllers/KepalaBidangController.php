@@ -238,19 +238,17 @@ class KepalaBidangController extends Controller
         }
 
         // Cek apakah ini disposisi balik dari Direktur atau permintaan baru dari Kepala Instalasi
-        // Dengan cara cek apakah ada disposisi dari Direktur ke Kepala Bidang dengan status disetujui
+        // Cek apakah ada disposisi dengan catatan dari Direktur (approval)
         $disposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
             ->where('jabatan_tujuan', 'Kepala Bidang')
-            ->where('status', 'disetujui')
-            ->whereHas('notaDinas', function($q) {
-                $q->whereHas('disposisi', function($query) {
-                    $query->where('jabatan_tujuan', 'Direktur');
-                });
+            ->where(function($q) {
+                $q->where('catatan', 'like', '%Disetujui oleh Direktur%')
+                  ->orWhere('status', 'selesai');
             })
             ->exists();
 
         // Skenario 1: Disposisi balik dari Direktur - Teruskan ke Staff Perencanaan
-        if ($disposisiDariDirektur || $permintaan->status === 'disetujui') {
+        if ($disposisiDariDirektur) {
             // Buat disposisi ke Staff Perencanaan
             Disposisi::create([
                 'nota_id' => $notaDinas->nota_id,
