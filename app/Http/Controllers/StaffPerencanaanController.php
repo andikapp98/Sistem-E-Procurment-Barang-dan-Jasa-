@@ -34,22 +34,13 @@ class StaffPerencanaanController extends Controller
         $user = Auth::user();
         
         // Ambil semua permintaan yang ditujukan ke Staff Perencanaan
-        // HANYA yang statusnya disetujui DAN sudah melalui alur lengkap dari Direktur/Wakil Direktur
+        // Permintaan yang pic_pimpinan = 'Staff Perencanaan' dan status 'disetujui'
         $permintaans = Permintaan::with(['user', 'notaDinas', 'notaDinas.disposisi'])
             ->where(function($q) use ($user) {
                 $q->where('pic_pimpinan', 'Staff Perencanaan')
                   ->orWhere('pic_pimpinan', $user->nama);
             })
             ->whereIn('status', ['disetujui', 'proses'])
-            ->whereHas('notaDinas', function($q) {
-                // Pastikan ada nota dinas yang berasal dari Direktur atau Wakil Direktur
-                // Cek kolom 'dari' dan 'kepada' karena tidak ada kolom 'dari_jabatan'
-                $q->where(function($query) {
-                    $query->where('dari', 'like', '%Direktur%')
-                          ->orWhere('dari', 'like', '%Wakil Direktur%')
-                          ->orWhere('kepada', 'like', '%Staff Perencanaan%');
-                });
-            })
             ->get();
 
         $stats = [
@@ -87,22 +78,12 @@ class StaffPerencanaanController extends Controller
         $user = Auth::user();
         
         // Query dasar - hanya permintaan yang ditujukan ke Staff Perencanaan
-        // DAN sudah melalui alur approval lengkap dari Direktur/Wakil Direktur
         $query = Permintaan::with(['user', 'notaDinas', 'notaDinas.disposisi'])
             ->where(function($q) use ($user) {
                 $q->where('pic_pimpinan', 'Staff Perencanaan')
                   ->orWhere('pic_pimpinan', $user->nama);
             })
-            ->whereIn('status', ['disetujui', 'proses'])
-            ->whereHas('notaDinas', function($q) {
-                // Pastikan ada nota dinas yang berasal dari Direktur atau Wakil Direktur
-                // Cek kolom 'dari' dan 'kepada' karena tidak ada kolom 'dari_jabatan'
-                $q->where(function($query) {
-                    $query->where('dari', 'like', '%Direktur%')
-                          ->orWhere('dari', 'like', '%Wakil Direktur%')
-                          ->orWhere('kepada', 'like', '%Staff Perencanaan%');
-                });
-            });
+            ->whereIn('status', ['disetujui', 'proses']);
 
         // Apply filters
         if ($request->filled('search')) {
@@ -155,16 +136,6 @@ class StaffPerencanaanController extends Controller
         $user = Auth::user();
         
         
-        // Validasi tambahan: Pastikan permintaan sudah melalui alur dari Direktur/Wakil Direktur
-        $hasValidNotaDinas = $permintaan->notaDinas()
-            ->where(function($q) {
-                // Cek kolom 'dari' dan 'kepada' karena tidak ada kolom 'dari_jabatan'
-                $q->where('dari', 'like', '%Direktur%')
-                  ->orWhere('dari', 'like', '%Wakil Direktur%')
-                  ->orWhere('kepada', 'like', '%Staff Perencanaan%');
-            })
-            ->exists();
-        
         $permintaan->load(['user', 'notaDinas.disposisi']);
         
         // Get timeline tracking
@@ -186,21 +157,6 @@ class StaffPerencanaanController extends Controller
     public function createPerencanaan(Permintaan $permintaan)
     {
         $user = Auth::user();
-        
-        // Validasi tambahan: Pastikan permintaan sudah melalui alur dari Direktur/Wakil Direktur
-        $hasValidNotaDinas = $permintaan->notaDinas()
-            ->where(function($q) {
-                // Cek kolom 'dari' dan 'kepada' karena tidak ada kolom 'dari_jabatan'
-                $q->where('dari', 'like', '%Direktur%')
-                  ->orWhere('dari', 'like', '%Wakil Direktur%')
-                  ->orWhere('kepada', 'like', '%Staff Perencanaan%');
-            })
-            ->exists();
-        
-        if (!$hasValidNotaDinas) {
-            return redirect()->route('staff-perencanaan.index')
-                ->withErrors(['error' => 'Permintaan ini belum melalui proses approval yang lengkap dari Direktur/Wakil Direktur.']);
-        }
         
         $permintaan->load(['user', 'notaDinas']);
         
@@ -651,21 +607,6 @@ class StaffPerencanaanController extends Controller
     public function uploadDokumen(Permintaan $permintaan)
     {
         $user = Auth::user();
-        
-        // Validasi tambahan: Pastikan permintaan sudah melalui alur dari Direktur/Wakil Direktur
-        $hasValidNotaDinas = $permintaan->notaDinas()
-            ->where(function($q) {
-                // Cek kolom 'dari' dan 'kepada' karena tidak ada kolom 'dari_jabatan'
-                $q->where('dari', 'like', '%Direktur%')
-                  ->orWhere('dari', 'like', '%Wakil Direktur%')
-                  ->orWhere('kepada', 'like', '%Staff Perencanaan%');
-            })
-            ->exists();
-        
-        if (!$hasValidNotaDinas) {
-            return redirect()->route('staff-perencanaan.index')
-                ->withErrors(['error' => 'Permintaan ini belum melalui proses approval yang lengkap dari Direktur/Wakil Direktur.']);
-        }
         
         // Load dokumen yang sudah ada
         $permintaan->load(['user', 'notaDinas', 'dokumenPengadaan']);
