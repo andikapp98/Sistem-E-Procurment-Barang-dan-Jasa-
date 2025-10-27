@@ -3,34 +3,44 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-// Setup CSRF token for axios - this will be used by Inertia automatically
-let token = document.head.querySelector('meta[name="csrf-token"]');
+// Get CSRF token from meta tag
+function getCsrfToken() {
+    const token = document.head.querySelector('meta[name="csrf-token"]');
+    return token ? token.content : null;
+}
 
+// Setup CSRF token for axios
+const token = getCsrfToken();
 if (token) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-    // Also set it for fetch API which Inertia uses
-    window.csrfToken = token.content;
-    console.log('CSRF Token loaded:', token.content.substring(0, 10) + '...');
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
 } else {
-    console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
+    console.error('CSRF token not found');
 }
 
-// Make CSRF token globally available
-if (token) {
-    window.csrf_token = token.content;
-}
+// Axios interceptor to refresh CSRF token on each request
+window.axios.interceptors.request.use(
+    function (config) {
+        const freshToken = getCsrfToken();
+        if (freshToken) {
+            config.headers['X-CSRF-TOKEN'] = freshToken;
+        }
+        return config;
+    },
+    function (error) {
+        return Promise.reject(error);
+    }
+);
 
-// Intercept Inertia requests to ensure CSRF token is always sent
-if (window.axios) {
-    const originalRequest = window.axios.request;
-    window.axios.request = function(config) {
-        // Ensure CSRF token is in headers for all requests
-        if (!config.headers) {
-            config.headers = {};
+// Handle 419 errors by reloading the page to get fresh CSRF token
+window.axios.interceptors.response.use(
+    function (response) {
+        return response;
+    },
+    function (error) {
+        if (error.response && error.response.status === 419) {
+            console.warn('CSRF token mismatch detected, reloading page...');
+            window.location.reload();
         }
-        if (window.csrfToken && !config.headers['X-CSRF-TOKEN']) {
-            config.headers['X-CSRF-TOKEN'] = window.csrfToken;
-        }
-        return originalRequest.call(this, config);
-    };
-}
+        return Promise.reject(error);
+    }
+);
