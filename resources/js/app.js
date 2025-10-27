@@ -8,6 +8,12 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// Setup CSRF token for Inertia before creating app
+const token = document.head.querySelector('meta[name="csrf-token"]');
+if (token) {
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+}
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
