@@ -27,11 +27,6 @@ const submit = () => {
         onFinish: () => {
             form.reset('password');
         },
-        onError: (errors) => {
-            if (errors.message && errors.message.includes('419')) {
-                window.location.reload();
-            }
-        },
         preserveScroll: false,
         preserveState: false,
     });

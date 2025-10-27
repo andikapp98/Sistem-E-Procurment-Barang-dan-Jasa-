@@ -86,13 +86,15 @@ const sidebarOpen = ref(true);
                                         >
                                             Profile
                                         </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </DropdownLink>
+                                        <form :action="route('logout')" method="POST" class="w-full">
+                                            <input type="hidden" name="_token" :value="$page.props.csrf_token || document.querySelector('meta[name=csrf-token]')?.content">
+                                            <button
+                                                type="submit"
+                                                class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                            >
+                                                Log Out
+                                            </button>
+                                        </form>
                                     </template>
                                 </Dropdown>
                             </div>
@@ -339,13 +341,15 @@ const sidebarOpen = ref(true);
                             <ResponsiveNavLink :href="route('profile.edit')">
                                 Profile
                             </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('logout')"
-                                method="post"
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
+                            <form :action="route('logout')" method="POST" class="w-full">
+                                <input type="hidden" name="_token" :value="$page.props.csrf_token || document.querySelector('meta[name=csrf-token]')?.content">
+                                <button
+                                    type="submit"
+                                    class="block w-full ps-3 pe-4 py-2 border-l-4 border-transparent text-start text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out"
+                                >
+                                    Log Out
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

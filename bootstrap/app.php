@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'redirect.role' => \App\Http\Middleware\RedirectBasedOnRole::class,
         ]);
+        
+        // Validate CSRF tokens but don't throw on mismatch for certain routes
+        $middleware->validateCsrfTokens(except: [
+            // Add any routes that should be excluded from CSRF verification
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -28,7 +28,7 @@ const classes = computed(() =>
 </script>
 
 <template>
-    <Link :href="href" :method="method" :as="as" :class="classes">
+    <Link :href="href" :method="method" :as="as" :class="classes" preserve-scroll>
         <slot />
     </Link>
 </template>
