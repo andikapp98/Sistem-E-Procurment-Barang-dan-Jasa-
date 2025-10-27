@@ -11,3 +11,8 @@ if (token) {
 } else {
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
+
+// Make CSRF token globally available
+if (token) {
+    window.csrf_token = token.content;
+}
