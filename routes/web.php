@@ -136,30 +136,66 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
     Route::get('/permintaan/{permintaan}', [StaffPerencanaanController::class, 'show'])->name('show');
     Route::get('/permintaan/{permintaan}/tracking', [StaffPerencanaanController::class, 'tracking'])->name('tracking');
     Route::get('/approved', [StaffPerencanaanController::class, 'approved'])->name('approved');
+    
+    // Routes untuk Perencanaan
     Route::get('/permintaan/{permintaan}/perencanaan/create', [StaffPerencanaanController::class, 'createPerencanaan'])->name('perencanaan.create');
     Route::post('/permintaan/{permintaan}/perencanaan', [StaffPerencanaanController::class, 'storePerencanaan'])->name('perencanaan.store');
+    Route::get('/permintaan/{permintaan}/perencanaan/edit', [StaffPerencanaanController::class, 'editPerencanaan'])->name('perencanaan.edit');
+    Route::put('/permintaan/{permintaan}/perencanaan', [StaffPerencanaanController::class, 'updatePerencanaan'])->name('perencanaan.update');
+    Route::delete('/permintaan/{permintaan}/perencanaan', [StaffPerencanaanController::class, 'deletePerencanaan'])->name('perencanaan.delete');
+    
+    // Routes untuk Disposisi
     Route::get('/permintaan/{permintaan}/disposisi/create', [StaffPerencanaanController::class, 'createDisposisi'])->name('disposisi.create');
     Route::post('/permintaan/{permintaan}/disposisi', [StaffPerencanaanController::class, 'storeDisposisi'])->name('disposisi.store');
+    Route::get('/permintaan/{permintaan}/disposisi/edit', [StaffPerencanaanController::class, 'editDisposisi'])->name('disposisi.edit');
+    Route::put('/permintaan/{permintaan}/disposisi', [StaffPerencanaanController::class, 'updateDisposisi'])->name('disposisi.update');
+    Route::delete('/permintaan/{permintaan}/disposisi', [StaffPerencanaanController::class, 'deleteDisposisi'])->name('disposisi.delete');
     
     // Routes untuk Nota Dinas
     Route::get('/permintaan/{permintaan}/nota-dinas/create', [StaffPerencanaanController::class, 'createNotaDinas'])->name('nota-dinas.create');
     Route::post('/permintaan/{permintaan}/nota-dinas', [StaffPerencanaanController::class, 'storeNotaDinas'])->name('nota-dinas.store');
+    Route::get('/permintaan/{permintaan}/nota-dinas/edit', [StaffPerencanaanController::class, 'editNotaDinas'])->name('nota-dinas.edit');
+    Route::put('/permintaan/{permintaan}/nota-dinas', [StaffPerencanaanController::class, 'updateNotaDinas'])->name('nota-dinas.update');
+    Route::delete('/permintaan/{permintaan}/nota-dinas', [StaffPerencanaanController::class, 'deleteNotaDinas'])->name('nota-dinas.delete');
     
     // Routes untuk Nota Dinas Pembelian
     Route::get('/permintaan/{permintaan}/nota-dinas-pembelian/create', [StaffPerencanaanController::class, 'createNotaDinasPembelian'])->name('nota-dinas-pembelian.create');
     Route::post('/permintaan/{permintaan}/nota-dinas-pembelian', [StaffPerencanaanController::class, 'storeNotaDinasPembelian'])->name('nota-dinas-pembelian.store');
+    Route::get('/permintaan/{permintaan}/nota-dinas-pembelian/edit', [StaffPerencanaanController::class, 'editNotaDinasPembelian'])->name('nota-dinas-pembelian.edit');
+    Route::put('/permintaan/{permintaan}/nota-dinas-pembelian', [StaffPerencanaanController::class, 'updateNotaDinasPembelian'])->name('nota-dinas-pembelian.update');
+    Route::delete('/permintaan/{permintaan}/nota-dinas-pembelian', [StaffPerencanaanController::class, 'deleteNotaDinasPembelian'])->name('nota-dinas-pembelian.delete');
+    
+    // Routes untuk Spesifikasi Teknis
+    Route::get('/permintaan/{permintaan}/spesifikasi-teknis/create', [StaffPerencanaanController::class, 'createSpesifikasiTeknis'])->name('spesifikasi-teknis.create');
+    Route::post('/permintaan/{permintaan}/spesifikasi-teknis', [StaffPerencanaanController::class, 'storeSpesifikasiTeknis'])->name('spesifikasi-teknis.store');
+    Route::get('/permintaan/{permintaan}/spesifikasi-teknis/edit', [StaffPerencanaanController::class, 'editSpesifikasiTeknis'])->name('spesifikasi-teknis.edit');
+    Route::put('/permintaan/{permintaan}/spesifikasi-teknis', [StaffPerencanaanController::class, 'updateSpesifikasiTeknis'])->name('spesifikasi-teknis.update');
+    Route::delete('/permintaan/{permintaan}/spesifikasi-teknis', [StaffPerencanaanController::class, 'deleteSpesifikasiTeknis'])->name('spesifikasi-teknis.delete');
     
     // Routes untuk Scan Berkas / Upload Dokumen
     Route::get('/permintaan/{permintaan}/scan-berkas', [StaffPerencanaanController::class, 'uploadDokumen'])->name('scan-berkas');
     Route::post('/permintaan/{permintaan}/dokumen', [StaffPerencanaanController::class, 'storeDokumen'])->name('dokumen.store');
+    Route::delete('/permintaan/{permintaan}/dokumen/{dokumen}', [StaffPerencanaanController::class, 'deleteDokumen'])->name('dokumen.delete');
+    Route::get('/permintaan/{permintaan}/dokumen/{dokumen}/download', [StaffPerencanaanController::class, 'downloadDokumen'])->name('dokumen.download');
     
     // Routes untuk DPP (Dokumen Persiapan Pengadaan)
     Route::get('/permintaan/{permintaan}/dpp/create', [StaffPerencanaanController::class, 'createDPP'])->name('dpp.create');
     Route::post('/permintaan/{permintaan}/dpp', [StaffPerencanaanController::class, 'storeDPP'])->name('dpp.store');
+    Route::get('/permintaan/{permintaan}/dpp/edit', [StaffPerencanaanController::class, 'editDPP'])->name('dpp.edit');
+    Route::put('/permintaan/{permintaan}/dpp', [StaffPerencanaanController::class, 'updateDPP'])->name('dpp.update');
+    Route::delete('/permintaan/{permintaan}/dpp', [StaffPerencanaanController::class, 'deleteDPP'])->name('dpp.delete');
     
     // Routes untuk HPS (Harga Perkiraan Satuan)
     Route::get('/permintaan/{permintaan}/hps/create', [StaffPerencanaanController::class, 'createHPS'])->name('hps.create');
     Route::post('/permintaan/{permintaan}/hps', [StaffPerencanaanController::class, 'storeHPS'])->name('hps.store');
+    Route::get('/permintaan/{permintaan}/hps/edit', [StaffPerencanaanController::class, 'editHPS'])->name('hps.edit');
+    Route::put('/permintaan/{permintaan}/hps', [StaffPerencanaanController::class, 'updateHPS'])->name('hps.update');
+    Route::delete('/permintaan/{permintaan}/hps', [StaffPerencanaanController::class, 'deleteHPS'])->name('hps.delete');
+    
+    // Routes untuk Cetak Dokumen
+    Route::get('/permintaan/{permintaan}/nota-dinas/cetak', [StaffPerencanaanController::class, 'cetakNotaDinas'])->name('nota-dinas.cetak');
+    Route::get('/permintaan/{permintaan}/dpp/cetak', [StaffPerencanaanController::class, 'cetakDPP'])->name('dpp.cetak');
+    Route::get('/permintaan/{permintaan}/hps/cetak', [StaffPerencanaanController::class, 'cetakHPS'])->name('hps.cetak');
 });
 
 // Routes untuk Bagian KSO

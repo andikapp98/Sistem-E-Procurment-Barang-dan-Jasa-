@@ -75,6 +75,60 @@ class Permintaan extends Model
 	}
 
 	/**
+	 * Relasi ke Disposisi (via Nota Dinas)
+	 */
+	public function disposisi()
+	{
+		return $this->hasManyThrough(
+			Disposisi::class,
+			NotaDinas::class,
+			'permintaan_id', // Foreign key on nota_dinas table
+			'nota_id',       // Foreign key on disposisi table
+			'permintaan_id', // Local key on permintaan table
+			'nota_id'        // Local key on nota_dinas table
+		)->latest();
+	}
+
+	/**
+	 * Relasi ke Perencanaan (via Nota Dinas -> Disposisi)
+	 */
+	public function perencanaan()
+	{
+		return $this->hasManyThrough(
+			Perencanaan::class,
+			Disposisi::class,
+			'nota_id',       // Foreign key on disposisi table
+			'disposisi_id',  // Foreign key on perencanaan table
+			'permintaan_id', // Local key on permintaan table
+			'disposisi_id'   // Local key on disposisi table
+		)->latest()->first();
+	}
+
+	/**
+	 * Relasi ke DPP (sama dengan perencanaan, karena DPP adalah field di tabel perencanaan)
+	 */
+	public function dpp()
+	{
+		return $this->perencanaan();
+	}
+
+	/**
+	 * Relasi ke HPS
+	 */
+	public function hps()
+	{
+		return $this->hasOne(Hps::class, 'permintaan_id', 'permintaan_id')->latest();
+	}
+
+	/**
+	 * Relasi ke Spesifikasi Teknis
+	 */
+	public function spesifikasiTeknis()
+	{
+		return $this->hasOne(SpesifikasiTeknis::class, 'permintaan_id', 'permintaan_id')->latest();
+	}
+
+	/**
 	 * Get tracking status lengkap untuk permintaan ini
 	 */
 	public function getTrackingStatusAttribute()

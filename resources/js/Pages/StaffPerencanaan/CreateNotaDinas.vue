@@ -57,102 +57,138 @@
                     </div>
 
                     <form @submit.prevent="submit" class="p-6 space-y-6">
-                        <!-- Tanggal -->
-                        <div>
-                            <label for="tanggal_nota" class="block text-sm font-medium text-gray-700">
-                                Tanggal <span class="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                id="tanggal_nota"
-                                v-model="form.tanggal_nota"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                :class="{ 'border-red-500': errors.tanggal_nota }"
-                            />
-                            <p v-if="errors.tanggal_nota" class="mt-1 text-sm text-red-600">{{ errors.tanggal_nota }}</p>
+                        <!-- Header Section -->
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                            <p class="text-sm text-blue-700">
+                                <strong>Field dengan tanda bintang merah (*) wajib diisi.</strong> Nomor nota akan di-generate otomatis jika dikosongkan.
+                            </p>
                         </div>
 
-                        <!-- Nomor -->
+                        <!-- Grid 2 Kolom untuk Header -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Nomor Nota Dinas -->
+                            <div>
+                                <label for="nomor" class="block text-sm font-medium text-gray-700">
+                                    Nomor Nota Dinas <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="nomor"
+                                    v-model="form.nomor"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    :class="{ 'border-red-500': errors.nomor }"
+                                    placeholder="Contoh: 001/ND/SP/2025"
+                                />
+                                <p class="mt-1 text-xs text-gray-500">Kosongkan untuk auto-generate</p>
+                                <p v-if="errors.nomor" class="mt-1 text-sm text-red-600">{{ errors.nomor }}</p>
+                            </div>
+
+                            <!-- Tanggal -->
+                            <div>
+                                <label for="tanggal_nota" class="block text-sm font-medium text-gray-700">
+                                    Tanggal <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    id="tanggal_nota"
+                                    v-model="form.tanggal_nota"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    :class="{ 'border-red-500': errors.tanggal_nota }"
+                                />
+                                <p v-if="errors.tanggal_nota" class="mt-1 text-sm text-red-600">{{ errors.tanggal_nota }}</p>
+                            </div>
+
+                            <!-- Usulan Ruangan -->
+                            <div>
+                                <label for="usulan_ruangan" class="block text-sm font-medium text-gray-700">
+                                    Usulan Ruangan <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="usulan_ruangan"
+                                    v-model="form.usulan_ruangan"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    :class="{ 'border-red-500': errors.usulan_ruangan }"
+                                    placeholder="Contoh: IGD, Poliklinik, Farmasi"
+                                />
+                                <p v-if="errors.usulan_ruangan" class="mt-1 text-sm text-red-600">{{ errors.usulan_ruangan }}</p>
+                            </div>
+
+                            <!-- Sifat -->
+                            <div>
+                                <label for="sifat" class="block text-sm font-medium text-gray-700">
+                                    Sifat <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    id="sifat"
+                                    v-model="form.sifat"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    :class="{ 'border-red-500': errors.sifat }"
+                                >
+                                    <option value="">Pilih Sifat</option>
+                                    <option value="Sangat Segera">Sangat Segera</option>
+                                    <option value="Segera">Segera</option>
+                                    <option value="Biasa">Biasa</option>
+                                    <option value="Rahasia">Rahasia</option>
+                                </select>
+                                <p v-if="errors.sifat" class="mt-1 text-sm text-red-600">{{ errors.sifat }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Perihal -->
                         <div>
-                            <label for="nomor" class="block text-sm font-medium text-gray-700">
-                                Nomor
+                            <label for="perihal" class="block text-sm font-medium text-gray-700">
+                                Perihal <span class="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                id="nomor"
-                                v-model="form.nomor"
+                                id="perihal"
+                                v-model="form.perihal"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Contoh: 001/ND/2025"
+                                :class="{ 'border-red-500': errors.perihal }"
+                                placeholder="Contoh: Usulan Pengadaan Alat Medis"
                             />
+                            <p v-if="errors.perihal" class="mt-1 text-sm text-red-600">{{ errors.perihal }}</p>
                         </div>
 
-                        <!-- Penerima -->
-                        <div>
-                            <label for="penerima" class="block text-sm font-medium text-gray-700">
-                                Penerima
-                            </label>
-                            <input
-                                type="text"
-                                id="penerima"
-                                v-model="form.penerima"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                placeholder="Nama penerima"
-                            />
-                        </div>
+                        <!-- Dari dan Kepada -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Dari -->
+                            <div>
+                                <label for="dari" class="block text-sm font-medium text-gray-700">
+                                    Dari <span class="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="dari"
+                                    v-model="form.dari"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    :class="{ 'border-red-500': errors.dari }"
+                                    placeholder="Staff Perencanaan"
+                                />
+                                <p v-if="errors.dari" class="mt-1 text-sm text-red-600">{{ errors.dari }}</p>
+                            </div>
 
-                        <!-- Dari Unit -->
-                        <div>
-                            <label for="dari_unit" class="block text-sm font-medium text-gray-700">
-                                Dari <span class="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="dari_unit"
-                                v-model="form.dari_unit"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                :class="{ 'border-red-500': errors.dari_unit }"
-                                placeholder="Staff Perencanaan"
-                            />
-                            <p v-if="errors.dari_unit" class="mt-1 text-sm text-red-600">{{ errors.dari_unit }}</p>
-                        </div>
-
-                        <!-- Ke Jabatan -->
-                        <div>
-                            <label for="ke_jabatan" class="block text-sm font-medium text-gray-700">
-                                Kepada <span class="text-red-500">*</span>
-                            </label>
-                            <select
-                                id="ke_jabatan"
-                                v-model="form.ke_jabatan"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                :class="{ 'border-red-500': errors.ke_jabatan }"
-                            >
-                                <option value="">Pilih Tujuan</option>
-                                <option value="Direktur">Direktur</option>
-                                <option value="Wakil Direktur">Wakil Direktur</option>
-                                <option value="Kepala Bagian Keuangan">Kepala Bagian Keuangan</option>
-                                <option value="Bagian KSO">Bagian KSO</option>
-                                <option value="Bagian Pengadaan">Bagian Pengadaan</option>
-                            </select>
-                            <p v-if="errors.ke_jabatan" class="mt-1 text-sm text-red-600">{{ errors.ke_jabatan }}</p>
-                        </div>
-
-                        <!-- Sifat -->
-                        <div>
-                            <label for="sifat" class="block text-sm font-medium text-gray-700">
-                                Sifat
-                            </label>
-                            <select
-                                id="sifat"
-                                v-model="form.sifat"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                                <option value="">Pilih Sifat</option>
-                                <option value="Sangat Segera">Sangat Segera</option>
-                                <option value="Segera">Segera</option>
-                                <option value="Biasa">Biasa</option>
-                                <option value="Rahasia">Rahasia</option>
-                            </select>
+                            <!-- Kepada -->
+                            <div>
+                                <label for="kepada" class="block text-sm font-medium text-gray-700">
+                                    Kepada <span class="text-red-500">*</span>
+                                </label>
+                                <select
+                                    id="kepada"
+                                    v-model="form.kepada"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    :class="{ 'border-red-500': errors.kepada }"
+                                >
+                                    <option value="">Pilih Tujuan</option>
+                                    <option value="Direktur">Direktur</option>
+                                    <option value="Wakil Direktur">Wakil Direktur</option>
+                                    <option value="Kepala Bagian Keuangan">Kepala Bagian Keuangan</option>
+                                    <option value="Bagian KSO">Bagian KSO</option>
+                                    <option value="Bagian Pengadaan">Bagian Pengadaan</option>
+                                </select>
+                                <p v-if="errors.kepada" class="mt-1 text-sm text-red-600">{{ errors.kepada }}</p>
+                            </div>
                         </div>
 
                         <!-- Kode Program, Kegiatan, Rekening (Grid 3 kolom) -->
@@ -449,12 +485,14 @@ const props = defineProps({
 });
 
 const form = useForm({
-    tanggal_nota: new Date().toISOString().split('T')[0],
     nomor: '',
-    penerima: '',
-    dari_unit: 'Staff Perencanaan',
-    ke_jabatan: '',
+    tanggal_nota: new Date().toISOString().split('T')[0],
+    usulan_ruangan: props.permintaan.user?.unit_kerja || '',
     sifat: '',
+    perihal: '',
+    dari: 'Staff Perencanaan',
+    kepada: '',
+    penerima: '',
     kode_program: '',
     kode_kegiatan: '',
     kode_rekening: '',
@@ -469,7 +507,6 @@ const form = useForm({
     no_faktur_pajak: '',
     no_kwitansi: '',
     tanggal_faktur_pajak: '',
-    status: 'proses',
 });
 
 const processing = ref(false);
@@ -532,17 +569,33 @@ const submit = () => {
     // Reset errors
     errors.value = {};
 
-    // Validasi
-    if (!form.dari_unit) {
-        errors.value.dari_unit = 'Dari harus diisi';
-        return;
-    }
-    if (!form.ke_jabatan) {
-        errors.value.ke_jabatan = 'Kepada harus dipilih';
+    // Validasi semua field wajib
+    if (!form.nomor) {
+        errors.value.nomor = 'Nomor Nota Dinas harus diisi';
         return;
     }
     if (!form.tanggal_nota) {
-        errors.value.tanggal_nota = 'Tanggal nota harus diisi';
+        errors.value.tanggal_nota = 'Tanggal harus diisi';
+        return;
+    }
+    if (!form.usulan_ruangan) {
+        errors.value.usulan_ruangan = 'Usulan Ruangan harus diisi';
+        return;
+    }
+    if (!form.sifat) {
+        errors.value.sifat = 'Sifat harus dipilih';
+        return;
+    }
+    if (!form.perihal) {
+        errors.value.perihal = 'Perihal harus diisi';
+        return;
+    }
+    if (!form.dari) {
+        errors.value.dari = 'Dari harus diisi';
+        return;
+    }
+    if (!form.kepada) {
+        errors.value.kepada = 'Kepada harus diisi';
         return;
     }
     if (!form.pagu_anggaran || form.pagu_anggaran <= 0) {
@@ -557,6 +610,8 @@ const submit = () => {
             processing.value = false;
         },
         onError: (err) => {
+            errors.value = err;
+            processing.value = false;
         },
     });
 };

@@ -49,6 +49,7 @@ class NotaDinas extends Model
         'mengetahui',
         'nomor',
         'penerima',
+        'usulan_ruangan',
         'kode_program',
         'kode_kegiatan',
         'kode_rekening',
@@ -62,7 +63,9 @@ class NotaDinas extends Model
         'unit_instalasi',
         'no_faktur_pajak',
         'no_kwitansi',
-        'tanggal_faktur_pajak'
+        'tanggal_faktur_pajak',
+        'tipe_nota',
+        'isi_nota',
     ];
 
     /**

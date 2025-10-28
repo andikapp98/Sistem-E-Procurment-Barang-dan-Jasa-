@@ -541,7 +541,7 @@ const submit = () => {
     // Reset errors
     errors.value = {};
 
-    // Validasi
+    // Validasi semua field wajib
     const requiredFields = {
         ppk_ditunjuk: 'PPK yang ditunjuk harus diisi',
         nama_paket: 'Nama paket harus diisi',

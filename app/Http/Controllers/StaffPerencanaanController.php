@@ -9,6 +9,7 @@ use App\Models\DokumenPengadaan;
 use App\Models\Perencanaan;
 use App\Models\Hps;
 use App\Models\HpsItem;
+use App\Models\SpesifikasiTeknis;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -136,11 +137,35 @@ class StaffPerencanaanController extends Controller
         $user = Auth::user();
         
         
-        $permintaan->load(['user', 'notaDinas.disposisi']);
+        $permintaan->load(['user', 'notaDinas.disposisi', 'hps.items']);
         
         // Get timeline tracking
         $timeline = $permintaan->getTimelineTracking();
         $progress = $permintaan->getProgressPercentage();
+        
+        // Cek apakah dokumen sudah ada
+        $hasNotaDinas = $permintaan->notaDinas()->exists();
+        
+        // Cek DPP via Perencanaan
+        $hasDPP = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->exists();
+        
+        // Cek HPS
+        $hasHPS = $permintaan->hps()->exists();
+        
+        // Cek Disposisi
+        $hasDisposisi = Disposisi::whereHas('notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->exists();
+        
+        // Cek Nota Dinas Pembelian - untuk sementara cek dari tipe_nota jika ada di nota_dinas
+        $hasNotaDinasPembelian = NotaDinas::where('permintaan_id', $permintaan->permintaan_id)
+            ->where('tipe_nota', 'pembelian')
+            ->exists();
+        
+        // Cek Spesifikasi Teknis
+        $hasSpesifikasiTeknis = $permintaan->spesifikasiTeknis()->exists();
         
         return Inertia::render('StaffPerencanaan/Show', [
             'permintaan' => $permintaan,
@@ -148,6 +173,12 @@ class StaffPerencanaanController extends Controller
             'timeline' => $timeline,
             'progress' => $progress,
             'userLogin' => $user,
+            'hasNotaDinas' => $hasNotaDinas,
+            'hasDPP' => $hasDPP,
+            'hasHPS' => $hasHPS,
+            'hasDisposisi' => $hasDisposisi,
+            'hasNotaDinasPembelian' => $hasNotaDinasPembelian,
+            'hasSpesifikasiTeknis' => $hasSpesifikasiTeknis,
         ]);
     }
 
@@ -244,12 +275,14 @@ class StaffPerencanaanController extends Controller
         $user = Auth::user();
         
         $data = $request->validate([
+            'nomor' => 'required|string',
             'tanggal_nota' => 'required|date',
-            'nomor' => 'nullable|string',
-            'penerima' => 'nullable|string',
+            'usulan_ruangan' => 'required|string',
+            'sifat' => 'required|in:Sangat Segera,Segera,Biasa,Rahasia',
+            'perihal' => 'required|string',
             'dari' => 'required|string',
             'kepada' => 'required|string',
-            'sifat' => 'nullable|in:Sangat Segera,Segera,Biasa,Rahasia',
+            'penerima' => 'nullable|string',
             'kode_program' => 'nullable|string',
             'kode_kegiatan' => 'nullable|string',
             'kode_rekening' => 'nullable|string',
@@ -264,15 +297,9 @@ class StaffPerencanaanController extends Controller
             'no_faktur_pajak' => 'nullable|string',
             'no_kwitansi' => 'nullable|string',
             'tanggal_faktur_pajak' => 'nullable|date',
-            'perihal' => 'nullable|string',
         ]);
 
         $data['permintaan_id'] = $permintaan->permintaan_id;
-        
-        // Set default perihal jika tidak ada
-        if (!isset($data['perihal'])) {
-            $data['perihal'] = 'Nota Dinas Usulan Pengadaan - ' . $permintaan->deskripsi;
-        }
 
         // Generate nomor nota otomatis jika kosong
         if (empty($data['nomor'])) {
@@ -293,7 +320,7 @@ class StaffPerencanaanController extends Controller
 
         return redirect()
             ->route('staff-perencanaan.show', $permintaan)
-            ->with('success', 'Nota Dinas Usulan berhasil dibuat dan dikirim ke ' . $data['kepada']);
+            ->with('success', 'Nota Dinas Usulan berhasil dibuat');
     }
 
     /**
@@ -308,64 +335,6 @@ class StaffPerencanaanController extends Controller
         return Inertia::render('StaffPerencanaan/CreateNotaDinasPembelian', [
             'permintaan' => $permintaan,
         ]);
-    }
-
-    /**
-     * Store Nota Dinas Pembelian
-     */
-    public function storeNotaDinasPembelian(Request $request, Permintaan $permintaan)
-    {
-        $user = Auth::user();
-        
-        $data = $request->validate([
-            'nomor_nota_dinas' => 'required|string',
-            'tanggal_nota' => 'required|date',
-            'usulan_ruangan' => 'required|string',
-            'sifat' => 'required|in:Sangat Segera,Segera,Biasa,Rahasia',
-            'perihal' => 'required|string',
-            'dari' => 'required|string',
-            'kepada' => 'required|string',
-            'isi_nota' => 'nullable|string',
-            'tipe_nota' => 'nullable|string',
-        ]);
-
-        // Buat nota dinas dengan tipe pembelian
-        $notaDinas = NotaDinas::create([
-            'permintaan_id' => $permintaan->permintaan_id,
-            'nomor' => $data['nomor_nota_dinas'],
-            'tanggal_nota' => $data['tanggal_nota'],
-            'dari' => $data['dari'],
-            'kepada' => $data['kepada'],
-            'sifat' => $data['sifat'],
-            'perihal' => $data['perihal'],
-            'uraian' => $data['isi_nota'] ?? '',
-            'unit_instalasi' => $data['usulan_ruangan'],
-            'pagu_anggaran' => 0, // Set default atau bisa diisi nanti
-        ]);
-
-        // Buat disposisi ke tujuan
-        Disposisi::create([
-            'nota_id' => $notaDinas->nota_id,
-            'jabatan_tujuan' => $data['kepada'],
-            'tanggal_disposisi' => Carbon::now(),
-            'catatan' => "Nota Dinas Pembelian telah dibuat.\nUsulan dari: {$data['usulan_ruangan']}\nPerihal: {$data['perihal']}",
-            'status' => 'dalam_proses',
-        ]);
-
-        // Update status permintaan
-        $permintaan->update([
-            'status' => 'proses',
-            'pic_pimpinan' => $data['kepada'],
-            'deskripsi' => $permintaan->deskripsi . "\n\n[NOTA DINAS PEMBELIAN]\n" . 
-                          "Nomor: {$data['nomor_nota_dinas']}\n" .
-                          "Tanggal: " . Carbon::parse($data['tanggal_nota'])->format('d/m/Y') . "\n" .
-                          "Usulan Ruangan: {$data['usulan_ruangan']}\n" .
-                          "Perihal: {$data['perihal']}",
-        ]);
-
-        return redirect()
-            ->route('staff-perencanaan.show', $permintaan)
-            ->with('success', 'Nota Dinas Pembelian berhasil dibuat dan dikirim ke ' . $data['kepada']);
     }
 
     /**
@@ -875,5 +844,624 @@ class StaffPerencanaanController extends Controller
             'userLogin' => $user,
             'filters' => $request->only(['search', 'bidang', 'status', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
         ]);
+    }
+
+    // ==================== CRUD untuk Perencanaan ====================
+    public function editPerencanaan(Permintaan $permintaan)
+    {
+        // Perencanaan via Nota Dinas -> Disposisi -> Perencanaan
+        $perencanaan = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$perencanaan) {
+            return redirect()->back()->with('error', 'Data perencanaan tidak ditemukan');
+        }
+
+        return Inertia::render('StaffPerencanaan/CreatePerencanaan', [
+            'permintaan' => $permintaan,
+            'perencanaan' => $perencanaan,
+            'isEdit' => true,
+        ]);
+    }
+
+    public function updatePerencanaan(Request $request, Permintaan $permintaan)
+    {
+        $perencanaan = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$perencanaan) {
+            return redirect()->back()->with('error', 'Data perencanaan tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'rencana_kegiatan' => 'required|string',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date',
+            'anggaran' => 'nullable|numeric',
+            'metode_pengadaan' => 'nullable|string',
+        ]);
+
+        $perencanaan->update($validated);
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data perencanaan berhasil diupdate');
+    }
+
+    public function deletePerencanaan(Permintaan $permintaan)
+    {
+        $perencanaan = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$perencanaan) {
+            return redirect()->back()->with('error', 'Data perencanaan tidak ditemukan');
+        }
+
+        $perencanaan->delete();
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data perencanaan berhasil dihapus');
+    }
+
+    // ==================== CRUD untuk Disposisi ====================
+    public function editDisposisi(Permintaan $permintaan)
+    {
+        // Disposisi via Nota Dinas
+        $disposisi = Disposisi::whereHas('notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$disposisi) {
+            return redirect()->back()->with('error', 'Data disposisi tidak ditemukan');
+        }
+
+        return Inertia::render('StaffPerencanaan/CreateDisposisi', [
+            'permintaan' => $permintaan,
+            'disposisi' => $disposisi,
+            'isEdit' => true,
+        ]);
+    }
+
+    public function updateDisposisi(Request $request, Permintaan $permintaan)
+    {
+        $disposisi = Disposisi::whereHas('notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$disposisi) {
+            return redirect()->back()->with('error', 'Data disposisi tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'jabatan_tujuan' => 'required|string',
+            'tanggal_disposisi' => 'required|date',
+            'catatan' => 'nullable|string',
+        ]);
+
+        $disposisi->update($validated);
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data disposisi berhasil diupdate');
+    }
+
+    public function deleteDisposisi(Permintaan $permintaan)
+    {
+        $disposisi = Disposisi::whereHas('notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$disposisi) {
+            return redirect()->back()->with('error', 'Data disposisi tidak ditemukan');
+        }
+
+        $disposisi->delete();
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data disposisi berhasil dihapus');
+    }
+
+    // ==================== CRUD untuk Nota Dinas ====================
+    public function editNotaDinas(Permintaan $permintaan)
+    {
+        $notaDinas = $permintaan->notaDinas()->latest()->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->with('error', 'Data nota dinas tidak ditemukan');
+        }
+
+        return Inertia::render('StaffPerencanaan/CreateNotaDinas', [
+            'permintaan' => $permintaan,
+            'notaDinas' => $notaDinas,
+            'isEdit' => true,
+        ]);
+    }
+
+    public function updateNotaDinas(Request $request, Permintaan $permintaan)
+    {
+        $notaDinas = $permintaan->notaDinas()->latest()->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->with('error', 'Data nota dinas tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'no_nota_dinas' => 'required|string|max:255',
+            'tanggal_nota_dinas' => 'required|date',
+            'perihal' => 'required|string',
+            'kepada' => 'required|string',
+            'isi_nota_dinas' => 'nullable|string',
+            'pagu_anggaran' => 'nullable|numeric',
+        ]);
+
+        $notaDinas->update($validated);
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data nota dinas berhasil diupdate');
+    }
+
+    public function deleteNotaDinas(Permintaan $permintaan)
+    {
+        $notaDinas = $permintaan->notaDinas()->latest()->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->with('error', 'Data nota dinas tidak ditemukan');
+        }
+
+        $notaDinas->delete();
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data nota dinas berhasil dihapus');
+    }
+
+    // ==================== CRUD untuk DPP ====================
+    public function editDPP(Permintaan $permintaan)
+    {
+        // DPP ada di tabel perencanaan
+        $dpp = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$dpp) {
+            return redirect()->back()->with('error', 'Data DPP tidak ditemukan');
+        }
+
+        return Inertia::render('StaffPerencanaan/CreateDPP', [
+            'permintaan' => $permintaan,
+            'dpp' => $dpp,
+            'isEdit' => true,
+        ]);
+    }
+
+    public function updateDPP(Request $request, Permintaan $permintaan)
+    {
+        $dpp = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$dpp) {
+            return redirect()->back()->with('error', 'Data DPP tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'ppk_ditunjuk' => 'required|string',
+            'nama_paket' => 'required|string',
+            'lokasi' => 'nullable|string',
+            'sumber_dana' => 'required|string',
+            'pagu_paket' => 'nullable|numeric',
+            'nilai_hps' => 'nullable|numeric',
+            'jangka_waktu_pelaksanaan' => 'required|integer',
+            'metode_pengadaan' => 'nullable|string',
+        ]);
+
+        $dpp->update($validated);
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data DPP berhasil diupdate');
+    }
+
+    public function deleteDPP(Permintaan $permintaan)
+    {
+        $dpp = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$dpp) {
+            return redirect()->back()->with('error', 'Data DPP tidak ditemukan');
+        }
+
+        $dpp->delete();
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data DPP berhasil dihapus');
+    }
+
+    // ==================== CRUD untuk HPS ====================
+    public function editHPS(Permintaan $permintaan)
+    {
+        $hps = $permintaan->hps()->with('items')->first();
+        
+        if (!$hps) {
+            return redirect()->back()->with('error', 'Data HPS tidak ditemukan');
+        }
+
+        return Inertia::render('StaffPerencanaan/CreateHPS', [
+            'permintaan' => $permintaan,
+            'hps' => $hps,
+            'isEdit' => true,
+        ]);
+    }
+
+    public function updateHPS(Request $request, Permintaan $permintaan)
+    {
+        $hps = $permintaan->hps()->first();
+        
+        if (!$hps) {
+            return redirect()->back()->with('error', 'Data HPS tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'ppk' => 'required|string',
+            'surat_penawaran_harga' => 'required|string',
+            'tanggal_penetapan' => 'required|date',
+            'grand_total' => 'required|numeric',
+            'items' => 'required|array',
+            'items.*.nama_item' => 'required|string',
+            'items.*.spesifikasi' => 'required|string',
+            'items.*.satuan' => 'required|string',
+            'items.*.volume' => 'required|numeric',
+            'items.*.harga_satuan' => 'required|numeric',
+            'items.*.jumlah' => 'required|numeric',
+        ]);
+
+        // Update HPS
+        $hps->update([
+            'ppk' => $validated['ppk'],
+            'surat_penawaran_harga' => $validated['surat_penawaran_harga'],
+            'tanggal_penetapan' => $validated['tanggal_penetapan'],
+            'grand_total' => $validated['grand_total'],
+        ]);
+
+        // Delete existing items
+        $hps->items()->delete();
+
+        // Create new items
+        foreach ($validated['items'] as $item) {
+            $hps->items()->create($item);
+        }
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data HPS berhasil diupdate');
+    }
+
+    public function deleteHPS(Permintaan $permintaan)
+    {
+        $hps = $permintaan->hps()->first();
+        
+        if (!$hps) {
+            return redirect()->back()->with('error', 'Data HPS tidak ditemukan');
+        }
+
+        // Delete items first
+        $hps->items()->delete();
+        $hps->delete();
+
+        return redirect()->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Data HPS berhasil dihapus');
+    }
+
+    // ==================== CETAK DOKUMEN ====================
+    
+    /**
+     * Cetak Nota Dinas
+     */
+    public function cetakNotaDinas(Permintaan $permintaan)
+    {
+        $permintaan->load(['user', 'notaDinas']);
+        
+        $notaDinas = $permintaan->notaDinas()->latest()->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->with('error', 'Nota Dinas belum dibuat');
+        }
+        
+        return view('cetak.nota-dinas-staff-perencanaan', [
+            'permintaan' => $permintaan,
+            'notaDinas' => $notaDinas,
+        ]);
+    }
+    
+    /**
+     * Cetak DPP
+     */
+    public function cetakDPP(Permintaan $permintaan)
+    {
+        $permintaan->load('user');
+        
+        $dpp = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        if (!$dpp) {
+            return redirect()->back()->with('error', 'DPP belum dibuat');
+        }
+        
+        return view('cetak.dpp-staff-perencanaan', [
+            'permintaan' => $permintaan,
+            'dpp' => $dpp,
+        ]);
+    }
+    
+    /**
+     * Cetak HPS
+     */
+    public function cetakHPS(Permintaan $permintaan)
+    {
+        $permintaan->load('user');
+        
+        $hps = $permintaan->hps()->with('items')->first();
+        
+        if (!$hps) {
+            return redirect()->back()->with('error', 'HPS belum dibuat');
+        }
+        
+        return view('cetak.hps-staff-perencanaan', [
+            'permintaan' => $permintaan,
+            'hps' => $hps,
+        ]);
+    }
+
+    // ==================== CRUD SPESIFIKASI TEKNIS ====================
+    
+    /**
+     * Form membuat Spesifikasi Teknis
+     */
+    public function createSpesifikasiTeknis(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        return Inertia::render('StaffPerencanaan/CreateSpesifikasiTeknis', [
+            'permintaan' => $permintaan,
+        ]);
+    }
+
+    /**
+     * Store Spesifikasi Teknis
+     */
+    public function storeSpesifikasiTeknis(Request $request, Permintaan $permintaan)
+    {
+        $data = $request->validate([
+            // Section 1: Latar Belakang & Tujuan
+            'latar_belakang' => 'required|string',
+            'maksud_tujuan' => 'required|string',
+            'target_sasaran' => 'required|string',
+            
+            // Section 2: Pejabat & Anggaran
+            'pejabat_pengadaan' => 'required|string',
+            'sumber_dana' => 'required|string',
+            'perkiraan_biaya' => 'required|string',
+            
+            // Section 3: Detail Barang/Jasa
+            'jenis_barang_jasa' => 'required|string',
+            'fungsi_manfaat' => 'required|string',
+            'kegiatan_rutin' => 'required|in:Ya,Tidak',
+            
+            // Section 4: Waktu & Tenaga
+            'jangka_waktu' => 'required|string',
+            'estimasi_waktu_datang' => 'required|string',
+            'tenaga_diperlukan' => 'required|string',
+            
+            // Section 5: Pelaku Usaha & Konsolidasi
+            'pelaku_usaha' => 'required|string',
+            'pengadaan_sejenis' => 'required|in:Ya,Tidak',
+            'pengadaan_sejenis_keterangan' => 'nullable|string',
+            'indikasi_konsolidasi' => 'required|in:Ya,Tidak',
+            'indikasi_konsolidasi_keterangan' => 'nullable|string',
+        ]);
+
+        $data['permintaan_id'] = $permintaan->permintaan_id;
+
+        SpesifikasiTeknis::create($data);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Spesifikasi Teknis berhasil dibuat');
+    }
+
+    /**
+     * Form edit Spesifikasi Teknis
+     */
+    public function editSpesifikasiTeknis(Permintaan $permintaan)
+    {
+        $spesifikasi = $permintaan->spesifikasiTeknis;
+        
+        if (!$spesifikasi) {
+            return redirect()->back()->with('error', 'Data Spesifikasi Teknis tidak ditemukan');
+        }
+
+        return Inertia::render('StaffPerencanaan/CreateSpesifikasiTeknis', [
+            'permintaan' => $permintaan,
+            'spesifikasi' => $spesifikasi,
+            'isEdit' => true,
+        ]);
+    }
+
+    /**
+     * Update Spesifikasi Teknis
+     */
+    public function updateSpesifikasiTeknis(Request $request, Permintaan $permintaan)
+    {
+        $spesifikasi = $permintaan->spesifikasiTeknis;
+        
+        if (!$spesifikasi) {
+            return redirect()->back()->with('error', 'Data Spesifikasi Teknis tidak ditemukan');
+        }
+
+        $data = $request->validate([
+            // Section 1: Latar Belakang & Tujuan
+            'latar_belakang' => 'required|string',
+            'maksud_tujuan' => 'required|string',
+            'target_sasaran' => 'required|string',
+            
+            // Section 2: Pejabat & Anggaran
+            'pejabat_pengadaan' => 'required|string',
+            'sumber_dana' => 'required|string',
+            'perkiraan_biaya' => 'required|string',
+            
+            // Section 3: Detail Barang/Jasa
+            'jenis_barang_jasa' => 'required|string',
+            'fungsi_manfaat' => 'required|string',
+            'kegiatan_rutin' => 'required|in:Ya,Tidak',
+            
+            // Section 4: Waktu & Tenaga
+            'jangka_waktu' => 'required|string',
+            'estimasi_waktu_datang' => 'required|string',
+            'tenaga_diperlukan' => 'required|string',
+            
+            // Section 5: Pelaku Usaha & Konsolidasi
+            'pelaku_usaha' => 'required|string',
+            'pengadaan_sejenis' => 'required|in:Ya,Tidak',
+            'pengadaan_sejenis_keterangan' => 'nullable|string',
+            'indikasi_konsolidasi' => 'required|in:Ya,Tidak',
+            'indikasi_konsolidasi_keterangan' => 'nullable|string',
+        ]);
+
+        $spesifikasi->update($data);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Spesifikasi Teknis berhasil diupdate');
+    }
+
+    /**
+     * Delete Spesifikasi Teknis
+     */
+    public function deleteSpesifikasiTeknis(Permintaan $permintaan)
+    {
+        $spesifikasi = $permintaan->spesifikasiTeknis;
+        
+        if (!$spesifikasi) {
+            return redirect()->back()->with('error', 'Data Spesifikasi Teknis tidak ditemukan');
+        }
+
+        $spesifikasi->delete();
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Spesifikasi Teknis berhasil dihapus');
+    }
+
+    // ==================== CRUD NOTA DINAS PEMBELIAN ====================
+    
+    /**
+     * Store Nota Dinas Pembelian
+     */
+    public function storeNotaDinasPembelian(Request $request, Permintaan $permintaan)
+    {
+        $data = $request->validate([
+            'nomor_nota_dinas' => 'required|string',
+            'tanggal_nota' => 'required|date',
+            'usulan_ruangan' => 'required|string',
+            'sifat' => 'required|in:Sangat Segera,Segera,Biasa,Rahasia',
+            'perihal' => 'required|string',
+            'dari' => 'required|string',
+            'kepada' => 'required|string',
+            'isi_nota' => 'nullable|string',
+        ]);
+
+        $data['permintaan_id'] = $permintaan->permintaan_id;
+        $data['tipe_nota'] = 'pembelian';
+        $data['nomor'] = $data['nomor_nota_dinas'];
+        
+        // Generate nomor otomatis jika kosong
+        if (empty($data['nomor'])) {
+            $lastNota = NotaDinas::whereYear('tanggal_nota', date('Y'))
+                ->where('tipe_nota', 'pembelian')
+                ->orderBy('nota_id', 'desc')
+                ->first();
+                
+            $nextNumber = $lastNota ? intval(substr($lastNota->nomor, 0, 3)) + 1 : 1;
+            $data['nomor'] = sprintf('%03d/ND-PEM/SP/%s', $nextNumber, date('Y'));
+        }
+
+        NotaDinas::create($data);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Nota Dinas Pembelian berhasil dibuat');
+    }
+
+    /**
+     * Form edit Nota Dinas Pembelian
+     */
+    public function editNotaDinasPembelian(Permintaan $permintaan)
+    {
+        $notaDinas = NotaDinas::where('permintaan_id', $permintaan->permintaan_id)
+            ->where('tipe_nota', 'pembelian')
+            ->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->with('error', 'Nota Dinas Pembelian tidak ditemukan');
+        }
+
+        return Inertia::render('StaffPerencanaan/CreateNotaDinasPembelian', [
+            'permintaan' => $permintaan,
+            'notaDinas' => $notaDinas,
+            'isEdit' => true,
+        ]);
+    }
+
+    /**
+     * Update Nota Dinas Pembelian
+     */
+    public function updateNotaDinasPembelian(Request $request, Permintaan $permintaan)
+    {
+        $notaDinas = NotaDinas::where('permintaan_id', $permintaan->permintaan_id)
+            ->where('tipe_nota', 'pembelian')
+            ->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->with('error', 'Nota Dinas Pembelian tidak ditemukan');
+        }
+
+        $data = $request->validate([
+            'nomor_nota_dinas' => 'required|string',
+            'tanggal_nota' => 'required|date',
+            'usulan_ruangan' => 'required|string',
+            'sifat' => 'required|in:Sangat Segera,Segera,Biasa,Rahasia',
+            'perihal' => 'required|string',
+            'dari' => 'required|string',
+            'kepada' => 'required|string',
+            'isi_nota' => 'nullable|string',
+        ]);
+
+        $data['nomor'] = $data['nomor_nota_dinas'];
+        
+        $notaDinas->update($data);
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Nota Dinas Pembelian berhasil diupdate');
+    }
+
+    /**
+     * Delete Nota Dinas Pembelian
+     */
+    public function deleteNotaDinasPembelian(Permintaan $permintaan)
+    {
+        $notaDinas = NotaDinas::where('permintaan_id', $permintaan->permintaan_id)
+            ->where('tipe_nota', 'pembelian')
+            ->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->with('error', 'Nota Dinas Pembelian tidak ditemukan');
+        }
+
+        $notaDinas->delete();
+
+        return redirect()
+            ->route('staff-perencanaan.show', $permintaan)
+            ->with('success', 'Nota Dinas Pembelian berhasil dihapus');
     }
 }

@@ -33,6 +33,20 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Email harus diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password harus diisi.',
+        ];
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -44,8 +58,17 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            // Cek apakah email ada di database untuk memberikan pesan yang lebih spesifik
+            $user = \App\Models\User::where('email', $this->email)->first();
+            
+            if (!$user) {
+                throw ValidationException::withMessages([
+                    'email' => 'Email tidak terdaftar dalam sistem.',
+                ]);
+            }
+
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'password' => 'Password yang Anda masukkan salah.',
             ]);
         }
 
@@ -66,12 +89,10 @@ class LoginRequest extends FormRequest
         event(new Lockout($this));
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
+        $minutes = ceil($seconds / 60);
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => "Terlalu banyak percobaan login. Silakan coba lagi dalam {$minutes} menit.",
         ]);
     }
 
