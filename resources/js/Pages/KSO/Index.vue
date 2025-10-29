@@ -47,9 +47,18 @@ const formatDate = (date) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Daftar Permintaan KSO
-            </h2>
+            <div class="flex justify-between items-center">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Daftar Permintaan KSO
+                </h2>
+                <Link :href="route('kso.list-all')" 
+                      class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Lihat Semua KSO
+                </Link>
+            </div>
         </template>
 
         <div class="py-12">
@@ -113,7 +122,7 @@ const formatDate = (date) => {
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bidang</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status KSO</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dokumen KSO</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                                     </tr>
                                 </thead>
@@ -140,20 +149,60 @@ const formatDate = (date) => {
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span v-if="permintaan.has_kso" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                Sudah Ada
-                                            </span>
+                                            <div v-if="permintaan.has_kso" class="flex items-center space-x-2">
+                                                <!-- PKS Indicator -->
+                                                <div class="group relative">
+                                                    <div v-if="permintaan.kso_file_pks" 
+                                                         class="flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium">
+                                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        PKS
+                                                    </div>
+                                                    <div v-else 
+                                                         class="flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium">
+                                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        PKS
+                                                    </div>
+                                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                                        {{ permintaan.kso_file_pks ? 'PKS Uploaded' : 'PKS Belum Upload' }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- MoU Indicator -->
+                                                <div class="group relative">
+                                                    <div v-if="permintaan.kso_file_mou" 
+                                                         class="flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium">
+                                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        MoU
+                                                    </div>
+                                                    <div v-else 
+                                                         class="flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium">
+                                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        MoU
+                                                    </div>
+                                                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                                        {{ permintaan.kso_file_mou ? 'MoU Uploaded' : 'MoU Belum Upload' }}
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <span v-else class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                Belum Ada
+                                                Belum Ada KSO
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                            <Link :href="route('kso.show', permintaan.permintaan_id)" 
+                                            <Link :href="route('kso.show', { permintaan: permintaan.permintaan_id })" 
                                                   class="text-blue-600 hover:text-blue-900">
                                                 Detail
                                             </Link>
                                             <Link v-if="!permintaan.has_kso" 
-                                                  :href="route('kso.create', permintaan.permintaan_id)" 
+                                                  :href="route('kso.create', { permintaan: permintaan.permintaan_id })" 
                                                   class="text-green-600 hover:text-green-900">
                                                 Buat KSO
                                             </Link>

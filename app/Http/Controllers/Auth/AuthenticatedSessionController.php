@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Helpers\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,9 +34,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect berdasarkan role user
+        // Log successful login
         $user = Auth::user();
-        
+        ActivityLogger::logLogin($user);
+
+        // Redirect berdasarkan role user
         if ($user->role === 'kepala_instalasi') {
             return redirect()->intended(route('kepala-instalasi.dashboard', absolute: false));
         }
@@ -52,6 +55,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Log logout before destroying session
+        $user = Auth::user();
+        if ($user) {
+            ActivityLogger::logLogout($user);
+        }
+        
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

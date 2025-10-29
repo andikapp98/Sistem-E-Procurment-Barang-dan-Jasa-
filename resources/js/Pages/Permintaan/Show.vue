@@ -127,10 +127,36 @@
                                 <dd class="text-base text-gray-900">{{ permintaan.bidang ?? "-" }}</dd>
                             </div>
 
+                            <!-- Klasifikasi Permintaan -->
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 mb-1">Klasifikasi Permintaan</dt>
+                                <dd class="text-base">
+                                    <span 
+                                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                        :class="klasifikasiClass(permintaan.klasifikasi_permintaan)"
+                                    >
+                                        {{ formatKlasifikasi(permintaan.klasifikasi_permintaan) }}
+                                    </span>
+                                </dd>
+                            </div>
+
+                            <!-- Kabid Tujuan -->
+                            <div v-if="permintaan.kabid_tujuan">
+                                <dt class="text-sm font-medium text-gray-500 mb-1">Kepala Bidang Tujuan</dt>
+                                <dd class="text-base text-gray-900">
+                                    <span class="inline-flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        {{ permintaan.kabid_tujuan }}
+                                    </span>
+                                </dd>
+                            </div>
+
                             <!-- User Pengaju -->
                             <div>
                                 <dt class="text-sm font-medium text-gray-500 mb-1">Pengaju</dt>
-                                <dd class="text-base text-gray-900">{{ permintaan.user?.nama ?? "-" }}</dd>
+                                <dd class="text-base text-gray-900">{{ permintaan.user?.name ?? permintaan.user?.nama ?? "-" }}</dd>
                             </div>
 
                             <!-- PIC Pimpinan -->
@@ -167,16 +193,16 @@
                             <!-- Deskripsi (Full Width) -->
                             <div class="md:col-span-2">
                                 <dt class="text-sm font-medium text-gray-500 mb-2">Deskripsi Permintaan</dt>
-                                <dd class="text-base text-gray-900 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <dd class="text-base text-gray-900 bg-gray-50 p-4 rounded-lg border border-gray-200 whitespace-pre-wrap">
                                     {{ permintaan.deskripsi }}
                                 </dd>
                             </div>
 
                             <!-- Disposisi Tujuan -->
-                            <div>
+                            <div v-if="permintaan.disposisi_tujuan">
                                 <dt class="text-sm font-medium text-gray-500 mb-1">Disposisi</dt>
                                 <dd class="text-base text-gray-900 font-semibold">
-                                    {{ permintaan.disposisi_tujuan ?? "-" }}
+                                    {{ permintaan.disposisi_tujuan }}
                                 </dd>
                             </div>
 
@@ -191,7 +217,7 @@
                             <!-- Catatan Disposisi -->
                             <div class="md:col-span-2" v-if="permintaan.catatan_disposisi">
                                 <dt class="text-sm font-medium text-gray-500 mb-1">Detail / Catatan Disposisi</dt>
-                                <dd class="text-base text-gray-900 bg-gray-50 p-3 rounded border border-gray-200">
+                                <dd class="text-base text-gray-900 bg-gray-50 p-3 rounded border border-gray-200 whitespace-pre-wrap">
                                     {{ permintaan.catatan_disposisi }}
                                 </dd>
                             </div>
@@ -294,6 +320,39 @@
                     </div>
                     
                     <div class="p-6">
+                        <!-- Next Step Info -->
+                        <div v-if="nextStep && !nextStep.completed" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex items-start">
+                                <svg class="w-6 h-6 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-blue-900 mb-1">Tahapan Berikutnya</h4>
+                                    <p class="text-sm text-blue-800 mb-1">
+                                        <strong>{{ nextStep.tahapan }}</strong> - {{ nextStep.description }}
+                                    </p>
+                                    <p class="text-xs text-blue-600">
+                                        Penanggung Jawab: {{ nextStep.responsible }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Success Info -->
+                        <div v-if="nextStep && nextStep.completed" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-start">
+                                <svg class="w-6 h-6 text-green-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-green-900 mb-1">🎉 Semua Tahapan Selesai</h4>
+                                    <p class="text-sm text-green-800">
+                                        Proses pengadaan telah diselesaikan dengan baik.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Progress Bar -->
                         <div class="mb-6">
                             <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
@@ -378,10 +437,35 @@ const props = defineProps({
     trackingStatus: String,
     timeline: Array,
     progress: Number,
+    nextStep: Object,
     userLogin: Object,
 });
 
 const deleting = ref(false);
+
+// Helper function untuk format klasifikasi permintaan
+const formatKlasifikasi = (klasifikasi) => {
+    const klasifikasiMap = {
+        'medis': 'Medis',
+        'penunjang_medis': 'Penunjang Medis',
+        'non_medis': 'Non Medis'
+    };
+    return klasifikasiMap[klasifikasi] || klasifikasi || '-';
+};
+
+// Helper function untuk class klasifikasi
+const klasifikasiClass = (klasifikasi) => {
+    switch (klasifikasi) {
+        case 'medis':
+            return 'bg-blue-100 text-blue-800 border border-blue-300';
+        case 'penunjang_medis':
+            return 'bg-purple-100 text-purple-800 border border-purple-300';
+        case 'non_medis':
+            return 'bg-gray-100 text-gray-800 border border-gray-300';
+        default:
+            return 'bg-gray-100 text-gray-600 border border-gray-200';
+    }
+};
 
 // Helper function untuk icon berdasarkan tahapan
 const getIconForStep = (tahapan) => {

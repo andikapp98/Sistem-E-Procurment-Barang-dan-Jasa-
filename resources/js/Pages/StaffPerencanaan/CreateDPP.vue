@@ -588,7 +588,11 @@ const submit = () => {
 
     processing.value = true;
 
-    form.post(route('staff-perencanaan.dpp.store', props.permintaan.permintaan_id), {
+    form.transform((data) => ({
+        ...data,
+        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    })).post(route('staff-perencanaan.dpp.store', props.permintaan.permintaan_id), {
+        preserveScroll: true,
         onSuccess: () => {
             processing.value = false;
         },

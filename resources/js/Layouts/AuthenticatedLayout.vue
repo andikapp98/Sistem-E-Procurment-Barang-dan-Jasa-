@@ -1,13 +1,28 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
 const sidebarOpen = ref(true);
+
+const csrfToken = computed(() => {
+    const page = usePage();
+    return page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content || '';
+});
+
+const logout = () => {
+    router.post(route('logout'), {}, {
+        preserveState: false,
+        preserveScroll: false,
+        onSuccess: () => {
+            window.location.href = '/login';
+        }
+    });
+};
 </script>
 
 <template>
@@ -86,15 +101,12 @@ const sidebarOpen = ref(true);
                                         >
                                             Profile
                                         </DropdownLink>
-                                        <form :action="route('logout')" method="POST" class="w-full">
-                                            <input type="hidden" name="_token" :value="$page.props.csrf_token || document.querySelector('meta[name=csrf-token]')?.content">
-                                            <button
-                                                type="submit"
-                                                class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                                            >
-                                                Log Out
-                                            </button>
-                                        </form>
+                                        <button
+                                            @click="logout"
+                                            class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                        >
+                                            Log Out
+                                        </button>
                                     </template>
                                 </Dropdown>
                             </div>
@@ -341,15 +353,12 @@ const sidebarOpen = ref(true);
                             <ResponsiveNavLink :href="route('profile.edit')">
                                 Profile
                             </ResponsiveNavLink>
-                            <form :action="route('logout')" method="POST" class="w-full">
-                                <input type="hidden" name="_token" :value="$page.props.csrf_token || document.querySelector('meta[name=csrf-token]')?.content">
-                                <button
-                                    type="submit"
-                                    class="block w-full ps-3 pe-4 py-2 border-l-4 border-transparent text-start text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out"
-                                >
-                                    Log Out
-                                </button>
-                            </form>
+                            <button
+                                @click="logout"
+                                class="block w-full ps-3 pe-4 py-2 border-l-4 border-transparent text-start text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out"
+                            >
+                                Log Out
+                            </button>
                         </div>
                     </div>
                 </div>

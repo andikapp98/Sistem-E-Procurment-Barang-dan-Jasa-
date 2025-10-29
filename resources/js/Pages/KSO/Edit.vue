@@ -43,7 +43,7 @@ const formatCurrency = (event) => {
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Edit Dokumen KSO
                 </h2>
-                <Link :href="route('kso.show', permintaan.permintaan_id)" class="text-sm text-gray-600 hover:text-gray-900">
+                <Link :href="route('kso.show', { permintaan: permintaan.permintaan_id })" class="text-sm text-gray-600 hover:text-gray-900">
                     ← Kembali
                 </Link>
             </div>
@@ -209,7 +209,7 @@ const formatCurrency = (event) => {
 
                             <!-- Buttons -->
                             <div class="mt-8 flex justify-end space-x-3">
-                                <Link :href="route('kso.show', permintaan.permintaan_id)" 
+                                <Link :href="route('kso.show', { permintaan: permintaan.permintaan_id })" 
                                       class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
                                     Batal
                                 </Link>

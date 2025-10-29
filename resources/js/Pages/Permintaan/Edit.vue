@@ -79,6 +79,19 @@
                             <InputError :message="form.errors.bidang" class="mt-2" />
                         </div>
 
+                        <!-- Klasifikasi Permintaan -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700">Klasifikasi Permintaan <span class="text-red-500">*</span></label>
+                            <select v-model="form.klasifikasi_permintaan" class="mt-1 block w-full rounded-md border-gray-300" required>
+                                <option value="">-- Pilih Klasifikasi --</option>
+                                <option value="Medis">Medis</option>
+                                <option value="Non Medis">Non Medis</option>
+                                <option value="Penunjang">Penunjang</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Pilih klasifikasi sesuai jenis kebutuhan</p>
+                            <InputError :message="form.errors.klasifikasi_permintaan" class="mt-2" />
+                        </div>
+
                         <!-- Deskripsi -->
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
@@ -199,19 +212,30 @@ const permintaan = props.permintaan || {};
 
 const form = useForm({
     bidang: permintaan.bidang || "",
+    klasifikasi_permintaan: permintaan.klasifikasi_permintaan || "",
     deskripsi: permintaan.deskripsi || "",
     tanggal_permintaan: permintaan.tanggal_permintaan ? permintaan.tanggal_permintaan.split('T')[0] : "",
     pic_pimpinan: permintaan.pic_pimpinan || "",
     no_nota_dinas: permintaan.no_nota_dinas || "",
     link_scan: permintaan.link_scan || "",
     status: permintaan.status === 'ditolak' ? 'diajukan' : permintaan.status || "", // Auto set ke diajukan jika ditolak
+    disposisi_tujuan: permintaan.disposisi_tujuan || "",
+    wadir_tujuan: permintaan.wadir_tujuan || "",
+    kabid_tujuan: permintaan.kabid_tujuan || "",
 });
 
 const submit = () => {
-    form.put(route("permintaan.update", permintaan.permintaan_id), {
+    form.transform((data) => ({
+        ...data,
+        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    })).put(route("permintaan.update", permintaan.permintaan_id), {
+        preserveScroll: true,
         onSuccess: () => {
             // Redirect to show page after success
         },
+        onError: (errors) => {
+            console.error('Form errors:', errors);
+        }
     });
 };
 </script>

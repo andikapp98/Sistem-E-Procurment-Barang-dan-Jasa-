@@ -14,11 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\LogUserActivity::class,
         ]);
 
         // Middleware aliases
         $middleware->alias([
             'redirect.role' => \App\Http\Middleware\RedirectBasedOnRole::class,
+            'log.activity' => \App\Http\Middleware\LogUserActivity::class,
         ]);
         
         // Validate CSRF tokens but don't throw on mismatch for certain routes

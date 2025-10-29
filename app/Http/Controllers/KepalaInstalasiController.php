@@ -16,8 +16,14 @@ use Carbon\Carbon;
  * Tugas Kepala Instalasi:
  * 1. Menerima permintaan dari unit
  * 2. Mereview permintaan
- * 3. Membuat Nota Dinas untuk dikirim ke atasan (Kepala Instalasi / Direktur)
- * 4. Meneruskan ke bagian pengadaan
+ * 3. Menentukan klasifikasi permintaan dan routing ke Kabid yang sesuai
+ * 4. Membuat Nota Dinas untuk dikirim ke Kepala Bidang
+ * 5. Meneruskan ke bagian pengadaan
+ * 
+ * ROUTING BERDASARKAN KLASIFIKASI:
+ * - Alat medis, obat → klasifikasi: 'medis' → Kabid Pelayanan Medis
+ * - Reagen lab, film radiologi → klasifikasi: 'penunjang_medis' → Kabid Penunjang Medis
+ * - Linen, IT, makanan → klasifikasi: 'non_medis' → Kabid Keperawatan/Bagian Umum
  */
 class KepalaInstalasiController extends Controller
 {
@@ -56,6 +62,76 @@ class KepalaInstalasiController extends Controller
             'Penjaminan' => 'Unit Penjaminan',
             'Pengaduan' => 'Unit Pengaduan',
         ];
+    }
+
+    /**
+     * Tentukan klasifikasi permintaan berdasarkan unit kerja
+     * 
+     * MEDIS: IGD, Farmasi (obat), Bedah, Rawat Inap, Rawat Jalan, ICU
+     * PENUNJANG MEDIS: Lab, Radiologi, Farmasi (alat)
+     * NON MEDIS: Rekam Medik, Gizi, Sanitasi, Laundry, IT
+     */
+    private function determineKlasifikasi($bidang)
+    {
+        $medisUnits = [
+            'IGD', 'Instalasi Gawat Darurat', 'Gawat Darurat',
+            'IBS', 'Instalasi Bedah Sentral', 'Bedah Sentral',
+            'ICU', 'Instalasi Intensif Care', 'ICU/ICCU',
+            'IRJ', 'Instalasi Rawat Jalan', 'Rawat Jalan',
+            'IRNA', 'Instalasi Rawat Inap', 'Rawat Inap',
+        ];
+
+        $penunjangMedisUnits = [
+            'Lab', 'Instalasi Laboratorium', 'Laboratorium',
+            'Radiologi', 'Instalasi Radiologi',
+        ];
+
+        $nonMedisUnits = [
+            'Rekam Medik', 'Unit Rekam Medik',
+            'Gizi', 'Instalasi Gizi',
+            'Sanitasi', 'Instalasi Penyehatan Lingkungan', 'Sanitasi & Pemeliharaan',
+            'Laundry', 'Linen', 'Laundry & Linen',
+            'IT', 'Teknologi Informasi',
+            'Pemeliharaan', 'Instalasi Pemeliharaan',
+        ];
+
+        foreach ($medisUnits as $unit) {
+            if (stripos($bidang, $unit) !== false) {
+                return 'medis';
+            }
+        }
+
+        foreach ($penunjangMedisUnits as $unit) {
+            if (stripos($bidang, $unit) !== false) {
+                return 'penunjang_medis';
+            }
+        }
+
+        foreach ($nonMedisUnits as $unit) {
+            if (stripos($bidang, $unit) !== false) {
+                return 'non_medis';
+            }
+        }
+
+        // Default ke medis jika tidak bisa ditentukan
+        return 'medis';
+    }
+
+    /**
+     * Tentukan Kabid tujuan berdasarkan klasifikasi
+     */
+    private function getKabidTujuan($klasifikasi)
+    {
+        $mapping = [
+            'Medis' => 'Bidang Pelayanan Medis',
+            'medis' => 'Bidang Pelayanan Medis',
+            'Penunjang' => 'Bidang Penunjang Medis',
+            'penunjang_medis' => 'Bidang Penunjang Medis',
+            'Non Medis' => 'Bidang Umum & Keuangan',
+            'non_medis' => 'Bidang Umum & Keuangan',
+        ];
+
+        return $mapping[$klasifikasi] ?? 'Bidang Pelayanan Medis';
     }
 
     /**
@@ -237,12 +313,18 @@ class KepalaInstalasiController extends Controller
         $timeline = $permintaan->getTimelineTracking();
         $progress = $permintaan->getProgressPercentage();
         
+        // Tentukan klasifikasi dan kabid tujuan untuk preview
+        $klasifikasi = $permintaan->klasifikasi_permintaan ?? $this->determineKlasifikasi($permintaan->bidang);
+        $kabidTujuan = $this->getKabidTujuan($klasifikasi);
+        
         return Inertia::render('KepalaInstalasi/Show', [
             'permintaan' => $permintaan,
             'trackingStatus' => $permintaan->trackingStatus,
             'timeline' => $timeline,
             'progress' => $progress,
             'userLogin' => $user,
+            'klasifikasi' => $klasifikasi,
+            'kabidTujuan' => $kabidTujuan,
         ]);
     }
 
@@ -318,12 +400,23 @@ class KepalaInstalasiController extends Controller
         // Validasi input - bisa dengan atau tanpa catatan
         $data = $request->validate([
             'catatan' => 'nullable|string',
+            'klasifikasi_permintaan' => 'nullable|in:medis,penunjang_medis,non_medis',
         ]);
 
-        // Update status permintaan menjadi disetujui oleh Kepala Instalasi
+        // Tentukan klasifikasi jika belum ada atau di-override
+        $klasifikasi = $data['klasifikasi_permintaan'] ?? 
+                       $permintaan->klasifikasi_permintaan ?? 
+                       $this->determineKlasifikasi($permintaan->bidang);
+        
+        // Tentukan Kabid tujuan berdasarkan klasifikasi
+        $kabidTujuan = $this->getKabidTujuan($klasifikasi);
+
+        // Update status permintaan dan set klasifikasi + kabid_tujuan
         $permintaan->update([
             'status' => 'proses', // Masih proses karena menunggu Kepala Bidang
             'pic_pimpinan' => 'Kepala Bidang', // Diteruskan ke Kepala Bidang
+            'klasifikasi_permintaan' => $klasifikasi,
+            'kabid_tujuan' => $kabidTujuan,
         ]);
 
         // Buat nota dinas ke Kepala Bidang
@@ -331,23 +424,26 @@ class KepalaInstalasiController extends Controller
             'permintaan_id' => $permintaan->permintaan_id,
             'no_nota' => $permintaan->no_nota_dinas ?? 'ND/' . date('Y/m/d') . '/' . $permintaan->permintaan_id,
             'dari' => $user->unit_kerja ?? $user->jabatan ?? 'Kepala Instalasi',
-            'kepada' => 'Kepala Bidang',
+            'kepada' => $kabidTujuan, // Kirim ke Kabid yang sesuai
             'tanggal_nota' => Carbon::now(),
-            'perihal' => 'Persetujuan Permintaan - ' . substr($permintaan->deskripsi, 0, 100),
+            'perihal' => 'Persetujuan Permintaan [' . strtoupper($klasifikasi) . '] - ' . substr($permintaan->deskripsi, 0, 100),
         ]);
 
-        // OTOMATIS BUAT DISPOSISI ke Kepala Bidang
+        // OTOMATIS BUAT DISPOSISI ke Kepala Bidang yang sesuai
         Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
-            'jabatan_tujuan' => 'Kepala Bidang',
+            'jabatan_tujuan' => $kabidTujuan,
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => $data['catatan'] ?? 'Mohon review dan persetujuan',
+            'catatan' => ($data['catatan'] ?? 'Mohon review dan persetujuan') . 
+                        "\n\nKlasifikasi: " . strtoupper(str_replace('_', ' ', $klasifikasi)) .
+                        "\nDiteruskan ke: " . $kabidTujuan,
             'status' => 'pending',
         ]);
 
-        $message = 'Permintaan disetujui dan otomatis diteruskan ke Kepala Bidang';
+        $message = 'Permintaan disetujui dan otomatis diteruskan ke ' . $kabidTujuan . 
+                   ' (Klasifikasi: ' . strtoupper(str_replace('_', ' ', $klasifikasi)) . ')';
         if (isset($data['catatan']) && $data['catatan']) {
-            $message .= ' dengan catatan: ' . $data['catatan'];
+            $message .= ' dengan catatan';
         }
 
         return redirect()

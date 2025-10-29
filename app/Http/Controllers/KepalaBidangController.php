@@ -14,13 +14,36 @@ use Carbon\Carbon;
  * Controller untuk Kepala Bidang
  * 
  * Tugas Kepala Bidang:
- * 1. Menerima permintaan dari Kepala Instalasi
+ * 1. Menerima permintaan dari Kepala Instalasi berdasarkan klasifikasi
  * 2. Review dan validasi permintaan
- * 3. Membuat disposisi untuk diteruskan ke bagian terkait
+ * 3. Membuat disposisi untuk diteruskan ke Direktur
  * 4. Approve atau reject permintaan
+ * 
+ * ROUTING BERDASARKAN KLASIFIKASI:
+ * - klasifikasi_permintaan = 'medis' → Kabid Pelayanan Medis
+ * - klasifikasi_permintaan = 'penunjang_medis' → Kabid Penunjang Medis  
+ * - klasifikasi_permintaan = 'non_medis' → Kabid Keperawatan/Bagian Umum
  */
 class KepalaBidangController extends Controller
 {
+    /**
+     * Get klasifikasi yang sesuai dengan unit kerja Kabid
+     */
+    private function getKlasifikasiByUnitKerja($unitKerja)
+    {
+        $mapping = [
+            // Format baru
+            'Bidang Pelayanan Medis' => ['Medis', 'medis'],
+            'Bidang Penunjang Medis' => ['Penunjang', 'penunjang_medis'],
+            'Bidang Keperawatan' => ['Non Medis', 'non_medis'],
+            'Bagian Umum' => ['Non Medis', 'non_medis'],
+            'Bidang Umum' => ['Non Medis', 'non_medis'],
+            'Bidang Umum & Keuangan' => ['Non Medis', 'non_medis'],
+        ];
+
+        return $mapping[$unitKerja] ?? null;
+    }
+
     /**
      * Dashboard Kepala Bidang
      */
@@ -28,26 +51,43 @@ class KepalaBidangController extends Controller
     {
         $user = Auth::user();
         
-        // Ambil permintaan yang SEDANG di tangan Kepala Bidang
+        // Dapatkan klasifikasi yang sesuai dengan unit kerja Kabid
+        $klasifikasiArray = $this->getKlasifikasiByUnitKerja($user->unit_kerja);
+        
+        // Ambil HANYA permintaan yang BELUM di-approve Kabid (masih menunggu action)
+        // Cek: belum ada disposisi dari Kabid ke Direktur
         $permintaans = Permintaan::with(['user', 'notaDinas.disposisi'])
-            ->where(function($q) use ($user) {
-                // Cek berdasarkan pic_pimpinan = Kepala Bidang
-                $q->where('pic_pimpinan', 'Kepala Bidang')
-                  ->orWhere('pic_pimpinan', $user->nama);
+            ->where(function($q) use ($user, $klasifikasiArray) {
+                // Filter berdasarkan klasifikasi_permintaan
+                if ($klasifikasiArray) {
+                    $q->whereIn('klasifikasi_permintaan', $klasifikasiArray);
+                }
+                // Dan kabid_tujuan sesuai unit kerja
+                $q->orWhere('kabid_tujuan', 'LIKE', '%' . $user->unit_kerja . '%');
             })
-            ->whereIn('status', ['proses', 'disetujui'])
+            // HANYA yang statusnya masih proses/diajukan DAN pic_pimpinan = Kepala Bidang
+            ->where('status', 'proses')
+            ->where('pic_pimpinan', 'LIKE', '%Kepala Bidang%')
             ->get();
 
         $stats = [
             'total' => $permintaans->count(),
-            'menunggu' => $permintaans->where('status', 'proses')->count(),
-            'disetujui' => $permintaans->where('status', 'disetujui')->count(),
+            'menunggu' => $permintaans->count(), // Semua adalah menunggu action Kabid
+            'disetujui' => Permintaan::whereHas('notaDinas.disposisi', function($q) {
+                // Permintaan yang sudah di-approve Kabid (ada disposisi ke Direktur)
+                $q->where('jabatan_tujuan', 'Direktur')
+                  ->where('catatan', 'LIKE', '%Kepala Bidang%');
+            })->count(),
             'ditolak' => Permintaan::where('status', 'ditolak')
-                ->where('deskripsi', 'like', '%DITOLAK oleh Kepala Bidang%')
+                ->where(function($q) use ($klasifikasiArray) {
+                    if ($klasifikasiArray) {
+                        $q->whereIn('klasifikasi_permintaan', $klasifikasiArray);
+                    }
+                })
                 ->count(),
         ];
 
-        // Ambil 5 permintaan terbaru
+        // Ambil 5 permintaan terbaru yang menunggu
         $recentPermintaans = $permintaans
             ->sortByDesc('permintaan_id')
             ->take(5)
@@ -62,6 +102,7 @@ class KepalaBidangController extends Controller
             'stats' => $stats,
             'recentPermintaans' => $recentPermintaans,
             'userLogin' => $user,
+            'klasifikasi' => $klasifikasiArray ? $klasifikasiArray[0] : null,
         ]);
     }
 
@@ -72,21 +113,30 @@ class KepalaBidangController extends Controller
     {
         $user = Auth::user();
         
-        // Query dasar - permintaan yang SEDANG di tangan Kepala Bidang
+        // Dapatkan klasifikasi yang sesuai dengan unit kerja Kabid
+        $klasifikasiArray = $this->getKlasifikasiByUnitKerja($user->unit_kerja);
+        
+        // Query dasar - HANYA permintaan yang BELUM di-approve Kabid
         $query = Permintaan::with(['user', 'notaDinas.disposisi'])
-            ->where(function($q) use ($user) {
-                // Cek berdasarkan pic_pimpinan = Kepala Bidang
-                $q->where('pic_pimpinan', 'Kepala Bidang')
-                  ->orWhere('pic_pimpinan', $user->nama);
+            ->where(function($q) use ($user, $klasifikasiArray) {
+                // Filter berdasarkan klasifikasi_permintaan
+                if ($klasifikasiArray) {
+                    $q->whereIn('klasifikasi_permintaan', $klasifikasiArray);
+                }
+                // Dan kabid_tujuan sesuai unit kerja
+                $q->orWhere('kabid_tujuan', 'LIKE', '%' . $user->unit_kerja . '%');
             })
-            ->whereIn('status', ['proses', 'disetujui']);
+            // HANYA yang masih proses DAN pic_pimpinan = Kepala Bidang
+            ->where('status', 'proses')
+            ->where('pic_pimpinan', 'LIKE', '%Kepala Bidang%');
 
         // Apply filters
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('permintaan_id', 'like', "%{$search}%")
-                  ->orWhere('deskripsi', 'like', "%{$search}%");
+                  ->orWhere('deskripsi', 'like', "%{$search}%")
+                  ->orWhere('bidang', 'like', "%{$search}%");
             });
         }
 
@@ -120,6 +170,7 @@ class KepalaBidangController extends Controller
         return Inertia::render('KepalaBidang/Index', [
             'permintaans' => $permintaans,
             'userLogin' => $user,
+            'klasifikasi' => $klasifikasiArray ? $klasifikasiArray[0] : null,
             'filters' => $request->only(['search', 'status', 'bidang', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
         ]);
     }
@@ -131,7 +182,36 @@ class KepalaBidangController extends Controller
     {
         $user = Auth::user();
         
+        // Validasi: Cek apakah permintaan ini untuk Kabid ini berdasarkan klasifikasi
+        $klasifikasiArray = $this->getKlasifikasiByUnitKerja($user->unit_kerja);
+        
+        // Cek apakah klasifikasi cocok
+        $klasifikasiCocok = false;
+        if ($klasifikasiArray && in_array($permintaan->klasifikasi_permintaan, $klasifikasiArray)) {
+            $klasifikasiCocok = true;
+        }
+        
+        // Cek apakah kabid_tujuan cocok (flexible match)
+        $kabidCocok = false;
+        if ($permintaan->kabid_tujuan) {
+            // Match exact atau partial (untuk backward compatibility)
+            if ($permintaan->kabid_tujuan === $user->unit_kerja ||
+                str_contains($permintaan->kabid_tujuan, 'Umum') && str_contains($user->unit_kerja, 'Umum') ||
+                str_contains($permintaan->kabid_tujuan, $user->unit_kerja) ||
+                str_contains($user->unit_kerja, $permintaan->kabid_tujuan)) {
+                $kabidCocok = true;
+            }
+        }
+        
+        // Jika tidak ada yang cocok, tolak akses
+        if (!$klasifikasiCocok && !$kabidCocok) {
+            abort(403, 'Permintaan ini bukan untuk bidang Anda.');
+        }
+        
         $permintaan->load(['user', 'notaDinas.disposisi']);
+        
+        // Get klasifikasi untuk info
+        $klasifikasi = $permintaan->klasifikasi_permintaan;
         
         // Get timeline tracking
         $timeline = $permintaan->getTimelineTracking();
@@ -158,6 +238,8 @@ class KepalaBidangController extends Controller
             'timeline' => $timeline,
             'progress' => $progress,
             'isDisposisiDariDirektur' => $isDisposisiDariDirektur,
+            'userLogin' => $user,
+            'klasifikasi' => $klasifikasi,
         ]);
     }
 
@@ -303,7 +385,7 @@ class KepalaBidangController extends Controller
         // Update status permintaan
         $permintaan->update([
             'status' => 'ditolak',
-            'pic_pimpinan' => $user->nama,
+            'pic_pimpinan' => $user->name ?? $user->jabatan ?? 'Kepala Bidang',
             'deskripsi' => $permintaan->deskripsi . "\n\n[DITOLAK oleh Kepala Bidang] " . $data['alasan'],
         ]);
 
@@ -391,21 +473,28 @@ class KepalaBidangController extends Controller
     }
 
     /**
-     * Tampilkan daftar permintaan yang sudah disetujui (untuk tracking)
+     * Tampilkan daftar permintaan yang sudah disetujui Kabid (untuk tracking)
      */
     public function approved(Request $request)
     {
         $user = Auth::user();
+        $klasifikasiArray = $this->getKlasifikasiByUnitKerja($user->unit_kerja);
         
-        // Query - ambil semua permintaan yang sudah pernah melalui Kepala Bidang
-        // dan statusnya disetujui, ditolak, atau revisi (sudah melewati tahap Kepala Bidang)
+        // Query - ambil permintaan yang SUDAH di-approve Kabid
+        // Cek: Ada disposisi dari Kabid ke Direktur (artinya sudah di-approve)
         $query = Permintaan::with(['user', 'notaDinas.disposisi'])
-            ->whereHas('notaDinas.disposisi', function($q) use ($user) {
-                // Cari disposisi yang pernah ditujukan ke Kepala Bidang
-                $q->where('jabatan_tujuan', 'like', '%Kepala Bidang%')
-                  ->orWhere('jabatan_tujuan', $user->jabatan);
+            ->where(function($q) use ($klasifikasiArray) {
+                if ($klasifikasiArray) {
+                    $q->whereIn('klasifikasi_permintaan', $klasifikasiArray);
+                }
             })
-            ->whereIn('status', ['proses', 'disetujui', 'ditolak', 'revisi']);
+            ->whereHas('notaDinas.disposisi', function($q) {
+                // Disposisi ke Direktur atau Staff Perencanaan (artinya sudah di-approve Kabid)
+                $q->whereIn('jabatan_tujuan', ['Direktur', 'Staff Perencanaan'])
+                  ->where('catatan', 'LIKE', '%Kepala Bidang%');
+            })
+            // Status bisa proses (di Direktur/Staff) atau disetujui (selesai)
+            ->whereIn('status', ['proses', 'disetujui']);
 
         // Apply filters
         if ($request->filled('search')) {

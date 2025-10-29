@@ -66,6 +66,62 @@ class KsoController extends Controller
     }
 
     /**
+     * Tampilkan SEMUA KSO yang sudah dibuat (semua status)
+     */
+    public function listAll(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Only allow KSO role
+        if ($user->role !== 'kso') {
+            abort(403, 'Hanya Bagian KSO yang dapat mengakses halaman ini.');
+        }
+        
+        // Query semua KSO dengan relasi
+        $query = Kso::with(['perencanaan.disposisi.notaDinas.permintaan.user']);
+        
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Search by no_kso or pihak_kedua
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('no_kso', 'like', "%{$search}%")
+                  ->orWhere('pihak_kedua', 'like', "%{$search}%")
+                  ->orWhere('pihak_pertama', 'like', "%{$search}%");
+            });
+        }
+        
+        // Sort by latest
+        $query->orderBy('created_at', 'desc');
+        
+        // Paginate
+        $perPage = $request->get('per_page', 15);
+        $ksos = $query->paginate($perPage)->withQueryString();
+        
+        // Add permintaan info to each KSO
+        $ksos->getCollection()->transform(function($kso) {
+            if ($kso->perencanaan && $kso->perencanaan->disposisi && 
+                $kso->perencanaan->disposisi->notaDinas && 
+                $kso->perencanaan->disposisi->notaDinas->permintaan) {
+                $kso->permintaan = $kso->perencanaan->disposisi->notaDinas->permintaan;
+            } else {
+                $kso->permintaan = null;
+            }
+            return $kso;
+        });
+        
+        return Inertia::render('KSO/ListAll', [
+            'ksos' => $ksos,
+            'filters' => $request->only(['search', 'status', 'per_page']),
+            'userLogin' => $user,
+        ]);
+    }
+
+    /**
      * Tampilkan daftar permintaan untuk Bagian KSO
      */
     public function index(Request $request)
@@ -103,7 +159,9 @@ class KsoController extends Controller
             ->paginate($perPage)
             ->through(function($permintaan) {
                 $permintaan->has_kso = $this->hasKso($permintaan);
-                $permintaan->kso_data = $this->getKsoData($permintaan);
+                $ksoData = $this->getKsoData($permintaan);
+                $permintaan->kso_file_pks = $ksoData ? $ksoData->file_pks : null;
+                $permintaan->kso_file_mou = $ksoData ? $ksoData->file_mou : null;
                 return $permintaan;
             });
 
@@ -121,9 +179,9 @@ class KsoController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Bagian KSO' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk melihat permintaan ini.');
+        // Cek otorisasi - Only KSO role can view
+        if ($user->role !== 'kso') {
+            abort(403, 'Hanya Bagian KSO yang dapat mengakses halaman ini.');
         }
         
         $permintaan->load(['user', 'notaDinas.disposisi.perencanaan.kso']);
@@ -149,9 +207,9 @@ class KsoController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Bagian KSO' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk membuat KSO permintaan ini.');
+        // Cek otorisasi - Only KSO role can create KSO
+        if ($user->role !== 'kso') {
+            abort(403, 'Hanya Bagian KSO yang dapat membuat dokumen KSO.');
         }
         
         $permintaan->load(['user', 'notaDinas.disposisi.perencanaan']);
@@ -184,9 +242,9 @@ class KsoController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Bagian KSO' && $permintaan->pic_pimpinan !== $user->nama) {
-            abort(403, 'Anda tidak memiliki akses untuk membuat KSO permintaan ini.');
+        // Cek otorisasi - Only KSO role can store KSO
+        if ($user->role !== 'kso') {
+            abort(403, 'Hanya Bagian KSO yang dapat membuat dokumen KSO.');
         }
         
         $data = $request->validate([
@@ -194,33 +252,50 @@ class KsoController extends Controller
             'tanggal_kso' => 'required|date',
             'pihak_pertama' => 'required|string',
             'pihak_kedua' => 'required|string',
-            'isi_kerjasama' => 'required|string',
-            'status' => 'nullable|in:draft,aktif,selesai,batal',
+            'file_pks' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
+            'file_mou' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
+            'keterangan' => 'nullable|string',
         ]);
 
         // Get perencanaan
         $perencanaan = $this->getPerencanaanFromPermintaan($permintaan);
         
         if (!$perencanaan) {
-            return redirect()->back()->withErrors(['error' => 'Perencanaan tidak ditemukan.']);
+            return redirect()->route('kso.index')->withErrors(['error' => 'Perencanaan tidak ditemukan.']);
+        }
+
+        // Handle file uploads
+        $pksPath = null;
+        $mouPath = null;
+
+        if ($request->hasFile('file_pks')) {
+            $pksFile = $request->file('file_pks');
+            $pksFileName = 'PKS_' . $permintaan->permintaan_id . '_' . time() . '.' . $pksFile->getClientOriginalExtension();
+            $pksPath = $pksFile->storeAs('kso/pks', $pksFileName, 'public');
+        }
+
+        if ($request->hasFile('file_mou')) {
+            $mouFile = $request->file('file_mou');
+            $mouFileName = 'MoU_' . $permintaan->permintaan_id . '_' . time() . '.' . $mouFile->getClientOriginalExtension();
+            $mouPath = $mouFile->storeAs('kso/mou', $mouFileName, 'public');
         }
 
         $data['perencanaan_id'] = $perencanaan->perencanaan_id;
-        $data['status'] = $data['status'] ?? 'draft';
+        $data['file_pks'] = $pksPath;
+        $data['file_mou'] = $mouPath;
+        $data['status'] = 'aktif'; // Selalu aktif karena sudah upload dokumen
 
         $kso = Kso::create($data);
 
-        // Jika status langsung aktif atau selesai, update permintaan
-        if (in_array($data['status'], ['aktif', 'selesai'])) {
-            $permintaan->update([
-                'pic_pimpinan' => 'Bagian Pengadaan',
-                'status' => 'proses',
-            ]);
-        }
+        // Otomatis forward ke Bagian Pengadaan setelah upload dokumen
+        $permintaan->update([
+            'pic_pimpinan' => 'Bagian Pengadaan',
+            'status' => 'proses',
+        ]);
 
         return redirect()
-            ->route('kso.show', $permintaan->permintaan_id)
-            ->with('success', 'KSO berhasil dibuat.');
+            ->route('kso.dashboard')
+            ->with('success', 'Dokumen KSO (PKS & MoU) berhasil diupload dan diteruskan ke Bagian Pengadaan.');
     }
 
     /**
@@ -230,8 +305,10 @@ class KsoController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Bagian KSO' && $permintaan->pic_pimpinan !== $user->nama) {
+        // Cek otorisasi - Allow KSO role atau jika pic_pimpinan sesuai
+        if ($user->role !== 'kso' && 
+            $permintaan->pic_pimpinan !== 'Bagian KSO' && 
+            $permintaan->pic_pimpinan !== $user->nama) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit KSO permintaan ini.');
         }
         
@@ -253,8 +330,10 @@ class KsoController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Bagian KSO' && $permintaan->pic_pimpinan !== $user->nama) {
+        // Cek otorisasi - Allow KSO role atau jika pic_pimpinan sesuai
+        if ($user->role !== 'kso' && 
+            $permintaan->pic_pimpinan !== 'Bagian KSO' && 
+            $permintaan->pic_pimpinan !== $user->nama) {
             abort(403, 'Anda tidak memiliki akses untuk mengupdate KSO permintaan ini.');
         }
         
@@ -289,8 +368,10 @@ class KsoController extends Controller
     {
         $user = Auth::user();
         
-        // Cek otorisasi
-        if ($permintaan->pic_pimpinan !== 'Bagian KSO' && $permintaan->pic_pimpinan !== $user->nama) {
+        // Cek otorisasi - Allow KSO role atau jika pic_pimpinan sesuai
+        if ($user->role !== 'kso' && 
+            $permintaan->pic_pimpinan !== 'Bagian KSO' && 
+            $permintaan->pic_pimpinan !== $user->nama) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus KSO permintaan ini.');
         }
         
@@ -335,13 +416,18 @@ class KsoController extends Controller
     private function getPerencanaanFromPermintaan(Permintaan $permintaan)
     {
         // Cari perencanaan melalui nota dinas → disposisi → perencanaan
+        // Ambil yang sudah ada perencanaan-nya (karena bisa ada multiple disposisi)
         $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
         
         if (!$notaDinas) {
             return null;
         }
         
-        $disposisi = $notaDinas->disposisi()->latest('tanggal_disposisi')->first();
+        // Cari disposisi yang sudah punya perencanaan
+        $disposisi = $notaDinas->disposisi()
+            ->whereHas('perencanaan')
+            ->latest('tanggal_disposisi')
+            ->first();
         
         if (!$disposisi) {
             return null;

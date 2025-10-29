@@ -73,6 +73,7 @@ class PermintaanController extends Controller
         $data = $request->validate([
             // adjust fields to your table structure
             'bidang' => 'nullable|string',
+            'klasifikasi_permintaan' => 'required|string|in:Medis,Non Medis,Penunjang',
             'tanggal_permintaan' => 'nullable|date',
             'deskripsi' => 'required|string',
             'status' => 'nullable|string',
@@ -82,6 +83,7 @@ class PermintaanController extends Controller
             'disposisi_tujuan' => 'required|string',
             'catatan_disposisi' => 'nullable|string',
             'wadir_tujuan' => 'nullable|string',
+            'kabid_tujuan' => 'nullable|string|in:Kabid Umum,Kabid Yanmed,Kabid Penunjang',
             // Nota Dinas fields
             'nota_kepada' => 'required|string',
             'nota_dari' => 'required|string',
@@ -151,12 +153,14 @@ class PermintaanController extends Controller
         // Get complete timeline tracking (8 tahapan) untuk admin
         $timeline = $permintaan->getCompleteTracking();
         $progress = $permintaan->getProgressPercentage();
+        $nextStep = $permintaan->getNextStep();
         
         return Inertia::render('Permintaan/Show', [
             'permintaan' => $permintaan,
             'trackingStatus' => $permintaan->trackingStatus,
             'timeline' => $timeline,
             'progress' => $progress,
+            'nextStep' => $nextStep,
             'userLogin' => Auth::user(),
         ]);
     }
@@ -192,6 +196,7 @@ class PermintaanController extends Controller
 
         $data = $request->validate([
             'bidang' => 'nullable|string',
+            'klasifikasi_permintaan' => 'required|string|in:Medis,Non Medis,Penunjang',
             'tanggal_permintaan' => 'nullable|date',
             'deskripsi' => 'required|string',
             'pic_pimpinan' => 'nullable|string',
@@ -200,6 +205,7 @@ class PermintaanController extends Controller
             'disposisi_tujuan' => 'nullable|string',
             'catatan_disposisi' => 'nullable|string',
             'wadir_tujuan' => 'nullable|string',
+            'kabid_tujuan' => 'nullable|string|in:Kabid Umum,Kabid Yanmed,Kabid Penunjang',
         ]);
 
         // Set status ke 'diajukan' untuk resubmit

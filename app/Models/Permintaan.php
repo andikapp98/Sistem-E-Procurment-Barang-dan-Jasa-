@@ -39,6 +39,8 @@ class Permintaan extends Model
 	protected $fillable = [
 		'user_id',
 		'bidang',
+		'klasifikasi_permintaan',
+		'kabid_tujuan',
 		'tanggal_permintaan',
 		'deskripsi',
 		'status',

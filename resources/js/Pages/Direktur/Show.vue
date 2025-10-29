@@ -354,6 +354,8 @@ const revisiForm = ref({
 const submitApprove = () => {
     processing.value = true;
     router.post(route('direktur.approve', props.permintaan.permintaan_id), approveForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showApproveModal.value = false;
             processing.value = false;
@@ -370,6 +372,8 @@ const submitReject = () => {
     }
     processing.value = true;
     router.post(route('direktur.reject', props.permintaan.permintaan_id), rejectForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showRejectModal.value = false;
             processing.value = false;
@@ -386,6 +390,8 @@ const submitRevisi = () => {
     }
     processing.value = true;
     router.post(route('direktur.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showRevisiModal.value = false;
             processing.value = false;

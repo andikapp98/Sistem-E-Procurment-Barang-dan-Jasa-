@@ -306,6 +306,8 @@ const revisiForm = ref({
 
 const submitApprove = () => {
     router.post(route('wakil-direktur.approve', props.permintaan.permintaan_id), approveForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showApproveModal.value = false;
         },
@@ -314,6 +316,8 @@ const submitApprove = () => {
 
 const submitReject = () => {
     router.post(route('wakil-direktur.reject', props.permintaan.permintaan_id), rejectForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showRejectModal.value = false;
         },
@@ -322,6 +326,8 @@ const submitReject = () => {
 
 const submitRevisi = () => {
     router.post(route('wakil-direktur.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showRevisiModal.value = false;
         },

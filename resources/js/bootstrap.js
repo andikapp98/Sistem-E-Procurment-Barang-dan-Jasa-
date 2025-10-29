@@ -10,7 +10,6 @@ let token = document.head.querySelector('meta[name="csrf-token"]');
 
 if (token) {
     window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-    // Also set for XSRF
     window.axios.defaults.headers.common['X-XSRF-TOKEN'] = token.content;
 } else {
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
@@ -27,3 +26,22 @@ window.axios.interceptors.request.use(function (config) {
 }, function (error) {
     return Promise.reject(error);
 });
+
+// Add CSRF token to fetch requests (used by Inertia)
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+    const [url, config = {}] = args;
+    
+    // Get fresh CSRF token
+    const csrfToken = document.head.querySelector('meta[name="csrf-token"]');
+    
+    if (csrfToken && config.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method.toUpperCase())) {
+        config.headers = {
+            ...config.headers,
+            'X-CSRF-TOKEN': csrfToken.content,
+            'X-XSRF-TOKEN': csrfToken.content,
+        };
+    }
+    
+    return originalFetch.apply(this, [url, config]);
+};

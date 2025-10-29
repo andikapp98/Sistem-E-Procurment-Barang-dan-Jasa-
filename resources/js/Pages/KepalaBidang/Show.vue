@@ -5,9 +5,21 @@
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Detail Permintaan #{{ permintaan.permintaan_id }}
                 </h2>
-                <Link :href="route('kepala-bidang.index')" class="text-sm text-gray-600 hover:text-gray-900">
-                    ← Kembali ke Daftar
-                </Link>
+                <div class="flex items-center gap-3">
+                    <!-- Link Full Tracking -->
+                    <Link 
+                        v-if="permintaan.status === 'disetujui' || permintaan.status === 'proses'"
+                        :href="route('kepala-bidang.tracking', permintaan.permintaan_id)" 
+                        class="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Lihat Full Tracking
+                    </Link>
+                    <Link :href="route('kepala-bidang.index')" class="text-sm text-gray-600 hover:text-gray-900">
+                        ← Kembali ke Daftar
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -314,26 +326,59 @@ const revisiForm = ref({
 });
 
 const submitApprove = () => {
+    // Ensure fresh CSRF token
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
     router.post(route('kepala-bidang.approve', props.permintaan.permintaan_id), approveForm.value, {
+        preserveState: false,
+        preserveScroll: false,
+        headers: {
+            'X-CSRF-TOKEN': token
+        },
         onSuccess: () => {
             showApproveModal.value = false;
         },
+        onError: (errors) => {
+            console.error('Approve error:', errors);
+        }
     });
 };
 
 const submitReject = () => {
+    // Ensure fresh CSRF token
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
     router.post(route('kepala-bidang.reject', props.permintaan.permintaan_id), rejectForm.value, {
+        preserveState: false,
+        preserveScroll: false,
+        headers: {
+            'X-CSRF-TOKEN': token
+        },
         onSuccess: () => {
             showRejectModal.value = false;
         },
+        onError: (errors) => {
+            console.error('Reject error:', errors);
+        }
     });
 };
 
 const submitRevisi = () => {
+    // Ensure fresh CSRF token
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
     router.post(route('kepala-bidang.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+        preserveState: false,
+        preserveScroll: false,
+        headers: {
+            'X-CSRF-TOKEN': token
+        },
         onSuccess: () => {
             showRevisiModal.value = false;
         },
+        onError: (errors) => {
+            console.error('Revisi error:', errors);
+        }
     });
 };
 </script>

@@ -282,6 +282,7 @@ class StaffPerencanaanController extends Controller
             'perihal' => 'required|string',
             'dari' => 'required|string',
             'kepada' => 'required|string',
+            'isi_nota' => 'nullable|string',
             'penerima' => 'nullable|string',
             'kode_program' => 'nullable|string',
             'kode_kegiatan' => 'nullable|string',
@@ -308,6 +309,17 @@ class StaffPerencanaanController extends Controller
                 ->first();
             $nextNumber = $lastNota ? (intval(substr($lastNota->nomor, 0, 3)) + 1) : 1;
             $data['nomor'] = sprintf('%03d/ND-SP/%s', $nextNumber, date('Y'));
+        }
+
+        // Set no_nota sama dengan nomor - REQUIRED field
+        $data['no_nota'] = $data['nomor'];
+        
+        // Set tipe_nota untuk pembelian (usulan)
+        $data['tipe_nota'] = 'usulan';
+        
+        // Set isi_nota default jika tidak ada
+        if (empty($data['isi_nota'])) {
+            $data['isi_nota'] = $data['perihal'];
         }
 
         $notaDinas = NotaDinas::create($data);
@@ -406,6 +418,29 @@ class StaffPerencanaanController extends Controller
         
         if (!$notaDinas) {
             return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan']);
+        }
+
+        // Buat Nota Dinas untuk DPP jika belum ada
+        if (!$notaDinas) {
+            // Generate nomor nota otomatis
+            $lastNota = NotaDinas::whereYear('tanggal_nota', date('Y'))
+                ->orderBy('nota_id', 'desc')
+                ->first();
+            $nextNumber = $lastNota ? (intval(substr($lastNota->nomor, 0, 3)) + 1) : 1;
+            $nomorNota = sprintf('%03d/ND-DPP/%s', $nextNumber, date('Y'));
+            
+            $notaDinas = NotaDinas::create([
+                'permintaan_id' => $permintaan->permintaan_id,
+                'no_nota' => $nomorNota,
+                'nomor' => $nomorNota,
+                'tanggal_nota' => Carbon::now(),
+                'dari' => 'Staff Perencanaan',
+                'kepada' => 'Bagian Pengadaan',
+                'perihal' => "DPP - {$data['nama_paket']}",
+                'sifat' => 'Biasa',
+                'tipe_nota' => 'dpp',
+                'isi_nota' => "Dokumen Persiapan Pengadaan untuk paket: {$data['nama_paket']}",
+            ]);
         }
 
         // Buat disposisi untuk DPP
@@ -995,6 +1030,11 @@ class StaffPerencanaanController extends Controller
             'pagu_anggaran' => 'nullable|numeric',
         ]);
 
+        // Update no_nota jika nomor berubah
+        if (isset($validated['nomor'])) {
+            $validated['no_nota'] = $validated['nomor'];
+        }
+
         $notaDinas->update($validated);
 
         return redirect()->route('staff-perencanaan.show', $permintaan)
@@ -1360,7 +1400,7 @@ class StaffPerencanaanController extends Controller
     public function storeNotaDinasPembelian(Request $request, Permintaan $permintaan)
     {
         $data = $request->validate([
-            'nomor_nota_dinas' => 'required|string',
+            'nomor_nota_dinas' => 'nullable|string', // Changed to nullable
             'tanggal_nota' => 'required|date',
             'usulan_ruangan' => 'required|string',
             'sifat' => 'required|in:Sangat Segera,Segera,Biasa,Rahasia',
@@ -1372,10 +1412,12 @@ class StaffPerencanaanController extends Controller
 
         $data['permintaan_id'] = $permintaan->permintaan_id;
         $data['tipe_nota'] = 'pembelian';
-        $data['nomor'] = $data['nomor_nota_dinas'];
         
-        // Generate nomor otomatis jika kosong
-        if (empty($data['nomor'])) {
+        // Set nomor dari nomor_nota_dinas atau generate baru
+        if (!empty($data['nomor_nota_dinas'])) {
+            $data['nomor'] = $data['nomor_nota_dinas'];
+        } else {
+            // Generate nomor otomatis jika kosong
             $lastNota = NotaDinas::whereYear('tanggal_nota', date('Y'))
                 ->where('tipe_nota', 'pembelian')
                 ->orderBy('nota_id', 'desc')
@@ -1384,6 +1426,17 @@ class StaffPerencanaanController extends Controller
             $nextNumber = $lastNota ? intval(substr($lastNota->nomor, 0, 3)) + 1 : 1;
             $data['nomor'] = sprintf('%03d/ND-PEM/SP/%s', $nextNumber, date('Y'));
         }
+
+        // Set no_nota sama dengan nomor - REQUIRED FIELD
+        $data['no_nota'] = $data['nomor'];
+        
+        // Set isi_nota default jika tidak ada
+        if (empty($data['isi_nota'])) {
+            $data['isi_nota'] = $data['perihal'];
+        }
+
+        // Remove nomor_nota_dinas from data before create
+        unset($data['nomor_nota_dinas']);
 
         NotaDinas::create($data);
 
@@ -1437,6 +1490,9 @@ class StaffPerencanaanController extends Controller
         ]);
 
         $data['nomor'] = $data['nomor_nota_dinas'];
+        
+        // Update no_nota sama dengan nomor
+        $data['no_nota'] = $data['nomor'];
         
         $notaDinas->update($data);
 

@@ -218,24 +218,59 @@
 
         <!-- Modal Approve -->
         <div v-if="showApproveModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
                 <div class="mt-3">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Setujui Permintaan</h3>
-                    <div class="mt-2 px-7 py-3">
-                        <p class="text-sm text-gray-500">
-                            Apakah Anda yakin ingin menyetujui permintaan ini? Permintaan akan diteruskan ke Bagian Pengadaan.
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Setujui Permintaan</h3>
+                    
+                    <div class="px-7 py-3 space-y-4">
+                        <p class="text-sm text-gray-700">
+                            Apakah Anda yakin ingin menyetujui permintaan ini?
+                        </p>
+                        
+                        <!-- Info Klasifikasi -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-900 text-sm mb-2">Informasi Routing:</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <svg class="w-4 h-4 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                    <div>
+                                        <span class="text-gray-600">Klasifikasi:</span>
+                                        <span class="font-medium text-blue-900 ml-1">
+                                            {{ formatKlasifikasi(klasifikasi) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <svg class="w-4 h-4 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                    <div>
+                                        <span class="text-gray-600">Akan diteruskan ke:</span>
+                                        <span class="font-medium text-blue-900 ml-1">
+                                            {{ kabidTujuan }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-xs text-gray-500 italic">
+                            Permintaan akan otomatis dikirim ke {{ kabidTujuan }} untuk review dan persetujuan selanjutnya.
                         </p>
                     </div>
-                    <div class="flex gap-3 px-4 py-3">
+                    
+                    <div class="flex gap-3 px-4 py-3 mt-4">
                         <button
                             @click="approve"
-                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
                         >
                             Ya, Setujui
                         </button>
                         <button
                             @click="showApproveModal = false"
-                            class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                            class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-medium"
                         >
                             Batal
                         </button>
@@ -326,6 +361,11 @@ import { Link, router } from '@inertiajs/vue3';
 const props = defineProps({
     permintaan: Object,
     trackingStatus: String,
+    timeline: Array,
+    progress: Number,
+    userLogin: Object,
+    klasifikasi: String,
+    kabidTujuan: String,
 });
 
 const showApproveModal = ref(false);
@@ -339,6 +379,16 @@ const rejectForm = ref({
 const revisiForm = ref({
     catatan_revisi: '',
 });
+
+// Helper untuk format klasifikasi
+const formatKlasifikasi = (klasifikasi) => {
+    const mapping = {
+        'medis': 'Medis',
+        'penunjang_medis': 'Penunjang Medis',
+        'non_medis': 'Non Medis'
+    };
+    return mapping[klasifikasi] || klasifikasi || '-';
+};
 
 const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -388,6 +438,8 @@ const getTrackingClass = (tracking) => {
 
 const approve = () => {
     router.post(route('kepala-instalasi.approve', props.permintaan.permintaan_id), {}, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showApproveModal.value = false;
         }
@@ -396,6 +448,8 @@ const approve = () => {
 
 const reject = () => {
     router.post(route('kepala-instalasi.reject', props.permintaan.permintaan_id), rejectForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showRejectModal.value = false;
         }
@@ -410,6 +464,8 @@ const requestRevision = () => {
     }
     
     router.post(route('kepala-instalasi.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+        preserveState: false,
+        preserveScroll: false,
         onSuccess: () => {
             showRevisiModal.value = false;
             revisiForm.value.catatan_revisi = ''; // Reset form

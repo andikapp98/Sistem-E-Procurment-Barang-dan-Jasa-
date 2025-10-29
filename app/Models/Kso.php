@@ -24,6 +24,9 @@ class Kso extends Model
         'pihak_kedua',
         'isi_kerjasama',
         'nilai_kontrak',
+        'file_pks',
+        'file_mou',
+        'keterangan',
         'status'
     ];
 

@@ -202,6 +202,7 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
 Route::middleware(['auth', 'verified'])->prefix('kso')->name('kso.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\KsoController::class, 'dashboard'])->name('dashboard');
     Route::get('/', [App\Http\Controllers\KsoController::class, 'index'])->name('index');
+    Route::get('/list-all', [App\Http\Controllers\KsoController::class, 'listAll'])->name('list-all'); // NEW: List all KSO
     Route::get('/permintaan/{permintaan}', [App\Http\Controllers\KsoController::class, 'show'])->name('show');
     Route::get('/permintaan/{permintaan}/create', [App\Http\Controllers\KsoController::class, 'create'])->name('create');
     Route::post('/permintaan/{permintaan}', [App\Http\Controllers\KsoController::class, 'store'])->name('store');
