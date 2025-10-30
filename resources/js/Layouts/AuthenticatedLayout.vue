@@ -4,7 +4,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage, router } from '@inertiajs/vue3';
+import { Link, usePage, useForm } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
 const sidebarOpen = ref(true);
@@ -14,8 +14,10 @@ const csrfToken = computed(() => {
     return page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content || '';
 });
 
+const logoutForm = useForm({});
+
 const logout = () => {
-    router.post(route('logout'), {}, {
+    logoutForm.post(route('logout'), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {

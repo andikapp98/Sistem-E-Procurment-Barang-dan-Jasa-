@@ -198,8 +198,13 @@ class DirekturController extends Controller
     }
 
     /**
-     * Approve permintaan - Kembali ke Kepala Bidang untuk disposisi ke Staff Perencanaan
-     * Final Approval dari Direktur, dikembalikan ke Kepala Bidang untuk proses disposisi
+     * Approve permintaan - Langsung ke Kabid sesuai klasifikasi
+     * Final Approval dari Direktur, diteruskan ke Kepala Bidang yang sesuai
+     * 
+     * ROUTING OTOMATIS:
+     * - Permintaan MEDIS → Kabid Yanmed (Bidang Pelayanan Medis)
+     * - Permintaan PENUNJANG_MEDIS → Kabid Penunjang Medis
+     * - Permintaan NON_MEDIS → Kabid Umum & Keuangan
      */
     public function approve(Request $request, Permintaan $permintaan)
     {
@@ -216,24 +221,49 @@ class DirekturController extends Controller
             return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan. Silakan hubungi administrator.']);
         }
 
-        // Buat disposisi kembali ke Kepala Bidang
+        // Tentukan Kabid tujuan berdasarkan klasifikasi permintaan
+        $klasifikasi = $permintaan->klasifikasi_permintaan;
+        $kabidTujuan = $this->getKabidTujuanByKlasifikasi($klasifikasi);
+
+        // Buat disposisi ke Kepala Bidang yang sesuai
         Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
-            'jabatan_tujuan' => 'Kepala Bidang',
+            'jabatan_tujuan' => $kabidTujuan,
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => 'Disetujui oleh Direktur (Final Approval). ' . ($data['catatan'] ?? 'Silakan disposisi ke Staff Perencanaan untuk perencanaan pengadaan.'),
+            'catatan' => 'Disetujui oleh Direktur (Final Approval). ' . 
+                        ($data['catatan'] ?? 'Silakan disposisi ke Staff Perencanaan untuk perencanaan pengadaan.') .
+                        "\n\nKlasifikasi: " . strtoupper(str_replace('_', ' ', $klasifikasi)) .
+                        "\nDiteruskan ke: " . $kabidTujuan,
             'status' => 'selesai',
         ]);
 
-        // Update status permintaan - kembali ke Kepala Bidang untuk disposisi
+        // Update status permintaan - ke Kepala Bidang yang sesuai
         $permintaan->update([
             'status' => 'proses',
             'pic_pimpinan' => 'Kepala Bidang',
+            'kabid_tujuan' => $kabidTujuan, // Set kabid_tujuan agar routing jelas
         ]);
 
         return redirect()
             ->route('direktur.index')
-            ->with('success', 'Permintaan disetujui (Final Approval) dan dikembalikan ke Kepala Bidang untuk disposisi ke Staff Perencanaan.');
+            ->with('success', 'Permintaan disetujui (Final Approval) dan diteruskan ke ' . $kabidTujuan . ' untuk disposisi ke Staff Perencanaan.');
+    }
+
+    /**
+     * Helper: Tentukan Kabid tujuan berdasarkan klasifikasi
+     */
+    private function getKabidTujuanByKlasifikasi($klasifikasi)
+    {
+        $mapping = [
+            'Medis' => 'Bidang Pelayanan Medis',
+            'medis' => 'Bidang Pelayanan Medis',
+            'Penunjang' => 'Bidang Penunjang Medis',
+            'penunjang_medis' => 'Bidang Penunjang Medis',
+            'Non Medis' => 'Bidang Umum & Keuangan',
+            'non_medis' => 'Bidang Umum & Keuangan',
+        ];
+
+        return $mapping[$klasifikasi] ?? 'Bidang Pelayanan Medis';
     }
 
     /**

@@ -403,11 +403,6 @@ class StaffPerencanaanController extends Controller
             'nilai_hps' => 'required|numeric|min:0',
             'sumber_data_survei_hps' => 'required|string',
             
-            // Kontrak dan Pelaksanaan
-            'jenis_kontrak' => 'required|string',
-            'kualifikasi' => 'required|string',
-            'jangka_waktu_pelaksanaan' => 'required|integer|min:1',
-            
             // Detail Pengadaan
             'nama_kegiatan' => 'required|string',
             'jenis_pengadaan' => 'required|string',
@@ -443,12 +438,12 @@ class StaffPerencanaanController extends Controller
             ]);
         }
 
-        // Buat disposisi untuk DPP
+        // Buat disposisi untuk DPP - dikirim ke Bagian Pengadaan
         $disposisi = Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
-            'jabatan_tujuan' => 'Bagian Pengadaan', // Default atau bisa disesuaikan
+            'jabatan_tujuan' => 'Bagian Pengadaan',
             'tanggal_disposisi' => Carbon::now(),
-            'catatan' => "DPP telah dibuat untuk paket: {$data['nama_paket']}",
+            'catatan' => "DPP telah dibuat untuk paket: {$data['nama_paket']}. Mohon ditindaklanjuti ke Bagian KSO setelah proses pengadaan.",
             'status' => 'dalam_proses',
         ]);
 
@@ -459,11 +454,11 @@ class StaffPerencanaanController extends Controller
         
         Perencanaan::create($data);
 
-        // Update status permintaan
+        // Update status permintaan - dikirim ke Bagian Pengadaan
         $permintaan->update([
             'status' => 'proses',
             'pic_pimpinan' => 'Bagian Pengadaan',
-            'deskripsi' => $permintaan->deskripsi . "\n\n[DPP DIBUAT]\n" .
+            'deskripsi' => $permintaan->deskripsi . "\n\n[DPP DIBUAT - WORKFLOW: Perencanaan → Pengadaan → KSO]\n" .
                           "Nama Paket: {$data['nama_paket']}\n" .
                           "PPK: {$data['ppk_ditunjuk']}\n" .
                           "Nilai HPS: Rp " . number_format($data['nilai_hps'], 0, ',', '.'),
@@ -603,6 +598,73 @@ class StaffPerencanaanController extends Controller
         return redirect()
             ->route('staff-perencanaan.show', $permintaan)
             ->with('success', 'Disposisi berhasil dibuat dan dikirim ke ' . $data['jabatan_tujuan']);
+    }
+
+    /**
+     * Forward ke Bagian Pengadaan setelah semua dokumen lengkap
+     * Workflow: Perencanaan → Pengadaan → KSO
+     */
+    public function forwardToPengadaan(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Staff Perencanaan' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk memforward permintaan ini.');
+        }
+
+        // Validasi semua dokumen sudah lengkap
+        $hasNotaDinas = $permintaan->notaDinas()->exists();
+        $hasDPP = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->exists();
+        $hasHPS = $permintaan->hps()->exists();
+        $hasNotaDinasPembelian = NotaDinas::where('permintaan_id', $permintaan->permintaan_id)
+            ->where('tipe_nota', 'pembelian')
+            ->exists();
+        $hasSpesifikasiTeknis = $permintaan->spesifikasiTeknis()->exists();
+
+        if (!$hasNotaDinas || !$hasDPP || !$hasHPS || !$hasNotaDinasPembelian || !$hasSpesifikasiTeknis) {
+            return redirect()->back()->withErrors([
+                'error' => 'Semua dokumen harus lengkap sebelum dikirim ke Bagian Pengadaan. ' .
+                          'Pastikan Nota Dinas, DPP, HPS, Nota Dinas Pembelian, dan Spesifikasi Teknis sudah dibuat.'
+            ]);
+        }
+
+        // Ambil nota dinas terakhir
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan.']);
+        }
+
+        // Buat disposisi ke Bagian Pengadaan
+        Disposisi::create([
+            'nota_id' => $notaDinas->nota_id,
+            'jabatan_tujuan' => 'Bagian Pengadaan',
+            'tanggal_disposisi' => Carbon::now(),
+            'catatan' => $request->input('catatan', 'Semua dokumen perencanaan telah lengkap. Mohon ditindaklanjuti untuk proses pengadaan dan selanjutnya ke Bagian KSO.'),
+            'status' => 'dalam_proses',
+        ]);
+
+        // Update status permintaan - dikirim ke Bagian Pengadaan
+        $permintaan->update([
+            'status' => 'proses',
+            'pic_pimpinan' => 'Bagian Pengadaan',
+            'deskripsi' => $permintaan->deskripsi . "\n\n[DOKUMEN LENGKAP - DIKIRIM KE PENGADAAN]\n" .
+                          "Tanggal: " . Carbon::now()->format('d/m/Y H:i') . "\n" .
+                          "Semua dokumen perencanaan sudah lengkap:\n" .
+                          "✓ Nota Dinas\n" .
+                          "✓ DPP (Dokumen Persiapan Pengadaan)\n" .
+                          "✓ HPS (Harga Perkiraan Satuan)\n" .
+                          "✓ Nota Dinas Pembelian\n" .
+                          "✓ Spesifikasi Teknis\n" .
+                          "Workflow: Staff Perencanaan → Bagian Pengadaan → Bagian KSO",
+        ]);
+
+        return redirect()
+            ->route('staff-perencanaan.index')
+            ->with('success', 'Permintaan berhasil dikirim ke Bagian Pengadaan dengan semua dokumen lengkap.');
     }
 
     /**

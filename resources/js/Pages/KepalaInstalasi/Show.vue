@@ -356,7 +356,7 @@
 <script setup>
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     permintaan: Object,
@@ -372,11 +372,11 @@ const showApproveModal = ref(false);
 const showRejectModal = ref(false);
 const showRevisiModal = ref(false);
 
-const rejectForm = ref({
+const rejectForm = useForm({
     alasan: '',
 });
 
-const revisiForm = ref({
+const revisiForm = useForm({
     catatan_revisi: '',
 });
 
@@ -437,7 +437,8 @@ const getTrackingClass = (tracking) => {
 };
 
 const approve = () => {
-    router.post(route('kepala-instalasi.approve', props.permintaan.permintaan_id), {}, {
+    const approveForm = useForm({});
+    approveForm.post(route('kepala-instalasi.approve', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
@@ -447,33 +448,30 @@ const approve = () => {
 };
 
 const reject = () => {
-    router.post(route('kepala-instalasi.reject', props.permintaan.permintaan_id), rejectForm.value, {
+    rejectForm.post(route('kepala-instalasi.reject', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showRejectModal.value = false;
+            rejectForm.reset();
         }
     });
 };
 
 const requestRevision = () => {
     // Validasi minimal 5 karakter sebelum submit
-    if (!revisiForm.value.catatan_revisi || revisiForm.value.catatan_revisi.trim().length < 5) {
+    if (!revisiForm.catatan_revisi || revisiForm.catatan_revisi.trim().length < 5) {
         alert('Catatan revisi minimal 5 karakter');
         return;
     }
     
-    router.post(route('kepala-instalasi.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+    revisiForm.post(route('kepala-instalasi.revisi', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showRevisiModal.value = false;
-            revisiForm.value.catatan_revisi = ''; // Reset form
+            revisiForm.reset();
         },
-        onError: (errors) => {
-            console.error('Error:', errors);
-            // Modal tetap terbuka jika ada error
-        }
     });
 };
 </script>

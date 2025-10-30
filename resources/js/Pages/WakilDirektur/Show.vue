@@ -279,7 +279,7 @@
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     permintaan: Object,
@@ -292,44 +292,47 @@ const showApproveModal = ref(false);
 const showRejectModal = ref(false);
 const showRevisiModal = ref(false);
 
-const approveForm = ref({
+const approveForm = useForm({
     catatan: '',
 });
 
-const rejectForm = ref({
+const rejectForm = useForm({
     alasan: '',
 });
 
-const revisiForm = ref({
+const revisiForm = useForm({
     catatan_revisi: '',
 });
 
 const submitApprove = () => {
-    router.post(route('wakil-direktur.approve', props.permintaan.permintaan_id), approveForm.value, {
+    approveForm.post(route('wakil-direktur.approve', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showApproveModal.value = false;
+            approveForm.reset();
         },
     });
 };
 
 const submitReject = () => {
-    router.post(route('wakil-direktur.reject', props.permintaan.permintaan_id), rejectForm.value, {
+    rejectForm.post(route('wakil-direktur.reject', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showRejectModal.value = false;
+            rejectForm.reset();
         },
     });
 };
 
 const submitRevisi = () => {
-    router.post(route('wakil-direktur.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+    revisiForm.post(route('wakil-direktur.revisi', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showRevisiModal.value = false;
+            revisiForm.reset();
         },
     });
 };

@@ -466,6 +466,63 @@
                     </div>
                 </div>
 
+                <!-- Tombol Forward ke Bagian Pengadaan -->
+                <div v-if="allDocumentsComplete" class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 overflow-hidden shadow-lg sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 bg-green-100 rounded-full">
+                                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-green-900">
+                                        Semua Dokumen Sudah Lengkap!
+                                    </h3>
+                                    <p class="text-sm text-green-700 mt-1">
+                                        Nota Dinas, DPP, HPS, Nota Dinas Pembelian, dan Spesifikasi Teknis telah dibuat.
+                                        Anda dapat melanjutkan ke Bagian Pengadaan.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                v-if="permintaan.pic_pimpinan === 'Staff Perencanaan' || permintaan.pic_pimpinan === userLogin.nama"
+                                @click="showForwardModal = true"
+                                class="inline-flex items-center px-6 py-3 bg-[#028174] border border-transparent rounded-lg font-semibold text-sm text-white uppercase tracking-widest hover:bg-[#03a089] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-lg transform transition hover:scale-105 gap-2"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                </svg>
+                                Kirim ke Bagian Pengadaan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert jika dokumen belum lengkap -->
+                <div v-else-if="permintaan.pic_pimpinan === 'Staff Perencanaan' || permintaan.pic_pimpinan === userLogin.nama" class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Dokumen Belum Lengkap.</strong> Silakan lengkapi semua dokumen berikut sebelum mengirim ke Bagian Pengadaan:
+                            </p>
+                            <ul class="list-disc list-inside text-xs text-yellow-600 mt-2 space-y-1">
+                                <li v-if="!hasNotaDinas">Nota Dinas</li>
+                                <li v-if="!hasDPP">DPP (Dokumen Persiapan Pengadaan)</li>
+                                <li v-if="!hasHPS">HPS (Harga Perkiraan Satuan)</li>
+                                <li v-if="!hasNotaDinasPembelian">Nota Dinas Pembelian</li>
+                                <li v-if="!hasSpesifikasiTeknis">Spesifikasi Teknis</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Riwayat Nota Dinas & Disposisi -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 border-b border-gray-200">
@@ -545,13 +602,70 @@
 
             </div>
         </div>
+
+        <!-- Modal Forward ke Bagian Pengadaan -->
+        <Modal :show="showForwardModal" @close="showForwardModal = false">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    Kirim ke Bagian Pengadaan
+                </h3>
+                
+                <div class="mb-4 bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                Permintaan ini akan dikirim ke <strong>Bagian Pengadaan</strong> untuk diproses lebih lanjut.
+                                Pastikan semua dokumen sudah benar sebelum mengirim.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form @submit.prevent="submitForward">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Catatan untuk Bagian Pengadaan
+                        </label>
+                        <textarea
+                            v-model="forwardForm.catatan"
+                            rows="4"
+                            class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500"
+                            placeholder="Tambahkan catatan atau instruksi untuk Bagian Pengadaan (opsional)"
+                        ></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button
+                            type="button"
+                            @click="showForwardModal = false"
+                            class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="forwardForm.processing"
+                            class="px-4 py-2 bg-[#028174] border border-transparent rounded-md text-sm font-medium text-white hover:bg-[#03a089] disabled:opacity-50"
+                        >
+                            {{ forwardForm.processing ? 'Mengirim...' : 'Kirim ke Pengadaan' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
     </AuthenticatedLayout>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Link, router } from '@inertiajs/vue3';
+import Modal from '@/Components/Modal.vue';
+import { Link, router, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     permintaan: Object,
@@ -565,6 +679,12 @@ const props = defineProps({
     hasDisposisi: Boolean,
     hasNotaDinasPembelian: Boolean,
     hasSpesifikasiTeknis: Boolean,
+});
+
+const showForwardModal = ref(false);
+
+const forwardForm = useForm({
+    catatan: '',
 });
 
 const formatDate = (date) => {
@@ -592,6 +712,26 @@ const completedDocuments = computed(() => {
 const documentProgress = computed(() => {
     return Math.round((completedDocuments.value / 6) * 100);
 });
+
+// Cek apakah semua dokumen sudah lengkap (kecuali Disposisi yang opsional)
+const allDocumentsComplete = computed(() => {
+    return props.hasNotaDinas && 
+           props.hasDPP && 
+           props.hasHPS && 
+           props.hasNotaDinasPembelian && 
+           props.hasSpesifikasiTeknis;
+});
+
+// Submit forward ke Bagian Pengadaan
+const submitForward = () => {
+    forwardForm.post(route('staff-perencanaan.forward-to-pengadaan', props.permintaan.permintaan_id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showForwardModal.value = false;
+            forwardForm.reset();
+        },
+    });
+};
 
 // Fungsi untuk konfirmasi delete
 const confirmDelete = (type) => {

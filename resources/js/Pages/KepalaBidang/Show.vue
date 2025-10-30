@@ -283,7 +283,7 @@
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     permintaan: Object,
@@ -313,72 +313,48 @@ const showApproveModal = ref(false);
 const showRejectModal = ref(false);
 const showRevisiModal = ref(false);
 
-const approveForm = ref({
+const approveForm = useForm({
     catatan: '',
 });
 
-const rejectForm = ref({
+const rejectForm = useForm({
     alasan: '',
 });
 
-const revisiForm = ref({
+const revisiForm = useForm({
     catatan_revisi: '',
 });
 
 const submitApprove = () => {
-    // Ensure fresh CSRF token
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    router.post(route('kepala-bidang.approve', props.permintaan.permintaan_id), approveForm.value, {
+    approveForm.post(route('kepala-bidang.approve', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
-        headers: {
-            'X-CSRF-TOKEN': token
-        },
         onSuccess: () => {
             showApproveModal.value = false;
+            approveForm.reset();
         },
-        onError: (errors) => {
-            console.error('Approve error:', errors);
-        }
     });
 };
 
 const submitReject = () => {
-    // Ensure fresh CSRF token
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    router.post(route('kepala-bidang.reject', props.permintaan.permintaan_id), rejectForm.value, {
+    rejectForm.post(route('kepala-bidang.reject', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
-        headers: {
-            'X-CSRF-TOKEN': token
-        },
         onSuccess: () => {
             showRejectModal.value = false;
+            rejectForm.reset();
         },
-        onError: (errors) => {
-            console.error('Reject error:', errors);
-        }
     });
 };
 
 const submitRevisi = () => {
-    // Ensure fresh CSRF token
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    router.post(route('kepala-bidang.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+    revisiForm.post(route('kepala-bidang.revisi', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
-        headers: {
-            'X-CSRF-TOKEN': token
-        },
         onSuccess: () => {
             showRevisiModal.value = false;
+            revisiForm.reset();
         },
-        onError: (errors) => {
-            console.error('Revisi error:', errors);
-        }
     });
 };
 </script>

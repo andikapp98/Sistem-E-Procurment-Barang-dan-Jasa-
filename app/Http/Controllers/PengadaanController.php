@@ -282,6 +282,49 @@ class PengadaanController extends Controller
     }
 
     /**
+     * Forward ke Bagian KSO setelah proses pengadaan selesai
+     * Workflow: Perencanaan → Pengadaan → KSO
+     */
+    public function forwardToKSO(Request $request, Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Cek otorisasi
+        if ($permintaan->pic_pimpinan !== 'Bagian Pengadaan' && $permintaan->pic_pimpinan !== $user->nama) {
+            abort(403, 'Anda tidak memiliki akses untuk memforward permintaan ini.');
+        }
+
+        // Import models yang diperlukan
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if (!$notaDinas) {
+            return redirect()->back()->withErrors(['error' => 'Nota dinas tidak ditemukan.']);
+        }
+
+        // Buat disposisi ke Bagian KSO
+        \App\Models\Disposisi::create([
+            'nota_id' => $notaDinas->nota_id,
+            'jabatan_tujuan' => 'Bagian KSO',
+            'tanggal_disposisi' => Carbon::now(),
+            'catatan' => $request->input('catatan', 'Proses pengadaan telah selesai. Mohon ditindaklanjuti untuk proses KSO.'),
+            'status' => 'dalam_proses',
+        ]);
+
+        // Update status permintaan - dikirim ke Bagian KSO
+        $permintaan->update([
+            'status' => 'proses',
+            'pic_pimpinan' => 'Bagian KSO',
+            'deskripsi' => $permintaan->deskripsi . "\n\n[FORWARDED: Pengadaan → KSO]\n" .
+                          "Tanggal Forward: " . Carbon::now()->format('d/m/Y H:i') . "\n" .
+                          "Catatan: " . $request->input('catatan', '-'),
+        ]);
+
+        return redirect()
+            ->route('pengadaan.index')
+            ->with('success', 'Permintaan berhasil diteruskan ke Bagian KSO.');
+    }
+
+    /**
      * Helper: Cek apakah permintaan sudah punya pengadaan
      */
     private function hasPengadaan(Permintaan $permintaan)

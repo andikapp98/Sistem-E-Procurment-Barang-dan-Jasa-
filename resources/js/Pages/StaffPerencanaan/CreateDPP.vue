@@ -281,76 +281,6 @@
                         </div>
                     </div>
 
-                    <!-- Jenis Kontrak dan Kualifikasi -->
-                    <div class="bg-white overflow-hidden shadow-sm rounded-lg">
-                        <div class="p-6 border-b border-gray-200">
-                            <h3 class="text-lg font-medium text-gray-900">Kontrak dan Pelaksanaan</h3>
-                        </div>
-                        <div class="p-6 space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Jenis Kontrak -->
-                                <div>
-                                    <label for="jenis_kontrak" class="block text-sm font-medium text-gray-700">
-                                        Jenis Kontrak <span class="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        id="jenis_kontrak"
-                                        v-model="form.jenis_kontrak"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        :class="{ 'border-red-500': errors.jenis_kontrak }"
-                                    >
-                                        <option value="">Pilih Jenis Kontrak</option>
-                                        <option value="Lump Sum">Lump Sum</option>
-                                        <option value="Harga Satuan">Harga Satuan</option>
-                                        <option value="Gabungan Lump Sum dan Harga Satuan">Gabungan Lump Sum dan Harga Satuan</option>
-                                        <option value="Kontrak Payung">Kontrak Payung</option>
-                                        <option value="Terima Jadi">Terima Jadi</option>
-                                    </select>
-                                    <p v-if="errors.jenis_kontrak" class="mt-1 text-sm text-red-600">{{ errors.jenis_kontrak }}</p>
-                                </div>
-
-                                <!-- Kualifikasi -->
-                                <div>
-                                    <label for="kualifikasi" class="block text-sm font-medium text-gray-700">
-                                        Kualifikasi <span class="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        id="kualifikasi"
-                                        v-model="form.kualifikasi"
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        :class="{ 'border-red-500': errors.kualifikasi }"
-                                    >
-                                        <option value="">Pilih Kualifikasi</option>
-                                        <option value="Kecil">Kecil</option>
-                                        <option value="Non Kecil">Non Kecil</option>
-                                        <option value="Tidak Dikualifikasi">Tidak Dikualifikasi</option>
-                                    </select>
-                                    <p v-if="errors.kualifikasi" class="mt-1 text-sm text-red-600">{{ errors.kualifikasi }}</p>
-                                </div>
-                            </div>
-
-                            <!-- Jangka Waktu Pelaksanaan -->
-                            <div>
-                                <label for="jangka_waktu_pelaksanaan" class="block text-sm font-medium text-gray-700">
-                                    Jangka Waktu Pelaksanaan <span class="text-red-500">*</span>
-                                </label>
-                                <div class="mt-1 flex items-center gap-2">
-                                    <input
-                                        type="number"
-                                        id="jangka_waktu_pelaksanaan"
-                                        v-model="form.jangka_waktu_pelaksanaan"
-                                        class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        :class="{ 'border-red-500': errors.jangka_waktu_pelaksanaan }"
-                                        placeholder="0"
-                                        min="1"
-                                    />
-                                    <span class="text-sm text-gray-700">hari kalender</span>
-                                </div>
-                                <p v-if="errors.jangka_waktu_pelaksanaan" class="mt-1 text-sm text-red-600">{{ errors.jangka_waktu_pelaksanaan }}</p>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Detail Pengadaan -->
                     <div class="bg-white overflow-hidden shadow-sm rounded-lg">
                         <div class="p-6 border-b border-gray-200">
@@ -466,11 +396,6 @@ const form = useForm({
     nilai_hps: '',
     sumber_data_survei_hps: '',
     
-    // Kontrak dan Pelaksanaan
-    jenis_kontrak: '',
-    kualifikasi: '',
-    jangka_waktu_pelaksanaan: '',
-    
     // Detail Pengadaan
     nama_kegiatan: '',
     jenis_pengadaan: '',
@@ -553,9 +478,6 @@ const submit = () => {
         pagu_paket: 'Pagu paket harus diisi',
         nilai_hps: 'Nilai HPS harus diisi',
         sumber_data_survei_hps: 'Sumber data survei HPS harus diisi',
-        jenis_kontrak: 'Jenis kontrak harus dipilih',
-        kualifikasi: 'Kualifikasi harus dipilih',
-        jangka_waktu_pelaksanaan: 'Jangka waktu pelaksanaan harus diisi',
         nama_kegiatan: 'Nama kegiatan harus diisi',
         jenis_pengadaan: 'Jenis pengadaan harus dipilih',
     };
@@ -576,11 +498,6 @@ const submit = () => {
 
     if (form.nilai_hps && form.nilai_hps <= 0) {
         errors.value.nilai_hps = 'Nilai HPS harus lebih dari 0';
-        hasError = true;
-    }
-
-    if (form.jangka_waktu_pelaksanaan && form.jangka_waktu_pelaksanaan < 1) {
-        errors.value.jangka_waktu_pelaksanaan = 'Jangka waktu minimal 1 hari';
         hasError = true;
     }
 

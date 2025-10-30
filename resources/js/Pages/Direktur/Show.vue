@@ -212,9 +212,9 @@
                             class="px-4 py-2 text-gray-700 hover:text-gray-900">
                             Batal
                         </button>
-                        <button type="submit" :disabled="processing"
+                        <button type="submit" :disabled="approveForm.processing"
                             class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">
-                            {{ processing ? 'Memproses...' : 'Setujui & Teruskan' }}
+                            {{ approveForm.processing ? 'Memproses...' : 'Setujui & Teruskan' }}
                         </button>
                     </div>
                 </form>
@@ -253,9 +253,9 @@
                             class="px-4 py-2 text-gray-700 hover:text-gray-900">
                             Batal
                         </button>
-                        <button type="submit" :disabled="processing || rejectForm.alasan.length < 10"
+                        <button type="submit" :disabled="rejectForm.processing || rejectForm.alasan.length < 10"
                             class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
-                            {{ processing ? 'Memproses...' : 'Tolak Permintaan' }}
+                            {{ rejectForm.processing ? 'Memproses...' : 'Tolak Permintaan' }}
                         </button>
                     </div>
                 </form>
@@ -294,9 +294,9 @@
                             class="px-4 py-2 text-gray-700 hover:text-gray-900">
                             Batal
                         </button>
-                        <button type="submit" :disabled="processing || revisiForm.catatan_revisi.length < 10"
+                        <button type="submit" :disabled="revisiForm.processing || revisiForm.catatan_revisi.length < 10"
                             class="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50">
-                            {{ processing ? 'Memproses...' : 'Kirim Permintaan Revisi' }}
+                            {{ revisiForm.processing ? 'Memproses...' : 'Kirim Permintaan Revisi' }}
                         </button>
                     </div>
                 </form>
@@ -309,7 +309,7 @@
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Modal from '@/Components/Modal.vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     permintaan: Object,
@@ -337,67 +337,54 @@ const cleanDeskripsi = computed(() => {
 const showApproveModal = ref(false);
 const showRejectModal = ref(false);
 const showRevisiModal = ref(false);
-const processing = ref(false);
 
-const approveForm = ref({
+const approveForm = useForm({
     catatan: '',
 });
 
-const rejectForm = ref({
+const rejectForm = useForm({
     alasan: '',
 });
 
-const revisiForm = ref({
+const revisiForm = useForm({
     catatan_revisi: '',
 });
 
 const submitApprove = () => {
-    processing.value = true;
-    router.post(route('direktur.approve', props.permintaan.permintaan_id), approveForm.value, {
+    approveForm.post(route('direktur.approve', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showApproveModal.value = false;
-            processing.value = false;
-        },
-        onError: () => {
-            processing.value = false;
+            approveForm.reset();
         },
     });
 };
 
 const submitReject = () => {
-    if (rejectForm.value.alasan.length < 10) {
+    if (rejectForm.alasan.length < 10) {
         return;
     }
-    processing.value = true;
-    router.post(route('direktur.reject', props.permintaan.permintaan_id), rejectForm.value, {
+    rejectForm.post(route('direktur.reject', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showRejectModal.value = false;
-            processing.value = false;
-        },
-        onError: () => {
-            processing.value = false;
+            rejectForm.reset();
         },
     });
 };
 
 const submitRevisi = () => {
-    if (revisiForm.value.catatan_revisi.length < 10) {
+    if (revisiForm.catatan_revisi.length < 10) {
         return;
     }
-    processing.value = true;
-    router.post(route('direktur.revisi', props.permintaan.permintaan_id), revisiForm.value, {
+    revisiForm.post(route('direktur.revisi', props.permintaan.permintaan_id), {
         preserveState: false,
         preserveScroll: false,
         onSuccess: () => {
             showRevisiModal.value = false;
-            processing.value = false;
-        },
-        onError: () => {
-            processing.value = false;
+            revisiForm.reset();
         },
     });
 };

@@ -372,7 +372,7 @@ class KepalaBidangController extends Controller
     }
 
     /**
-     * Reject permintaan
+     * Reject permintaan - Kembalikan ke Kepala Instalasi (pemohon)
      */
     public function reject(Request $request, Permintaan $permintaan)
     {
@@ -382,20 +382,20 @@ class KepalaBidangController extends Controller
             'alasan' => 'required|string',
         ]);
 
-        // Update status permintaan
+        // Update status permintaan - kembalikan ke Kepala Instalasi
         $permintaan->update([
             'status' => 'ditolak',
-            'pic_pimpinan' => $user->name ?? $user->jabatan ?? 'Kepala Bidang',
+            'pic_pimpinan' => $permintaan->user->name ?? 'Kepala Instalasi', // Nama pemohon
             'deskripsi' => $permintaan->deskripsi . "\n\n[DITOLAK oleh Kepala Bidang] " . $data['alasan'],
         ]);
 
-        // Ambil nota dinas terakhir dan buat disposisi penolakan
+        // Ambil nota dinas terakhir dan buat disposisi penolakan ke Kepala Instalasi
         $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
         
         if ($notaDinas) {
             Disposisi::create([
                 'nota_id' => $notaDinas->nota_id,
-                'jabatan_tujuan' => $permintaan->user->jabatan ?? 'Unit Pemohon',
+                'jabatan_tujuan' => $permintaan->user->jabatan ?? 'Kepala Instalasi', // Jabatan pemohon
                 'tanggal_disposisi' => Carbon::now(),
                 'catatan' => $data['alasan'],
                 'status' => 'ditolak',
@@ -404,11 +404,11 @@ class KepalaBidangController extends Controller
 
         return redirect()
             ->route('kepala-bidang.index')
-            ->with('success', 'Permintaan ditolak dan dikembalikan ke unit pemohon');
+            ->with('success', 'Permintaan ditolak dan dikembalikan ke Kepala Instalasi (Pemohon)');
     }
 
     /**
-     * Request revisi dari pemohon
+     * Request revisi dari Kepala Instalasi (pemohon)
      */
     public function requestRevision(Request $request, Permintaan $permintaan)
     {
@@ -418,15 +418,29 @@ class KepalaBidangController extends Controller
             'catatan_revisi' => 'required|string',
         ]);
 
-        // Update status permintaan
+        // Update status permintaan - kembalikan ke Kepala Instalasi
         $permintaan->update([
             'status' => 'revisi',
+            'pic_pimpinan' => $permintaan->user->name ?? 'Kepala Instalasi', // Nama pemohon
             'deskripsi' => $permintaan->deskripsi . "\n\n[CATATAN REVISI dari Kepala Bidang] " . $data['catatan_revisi'],
         ]);
 
+        // Buat disposisi revisi ke Kepala Instalasi
+        $notaDinas = $permintaan->notaDinas()->latest('tanggal_nota')->first();
+        
+        if ($notaDinas) {
+            Disposisi::create([
+                'nota_id' => $notaDinas->nota_id,
+                'jabatan_tujuan' => $permintaan->user->jabatan ?? 'Kepala Instalasi', // Jabatan pemohon
+                'tanggal_disposisi' => Carbon::now(),
+                'catatan' => $data['catatan_revisi'],
+                'status' => 'revisi',
+            ]);
+        }
+
         return redirect()
             ->route('kepala-bidang.index')
-            ->with('success', 'Permintaan revisi telah dikirim ke pemohon');
+            ->with('success', 'Permintaan revisi telah dikirim ke Kepala Instalasi (Pemohon)');
     }
 
     /**

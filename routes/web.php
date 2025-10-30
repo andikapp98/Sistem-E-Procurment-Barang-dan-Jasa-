@@ -196,6 +196,9 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
     Route::get('/permintaan/{permintaan}/nota-dinas/cetak', [StaffPerencanaanController::class, 'cetakNotaDinas'])->name('nota-dinas.cetak');
     Route::get('/permintaan/{permintaan}/dpp/cetak', [StaffPerencanaanController::class, 'cetakDPP'])->name('dpp.cetak');
     Route::get('/permintaan/{permintaan}/hps/cetak', [StaffPerencanaanController::class, 'cetakHPS'])->name('hps.cetak');
+    
+    // Forward ke Bagian Pengadaan setelah semua dokumen lengkap (Workflow: Perencanaan → Pengadaan → KSO)
+    Route::post('/permintaan/{permintaan}/forward-to-pengadaan', [StaffPerencanaanController::class, 'forwardToPengadaan'])->name('forward-to-pengadaan');
 });
 
 // Routes untuk Bagian KSO
@@ -221,6 +224,9 @@ Route::middleware(['auth', 'verified'])->prefix('pengadaan')->name('pengadaan.')
     Route::get('/permintaan/{permintaan}/pengadaan/{pengadaan}/edit', [App\Http\Controllers\PengadaanController::class, 'edit'])->name('edit');
     Route::put('/permintaan/{permintaan}/pengadaan/{pengadaan}', [App\Http\Controllers\PengadaanController::class, 'update'])->name('update');
     Route::delete('/permintaan/{permintaan}/pengadaan/{pengadaan}', [App\Http\Controllers\PengadaanController::class, 'destroy'])->name('destroy');
+    
+    // Forward ke Bagian KSO (Workflow: Perencanaan → Pengadaan → KSO)
+    Route::post('/permintaan/{permintaan}/forward-to-kso', [App\Http\Controllers\PengadaanController::class, 'forwardToKSO'])->name('forward-to-kso');
 });
 
 // Routes untuk Serah Terima
