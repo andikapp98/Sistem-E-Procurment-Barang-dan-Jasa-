@@ -104,15 +104,132 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // 6b. Kepala Instalasi Rawat Inap
+        // 6b. Kepala Instalasi Rawat Inap (IRNA)
         User::updateOrCreate(
             ['email' => 'kepala.ranap@rsud.id'],
             [
                 'name' => 'Ns. Siti Aminah, S.Kep, M.Kep',
                 'password' => Hash::make('password'),
                 'role' => 'kepala_instalasi',
-                'jabatan' => 'Kepala Instalasi',
+                'jabatan' => 'Kepala Instalasi Rawat Inap',
                 'unit_kerja' => 'Rawat Inap',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-1. Kepala Ruang Anggrek (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.anggrek@rsud.id'],
+            [
+                'name' => 'Ns. Anita Sari, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Anggrek',
+                'unit_kerja' => 'Anggrek',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-2. Kepala Ruang Bougenville (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.bougenville@rsud.id'],
+            [
+                'name' => 'Ns. Bunga Lestari, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Bougenville',
+                'unit_kerja' => 'Bougenville',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-3. Kepala Ruang Cempaka (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.cempaka@rsud.id'],
+            [
+                'name' => 'Ns. Citra Dewi, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Cempaka',
+                'unit_kerja' => 'Cempaka',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-4. Kepala Ruang Dahlia (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.dahlia@rsud.id'],
+            [
+                'name' => 'Ns. Dewi Anggraini, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Dahlia',
+                'unit_kerja' => 'Dahlia',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-5. Kepala Ruang Edelweiss (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.edelweiss@rsud.id'],
+            [
+                'name' => 'Ns. Eka Putri, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Edelweiss',
+                'unit_kerja' => 'Edelweiss',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-6. Kepala Ruang Flamboyan (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.flamboyan@rsud.id'],
+            [
+                'name' => 'Ns. Fitri Handayani, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Flamboyan',
+                'unit_kerja' => 'Flamboyan',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-7. Kepala Ruang Gardena (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.gardena@rsud.id'],
+            [
+                'name' => 'Ns. Gita Puspita, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Gardena',
+                'unit_kerja' => 'Gardena',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-8. Kepala Ruang Heliconia (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.heliconia@rsud.id'],
+            [
+                'name' => 'Ns. Hesti Wulandari, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Heliconia',
+                'unit_kerja' => 'Heliconia',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6b-9. Kepala Ruang Ixia (IRNA)
+        User::updateOrCreate(
+            ['email' => 'ruang.ixia@rsud.id'],
+            [
+                'name' => 'Ns. Indah Permata, S.Kep',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_ruang',
+                'jabatan' => 'Kepala Ruang Ixia',
+                'unit_kerja' => 'Ixia',
                 'email_verified_at' => now(),
             ]
         );
@@ -422,7 +539,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        $this->command->info('✅ 30 users berhasil dibuat!');
+        $this->command->info('✅ 39 users berhasil dibuat!');
         $this->command->info('');
         $this->command->info('📋 Daftar Akun:');
         $this->command->info('═══════════════════════════════════════════════════════════════════════════════════════');
@@ -436,6 +553,15 @@ class UserSeeder extends Seeder
         $this->command->info('Kepala Instalasi    | kepala.radiologi@rsud.id     | password      | Radiologi');
         $this->command->info('Kepala Instalasi    | kepala.bedah@rsud.id         | password      | Bedah Sentral');
         $this->command->info('Kepala Instalasi    | kepala.ranap@rsud.id         | password      | Rawat Inap');
+        $this->command->info('  Kepala Ruang      | ruang.anggrek@rsud.id        | password      | Anggrek');
+        $this->command->info('  Kepala Ruang      | ruang.bougenville@rsud.id    | password      | Bougenville');
+        $this->command->info('  Kepala Ruang      | ruang.cempaka@rsud.id        | password      | Cempaka');
+        $this->command->info('  Kepala Ruang      | ruang.dahlia@rsud.id         | password      | Dahlia');
+        $this->command->info('  Kepala Ruang      | ruang.edelweiss@rsud.id      | password      | Edelweiss');
+        $this->command->info('  Kepala Ruang      | ruang.flamboyan@rsud.id      | password      | Flamboyan');
+        $this->command->info('  Kepala Ruang      | ruang.gardena@rsud.id        | password      | Gardena');
+        $this->command->info('  Kepala Ruang      | ruang.heliconia@rsud.id      | password      | Heliconia');
+        $this->command->info('  Kepala Ruang      | ruang.ixia@rsud.id           | password      | Ixia');
         $this->command->info('Kepala Instalasi    | kepala.rajal@rsud.id         | password      | Rawat Jalan');
         $this->command->info('Kepala Instalasi    | kepala.icu@rsud.id           | password      | ICU/ICCU');
         $this->command->info('Kepala Instalasi    | kepala.rm@rsud.id            | password      | Rekam Medis');

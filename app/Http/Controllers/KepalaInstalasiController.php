@@ -36,6 +36,7 @@ class KepalaInstalasiController extends Controller
         return [
             'IGD' => 'Instalasi Gawat Darurat',
             'IRJ' => 'Instalasi Rawat Jalan',
+            'IRJA' => 'Instalasi Rawat Jalan',
             'IRNA' => 'Instalasi Rawat Inap',
             'IBS' => 'Instalasi Bedah Sentral',
             'ICU' => 'Instalasi Intensif Care',
@@ -61,6 +62,59 @@ class KepalaInstalasiController extends Controller
             'Logistik' => 'Unit Aset & Logistik',
             'Penjaminan' => 'Unit Penjaminan',
             'Pengaduan' => 'Unit Pengaduan',
+        ];
+    }
+
+    /**
+     * Get sub-departments under IRJA (Instalasi Rawat Jalan)
+     * Semua departemen ini berada di bawah Kepala IRJA
+     */
+    private function getIRJADepartments()
+    {
+        return [
+            'Poli Bedah',
+            'Poli Gigi',
+            'Poli Kulit Kelamin',
+            'Poli Penyakit Dalam',
+            'Poli Jiwa',
+            'Poli Psikologi',
+            'Poli Mata',
+            'Klinik Gizi',
+            'Laboratorium',
+            'Apotek',
+        ];
+    }
+
+    /**
+     * Get sub-departments under IRNA (Instalasi Rawat Inap)
+     * Semua ruangan ini berada di bawah Kepala IRNA
+     */
+    private function getIRNADepartments()
+    {
+        return [
+            'Anggrek',
+            'Bougenville',
+            'Cempaka',
+            'Dahlia',
+            'Edelweiss',
+            'Flamboyan',
+            'Gardena',
+            'Heliconia',
+            'Ixia',
+        ];
+    }
+
+    /**
+     * Get sub-departments under IGD (Instalasi Gawat Darurat)
+     * Semua departemen ini berada di bawah Kepala IGD
+     */
+    private function getIGDDepartments()
+    {
+        return [
+            'UGD',
+            'Triase',
+            'Observasi',
+            'Ruang Tindakan IGD',
         ];
     }
 
@@ -158,7 +212,33 @@ class KepalaInstalasiController extends Controller
             $variations[] = $reversedMapping[$unitKerja];
         }
 
-        return $variations;
+        // SPECIAL CASE: Jika Kepala IRJA (Rawat Jalan), tambahkan semua sub-departments
+        if (stripos($unitKerja, 'Rawat Jalan') !== false || 
+            $unitKerja === 'IRJ' || 
+            $unitKerja === 'IRJA') {
+            $variations = array_merge($variations, $this->getIRJADepartments());
+            $variations[] = 'IRJ';
+            $variations[] = 'IRJA';
+            $variations[] = 'Instalasi Rawat Jalan';
+        }
+
+        // SPECIAL CASE: Jika Kepala IRNA (Rawat Inap), tambahkan semua ruangan
+        if (stripos($unitKerja, 'Rawat Inap') !== false || 
+            $unitKerja === 'IRNA') {
+            $variations = array_merge($variations, $this->getIRNADepartments());
+            $variations[] = 'IRNA';
+            $variations[] = 'Instalasi Rawat Inap';
+        }
+
+        // SPECIAL CASE: Jika Kepala IGD, tambahkan semua sub-departments
+        if (stripos($unitKerja, 'Gawat Darurat') !== false || 
+            $unitKerja === 'IGD') {
+            $variations = array_merge($variations, $this->getIGDDepartments());
+            $variations[] = 'IGD';
+            $variations[] = 'Instalasi Gawat Darurat';
+        }
+
+        return array_unique($variations);
     }
 
     /**
