@@ -20,13 +20,36 @@ use Illuminate\Support\Facades\Storage;
 class KepalaRuangController extends Controller
 {
     /**
-     * Dashboard Kepala Ruang - Redirect ke index
+     * Dashboard Kepala Ruang dengan statistik
      * Bidang otomatis diset ke "Instalasi Rawat Inap"
      */
     public function dashboard()
     {
-        // Redirect ke index untuk menghindari loop
-        return redirect()->route('kepala-ruang.index');
+        $user = Auth::user();
+        
+        // Get statistics untuk unit kerja Kepala Ruang
+        $totalPermintaan = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->count();
+        
+        $permintaanDiajukan = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->where('status', 'diajukan')->count();
+        
+        $permintaanProses = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->where('status', 'proses')->count();
+        
+        $permintaanDisetujui = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->where('status', 'disetujui')->count();
+        
+        return Inertia::render('KepalaRuang/Dashboard', [
+            'totalPermintaan' => $totalPermintaan,
+            'permintaanDiajukan' => $permintaanDiajukan,
+            'permintaanProses' => $permintaanProses,
+            'permintaanDisetujui' => $permintaanDisetujui,
+        ]);
     }
 
     /**

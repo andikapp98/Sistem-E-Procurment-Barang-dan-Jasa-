@@ -55,11 +55,24 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        // Log attempt untuk debugging
+        \Log::info('Login attempt', [
+            'email' => $this->email,
+            'ip' => $this->ip(),
+            'user_agent' => $this->userAgent()
+        ]);
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             // Cek apakah email ada di database untuk memberikan pesan yang lebih spesifik
             $user = \App\Models\User::where('email', $this->email)->first();
+            
+            \Log::warning('Login failed', [
+                'email' => $this->email,
+                'user_exists' => $user ? 'yes' : 'no',
+                'ip' => $this->ip()
+            ]);
             
             if (!$user) {
                 throw ValidationException::withMessages([
@@ -71,6 +84,12 @@ class LoginRequest extends FormRequest
                 'password' => 'Password yang Anda masukkan salah.',
             ]);
         }
+
+        // Log successful authentication
+        \Log::info('Login successful', [
+            'email' => $this->email,
+            'user_id' => Auth::id()
+        ]);
 
         RateLimiter::clear($this->throttleKey());
     }

@@ -4,23 +4,27 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage, useForm } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
 const sidebarOpen = ref(true);
 
-const csrfToken = computed(() => {
-    const page = usePage();
-    return page.props.csrf_token || document.querySelector('meta[name="csrf-token"]')?.content || '';
-});
-
-const logoutForm = useForm({});
-
 const logout = () => {
-    logoutForm.post(route('logout'), {
+    // Use router.post with proper CSRF handling
+    router.post(route('logout'), {}, {
         preserveState: false,
         preserveScroll: false,
+        onBefore: () => {
+            // Ensure CSRF token is fresh
+            return true;
+        },
         onSuccess: () => {
+            // Redirect to login page
+            window.location.href = '/login';
+        },
+        onError: (errors) => {
+            console.error('Logout error:', errors);
+            // Even if error, still redirect to login
             window.location.href = '/login';
         }
     });

@@ -16,10 +16,20 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
+        // Configure Inertia to handle CSRF tokens
+        const app = createApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(ZiggyVue)
-            .mount(el);
+            .use(ZiggyVue);
+
+        // Add global error handler for 419 errors
+        app.config.errorHandler = (err, instance, info) => {
+            if (err.response && err.response.status === 419) {
+                console.warn('CSRF token mismatch detected, refreshing page...');
+                window.location.reload();
+            }
+        };
+
+        return app.mount(el);
     },
     progress: {
         color: '#4B5563',

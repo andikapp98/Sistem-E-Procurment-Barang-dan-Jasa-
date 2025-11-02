@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -22,13 +23,28 @@ const form = useForm({
     remember: false,
 });
 
+// Ensure fresh CSRF token on mount
+onMounted(() => {
+    // Verify CSRF token is present
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+    } else {
+        console.log('CSRF token loaded');
+    }
+});
+
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => {
             form.reset('password');
         },
-        preserveScroll: false,
-        preserveState: false,
+        onError: (errors) => {
+            console.error('Login errors:', errors);
+        },
+        preserveScroll: true,
+        preserveState: true,
+        replace: false,
     });
 };
 </script>

@@ -30,24 +30,70 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
 
-        $request->session()->regenerate();
+            $request->session()->regenerate();
 
-        // Log successful login
-        $user = Auth::user();
-        ActivityLogger::logLogin($user);
+            // Log successful login
+            $user = Auth::user();
+            
+            if ($user) {
+                ActivityLogger::logLogin($user);
 
-        // Redirect berdasarkan role user
-        if ($user->role === 'kepala_instalasi') {
-            return redirect()->intended(route('kepala-instalasi.dashboard', absolute: false));
+                // Redirect berdasarkan role user
+                if ($user->role === 'kepala_instalasi') {
+                    return redirect()->intended(route('kepala-instalasi.dashboard'));
+                }
+                
+                if ($user->role === 'kepala_bidang') {
+                    return redirect()->intended(route('kepala-bidang.dashboard'));
+                }
+                
+                if ($user->role === 'kepala_poli') {
+                    return redirect()->intended(route('kepala-poli.dashboard'));
+                }
+                
+                if ($user->role === 'kepala_ruang') {
+                    return redirect()->intended(route('kepala-ruang.dashboard'));
+                }
+                
+                if ($user->role === 'direktur') {
+                    return redirect()->intended(route('direktur.dashboard'));
+                }
+                
+                if ($user->role === 'wakil_direktur') {
+                    return redirect()->intended(route('wakil-direktur.dashboard'));
+                }
+                
+                if ($user->role === 'staff_perencanaan') {
+                    return redirect()->intended(route('staff-perencanaan.dashboard'));
+                }
+                
+                if ($user->role === 'pengadaan') {
+                    return redirect()->intended(route('pengadaan.dashboard'));
+                }
+                
+                if ($user->role === 'kso') {
+                    return redirect()->intended(route('kso.dashboard'));
+                }
+
+                return redirect()->intended(route('dashboard'));
+            }
+            
+            // Fallback jika user tidak ditemukan
+            Auth::logout();
+            return back()->withErrors([
+                'email' => 'Terjadi kesalahan. Silakan coba lagi.',
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Login error: ' . $e->getMessage());
+            
+            return back()->withErrors([
+                'email' => 'Terjadi kesalahan saat login. Silakan coba lagi.',
+            ])->withInput($request->only('email', 'remember'));
         }
-        
-        if ($user->role === 'kepala_bidang') {
-            return redirect()->intended(route('kepala-bidang.dashboard', absolute: false));
-        }
-
-        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

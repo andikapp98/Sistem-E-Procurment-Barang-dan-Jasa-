@@ -11,12 +11,12 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Dashboard Kepala Ruang" />
+    <Head title="Dashboard Kepala Poli" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Dashboard Kepala Ruang - Instalasi Rawat Inap
+                Dashboard Kepala Poli - Instalasi Rawat Jalan
             </h2>
         </template>
 
@@ -121,7 +121,7 @@ defineProps({
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-semibold mb-2">Selamat Datang di Sistem e-Procurement</h3>
-                        <p class="text-gray-600">Kelola permintaan pengadaan barang dan jasa untuk Instalasi Rawat Inap dengan mudah dan efisien.</p>
+                        <p class="text-gray-600">Kelola permintaan pengadaan barang dan jasa untuk Instalasi Rawat Jalan dengan mudah dan efisien.</p>
                     </div>
                 </div>
 
@@ -131,7 +131,7 @@ defineProps({
                         <h3 class="text-lg font-semibold mb-4 text-gray-900">Aksi Cepat</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <Link
-                                :href="route('kepala-ruang.create')"
+                                :href="route('kepala-poli.create')"
                                 class="flex items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
                             >
                                 <svg class="h-8 w-8 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ defineProps({
                             </Link>
 
                             <Link
-                                :href="route('kepala-ruang.index')"
+                                :href="route('kepala-poli.index')"
                                 class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                             >
                                 <svg class="h-8 w-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,4 +175,3 @@ defineProps({
         </div>
     </AuthenticatedLayout>
 </template>
-

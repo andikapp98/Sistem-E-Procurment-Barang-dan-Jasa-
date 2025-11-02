@@ -20,13 +20,36 @@ use Illuminate\Support\Facades\Storage;
 class KepalaPoliController extends Controller
 {
     /**
-     * Dashboard Kepala Poli - Redirect ke index
+     * Dashboard Kepala Poli dengan statistik
      * Bidang otomatis diset ke "Instalasi Rawat Jalan"
      */
     public function dashboard()
     {
-        // Redirect ke index untuk menghindari loop
-        return redirect()->route('kepala-poli.index');
+        $user = Auth::user();
+        
+        // Get statistics untuk unit kerja Kepala Poli
+        $totalPermintaan = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->count();
+        
+        $permintaanDiajukan = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->where('status', 'diajukan')->count();
+        
+        $permintaanProses = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->where('status', 'proses')->count();
+        
+        $permintaanDisetujui = Permintaan::whereHas('user', function($q) use ($user) {
+            $q->where('unit_kerja', $user->unit_kerja);
+        })->where('status', 'disetujui')->count();
+        
+        return Inertia::render('KepalaPoli/Dashboard', [
+            'totalPermintaan' => $totalPermintaan,
+            'permintaanDiajukan' => $permintaanDiajukan,
+            'permintaanProses' => $permintaanProses,
+            'permintaanDisetujui' => $permintaanDisetujui,
+        ]);
     }
 
     /**
