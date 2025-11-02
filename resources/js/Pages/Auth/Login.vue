@@ -71,7 +71,6 @@ const submit = () => {
                     :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': form.errors.email }"
                     v-model="form.email"
                     required
-                    autofocus
                     autocomplete="username"
                     placeholder="Masukkan email Anda"
                 />

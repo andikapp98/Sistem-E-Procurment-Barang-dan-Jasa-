@@ -166,19 +166,24 @@ const logout = () => {
                     class="sm:hidden"
                 >
                     <div class="space-y-1 pb-3 pt-2">
-                        <!-- Dashboard - Admin, Unit, Kepala Instalasi -->
+                        <!-- Dashboard - Admin, Unit, Kepala Instalasi, Kepala Ruang, Kepala Poli -->
                         <ResponsiveNavLink
                             v-if="$page.props.auth.user.role === 'admin' || 
                                   $page.props.auth.user.role === 'unit' || 
-                                  $page.props.auth.user.role === 'kepala_instalasi'"
+                                  $page.props.auth.user.role === 'kepala_instalasi' ||
+                                  $page.props.auth.user.role === 'kepala_ruang' ||
+                                  $page.props.auth.user.role === 'kepala_poli'"
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
                             Dashboard
                         </ResponsiveNavLink>
 
-                        <!-- Menu untuk Unit/Kepala Instalasi -->
-                        <template v-if="$page.props.auth.user.role === 'unit' || $page.props.auth.user.role === 'kepala_instalasi'">
+                        <!-- Menu untuk Unit/Kepala Instalasi/Kepala Ruang/Kepala Poli -->
+                        <template v-if="$page.props.auth.user.role === 'unit' || 
+                                        $page.props.auth.user.role === 'kepala_instalasi' ||
+                                        $page.props.auth.user.role === 'kepala_ruang' ||
+                                        $page.props.auth.user.role === 'kepala_poli'">
                             <ResponsiveNavLink
                                 :href="route('permintaan.index')"
                                 :active="route().current('permintaan.*')"
@@ -374,11 +379,13 @@ const logout = () => {
                     class="bg-white border-r border-gray-200 min-h-screen transition-all duration-300 overflow-hidden hidden sm:block"
                 >
                     <nav class="mt-5 px-2">
-                        <!-- Dashboard - Admin, Unit, Kepala Instalasi -->
+                        <!-- Dashboard - Admin, Unit, Kepala Instalasi, Kepala Ruang, Kepala Poli -->
                         <Link
                             v-if="$page.props.auth.user.role === 'admin' || 
                                   $page.props.auth.user.role === 'unit' || 
-                                  $page.props.auth.user.role === 'kepala_instalasi'"
+                                  $page.props.auth.user.role === 'kepala_instalasi' ||
+                                  $page.props.auth.user.role === 'kepala_ruang' ||
+                                  $page.props.auth.user.role === 'kepala_poli'"
                             :href="route('dashboard')"
                             :class="route().current('dashboard') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"
                             class="group flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors"
@@ -389,8 +396,11 @@ const logout = () => {
                             Dashboard
                         </Link>
 
-                        <!-- Menu untuk Unit/Kepala Instalasi -->
-                        <template v-if="$page.props.auth.user.role === 'unit' || $page.props.auth.user.role === 'kepala_instalasi'">
+                        <!-- Menu untuk Unit/Kepala Instalasi/Kepala Ruang/Kepala Poli -->
+                        <template v-if="$page.props.auth.user.role === 'unit' || 
+                                        $page.props.auth.user.role === 'kepala_instalasi' ||
+                                        $page.props.auth.user.role === 'kepala_ruang' ||
+                                        $page.props.auth.user.role === 'kepala_poli'">
                             <Link
                                 :href="route('permintaan.index')"
                                 :class="route().current('permintaan.*') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'"

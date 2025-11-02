@@ -41,6 +41,8 @@ Route::middleware('auth')->group(function () {
 
 use App\Http\Controllers\PermintaanController;
 use App\Http\Controllers\KepalaInstalasiController;
+use App\Http\Controllers\KepalaRuangController;
+use App\Http\Controllers\KepalaPoliController;
 use App\Http\Controllers\KepalaBidangController;
 use App\Http\Controllers\WakilDirekturController;
 use App\Http\Controllers\DirekturController;
@@ -80,6 +82,40 @@ Route::middleware(['auth', 'verified'])->prefix('kepala-instalasi')->name('kepal
     // Routes untuk cetak dan lampiran nota dinas (sama seperti admin)
     Route::get('/permintaan/{permintaan}/cetak-nota-dinas', [KepalaInstalasiController::class, 'cetakNotaDinas'])->name('cetak-nota-dinas');
     Route::get('/nota-dinas/{notaDinas}/lampiran', [KepalaInstalasiController::class, 'lihatLampiran'])->name('lampiran');
+});
+
+// Routes untuk Kepala Ruang (IRNA - Instalasi Rawat Inap)
+Route::middleware(['auth', 'verified'])->prefix('kepala-ruang')->name('kepala-ruang.')->group(function () {
+    Route::get('/dashboard', [KepalaRuangController::class, 'dashboard'])->name('dashboard');
+    Route::get('/', [KepalaRuangController::class, 'index'])->name('index');
+    Route::get('/create', [KepalaRuangController::class, 'create'])->name('create');
+    Route::post('/', [KepalaRuangController::class, 'store'])->name('store');
+    Route::get('/permintaan/{permintaan}', [KepalaRuangController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/edit', [KepalaRuangController::class, 'edit'])->name('edit');
+    Route::put('/permintaan/{permintaan}', [KepalaRuangController::class, 'update'])->name('update');
+    Route::delete('/permintaan/{permintaan}', [KepalaRuangController::class, 'destroy'])->name('destroy');
+    Route::get('/permintaan/{permintaan}/tracking', [KepalaRuangController::class, 'tracking'])->name('tracking');
+    
+    // Routes untuk cetak dan lampiran nota dinas
+    Route::get('/permintaan/{permintaan}/cetak-nota-dinas', [KepalaRuangController::class, 'cetakNotaDinas'])->name('cetak-nota-dinas');
+    Route::get('/nota-dinas/{notaDinas}/lampiran', [KepalaRuangController::class, 'lihatLampiran'])->name('lampiran');
+});
+
+// Routes untuk Kepala Poli (IRJA - Instalasi Rawat Jalan)
+Route::middleware(['auth', 'verified'])->prefix('kepala-poli')->name('kepala-poli.')->group(function () {
+    Route::get('/dashboard', [KepalaPoliController::class, 'dashboard'])->name('dashboard');
+    Route::get('/', [KepalaPoliController::class, 'index'])->name('index');
+    Route::get('/create', [KepalaPoliController::class, 'create'])->name('create');
+    Route::post('/', [KepalaPoliController::class, 'store'])->name('store');
+    Route::get('/permintaan/{permintaan}', [KepalaPoliController::class, 'show'])->name('show');
+    Route::get('/permintaan/{permintaan}/edit', [KepalaPoliController::class, 'edit'])->name('edit');
+    Route::put('/permintaan/{permintaan}', [KepalaPoliController::class, 'update'])->name('update');
+    Route::delete('/permintaan/{permintaan}', [KepalaPoliController::class, 'destroy'])->name('destroy');
+    Route::get('/permintaan/{permintaan}/tracking', [KepalaPoliController::class, 'tracking'])->name('tracking');
+    
+    // Routes untuk cetak dan lampiran nota dinas
+    Route::get('/permintaan/{permintaan}/cetak-nota-dinas', [KepalaPoliController::class, 'cetakNotaDinas'])->name('cetak-nota-dinas');
+    Route::get('/nota-dinas/{notaDinas}/lampiran', [KepalaPoliController::class, 'lihatLampiran'])->name('lampiran');
 });
 
 // Routes untuk Kepala Bidang

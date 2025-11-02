@@ -30,6 +30,10 @@ class RedirectBasedOnRole
                 switch($user->role) {
                     case 'kepala_instalasi':
                         return redirect()->route('kepala-instalasi.dashboard');
+                    case 'kepala_ruang':
+                        return redirect()->route('kepala-ruang.dashboard');
+                    case 'kepala_poli':
+                        return redirect()->route('kepala-poli.dashboard');
                     case 'kepala_bidang':
                         return redirect()->route('kepala-bidang.dashboard');
                     case 'wakil_direktur':
@@ -52,6 +56,10 @@ class RedirectBasedOnRole
                 switch($user->role) {
                     case 'kepala_instalasi':
                         return redirect()->route('kepala-instalasi.index');
+                    case 'kepala_ruang':
+                        return redirect()->route('kepala-ruang.index');
+                    case 'kepala_poli':
+                        return redirect()->route('kepala-poli.index');
                     case 'kepala_bidang':
                         return redirect()->route('kepala-bidang.index');
                     case 'wakil_direktur':

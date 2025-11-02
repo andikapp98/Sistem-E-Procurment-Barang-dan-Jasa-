@@ -247,6 +247,136 @@ class UserSeeder extends Seeder
             ]
         );
 
+        // 6c-1. Kepala Poli Bedah
+        User::updateOrCreate(
+            ['email' => 'kepala.poli.bedah@rsud.id'],
+            [
+                'name' => 'Dr. Budi Gunawan, Sp.B',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Poli Bedah',
+                'unit_kerja' => 'Poli Bedah',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-2. Kepala Poli Gigi
+        User::updateOrCreate(
+            ['email' => 'kepala.poli.gigi@rsud.id'],
+            [
+                'name' => 'drg. Gita Puspita, Sp.KG',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Poli Gigi',
+                'unit_kerja' => 'Poli Gigi',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-3. Kepala Poli Kulit Kelamin
+        User::updateOrCreate(
+            ['email' => 'kepala.poli.kulit@rsud.id'],
+            [
+                'name' => 'Dr. Joko Santoso, Sp.KK',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Poli Kulit Kelamin',
+                'unit_kerja' => 'Poli Kulit Kelamin',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-4. Kepala Poli Penyakit Dalam
+        User::updateOrCreate(
+            ['email' => 'kepala.poli.dalam@rsud.id'],
+            [
+                'name' => 'Dr. Ahmad Santoso, Sp.PD',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Poli Penyakit Dalam',
+                'unit_kerja' => 'Poli Penyakit Dalam',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-5. Kepala Poli Jiwa
+        User::updateOrCreate(
+            ['email' => 'kepala.poli.jiwa@rsud.id'],
+            [
+                'name' => 'Dr. Dewi Sartika, Sp.KJ',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Poli Jiwa',
+                'unit_kerja' => 'Poli Jiwa',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-6. Kepala Poli Psikologi
+        User::updateOrCreate(
+            ['email' => 'kepala.poli.psikologi@rsud.id'],
+            [
+                'name' => 'Psi. Eka Putri, M.Psi',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Poli Psikologi',
+                'unit_kerja' => 'Poli Psikologi',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-7. Kepala Poli Mata
+        User::updateOrCreate(
+            ['email' => 'kepala.poli.mata@rsud.id'],
+            [
+                'name' => 'Dr. Fajar Hidayat, Sp.M',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Poli Mata',
+                'unit_kerja' => 'Poli Mata',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-8. Kepala Klinik Gizi
+        User::updateOrCreate(
+            ['email' => 'kepala.klinik.gizi@rsud.id'],
+            [
+                'name' => 'Nurhayati, S.Gz, M.Gizi',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Klinik Gizi',
+                'unit_kerja' => 'Klinik Gizi',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-9. Kepala Laboratorium
+        User::updateOrCreate(
+            ['email' => 'kepala.laboratorium@rsud.id'],
+            [
+                'name' => 'Dr. Hendra Wijaya, Sp.PK',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Laboratorium',
+                'unit_kerja' => 'Laboratorium',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // 6c-10. Kepala Apotek
+        User::updateOrCreate(
+            ['email' => 'kepala.apotek@rsud.id'],
+            [
+                'name' => 'Apt. Indah Permata, S.Farm',
+                'password' => Hash::make('password'),
+                'role' => 'kepala_poli',
+                'jabatan' => 'Kepala Apotek',
+                'unit_kerja' => 'Apotek',
+                'email_verified_at' => now(),
+            ]
+        );
+
         // 6d. Kepala Instalasi ICU/ICCU
         User::updateOrCreate(
             ['email' => 'kepala.icu@rsud.id'],
@@ -539,7 +669,63 @@ class UserSeeder extends Seeder
             ]
         );
 
-        $this->command->info('✅ 39 users berhasil dibuat!');
+        $this->command->info('✅ 49 users berhasil dibuat!');
+        $this->command->info('');
+        $this->command->info('📋 Daftar Akun:');
+        $this->command->info('═══════════════════════════════════════════════════════════════════════════════════════');
+        $this->command->info('Role                | Email                              | Password      | Unit Kerja');
+        $this->command->info('───────────────────────────────────────────────────────────────────────────────────────');
+        $this->command->info('Admin               | admin@rsud.id                      | password      | IT');
+        $this->command->info('Admin               | admin@rs.com                       | password      | IT');
+        $this->command->info('Kepala Instalasi    | kepala.igd@rsud.id                 | password      | Gawat Darurat');
+        $this->command->info('Kepala Instalasi    | kepala.farmasi@rsud.id             | password      | Farmasi');
+        $this->command->info('Kepala Instalasi    | kepala.lab@rsud.id                 | password      | Laboratorium');
+        $this->command->info('Kepala Instalasi    | kepala.radiologi@rsud.id           | password      | Radiologi');
+        $this->command->info('Kepala Instalasi    | kepala.bedah@rsud.id               | password      | Bedah Sentral');
+        $this->command->info('Kepala Instalasi    | kepala.ranap@rsud.id               | password      | Rawat Inap');
+        $this->command->info('  Kepala Ruang      | ruang.anggrek@rsud.id              | password      | Anggrek');
+        $this->command->info('  Kepala Ruang      | ruang.bougenville@rsud.id          | password      | Bougenville');
+        $this->command->info('  Kepala Ruang      | ruang.cempaka@rsud.id              | password      | Cempaka');
+        $this->command->info('  Kepala Ruang      | ruang.dahlia@rsud.id               | password      | Dahlia');
+        $this->command->info('  Kepala Ruang      | ruang.edelweiss@rsud.id            | password      | Edelweiss');
+        $this->command->info('  Kepala Ruang      | ruang.flamboyan@rsud.id            | password      | Flamboyan');
+        $this->command->info('  Kepala Ruang      | ruang.gardena@rsud.id              | password      | Gardena');
+        $this->command->info('  Kepala Ruang      | ruang.heliconia@rsud.id            | password      | Heliconia');
+        $this->command->info('  Kepala Ruang      | ruang.ixia@rsud.id                 | password      | Ixia');
+        $this->command->info('Kepala Instalasi    | kepala.rajal@rsud.id               | password      | Rawat Jalan');
+        $this->command->info('  Kepala Poli       | kepala.poli.bedah@rsud.id          | password      | Poli Bedah');
+        $this->command->info('  Kepala Poli       | kepala.poli.gigi@rsud.id           | password      | Poli Gigi');
+        $this->command->info('  Kepala Poli       | kepala.poli.kulit@rsud.id          | password      | Poli Kulit Kelamin');
+        $this->command->info('  Kepala Poli       | kepala.poli.dalam@rsud.id          | password      | Poli Penyakit Dalam');
+        $this->command->info('  Kepala Poli       | kepala.poli.jiwa@rsud.id           | password      | Poli Jiwa');
+        $this->command->info('  Kepala Poli       | kepala.poli.psikologi@rsud.id      | password      | Poli Psikologi');
+        $this->command->info('  Kepala Poli       | kepala.poli.mata@rsud.id           | password      | Poli Mata');
+        $this->command->info('  Kepala Poli       | kepala.klinik.gizi@rsud.id         | password      | Klinik Gizi');
+        $this->command->info('  Kepala Poli       | kepala.laboratorium@rsud.id        | password      | Laboratorium');
+        $this->command->info('  Kepala Poli       | kepala.apotek@rsud.id              | password      | Apotek');
+        $this->command->info('Kepala Instalasi    | kepala.icu@rsud.id                 | password      | ICU/ICCU');
+        $this->command->info('Kepala Instalasi    | kepala.rm@rsud.id                  | password      | Rekam Medis');
+        $this->command->info('Kepala Instalasi    | kepala.gizi@rsud.id                | password      | Gizi');
+        $this->command->info('Kepala Instalasi    | kepala.sanitasi@rsud.id            | password      | Sanitasi');
+        $this->command->info('Kepala Instalasi    | kepala.laundry@rsud.id             | password      | Laundry & Linen');
+        $this->command->info('Kepala Instalasi    | kepala_instalasi@rsud.id           | password123   | Instalasi');
+        $this->command->info('Staff Pengadaan     | pengadaan@rsud.id                  | password      | Bagian Pengadaan');
+        $this->command->info('Kepala Bagian       | keuangan@rsud.id                   | password      | Keuangan');
+        $this->command->info('Kepala Bidang       | kabid.yanmed@rsud.id               | password      | Bid. Pelayanan Medis');
+        $this->command->info('Kepala Bidang       | kabid.penunjang@rsud.id            | password      | Bid. Penunjang Medis');
+        $this->command->info('Kepala Bidang       | kabid.keperawatan@rsud.id          | password      | Bid. Keperawatan');
+        $this->command->info('Direktur            | direktur@rsud.id                   | password      | Direksi');
+        $this->command->info('Wakil Direktur      | wadir.umum@rsud.id                 | password      | Direksi');
+        $this->command->info('Wakil Direktur      | wadir.yanmed@rsud.id               | password      | Direksi');
+        $this->command->info('Staff IT            | it@rsud.id                         | password      | IT');
+        $this->command->info('Staff Perencanaan   | perencanaan@rsud.id                | password      | Bagian Perencanaan');
+        $this->command->info('Staff Perencanaan   | staff.perencanaan@rsud.id          | password      | Bagian Perencanaan');
+        $this->command->info('Bagian KSO          | kso@rsud.id                        | password      | Bagian KSO');
+        $this->command->info('Bagian KSO          | staff.kso@rsud.id                  | password      | Bagian KSO');
+        $this->command->info('Bagian Pengadaan    | staff.pengadaan@rsud.id            | password      | Bagian Pengadaan');
+        $this->command->info('Bagian Penerimaan   | penerimaan@rsud.id                 | password      | Bagian Penerimaan');
+        $this->command->info('Bagian Penerimaan   | serah.terima@rsud.id               | password      | Bagian Penerimaan');
+        $this->command->info('═══════════════════════════════════════════════════════════════════════════════════════');
         $this->command->info('');
         $this->command->info('📋 Daftar Akun:');
         $this->command->info('═══════════════════════════════════════════════════════════════════════════════════════');

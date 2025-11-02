@@ -392,7 +392,7 @@
 						<!-- Actions -->
 						<div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
 							<Link 
-								:href="route('permintaan.index')" 
+								:href="route('kepala-poli.index')" 
 								class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
 							>
 								Batal
@@ -507,7 +507,7 @@ const submit = () => {
 	form.transform((data) => ({
 		...data,
 		_token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-	})).post(route("permintaan.store"), {
+	})).post(route("kepala-poli.store"), {
 		preserveScroll: true,
 		onError: (errors) => {
 			console.error('Form errors:', errors);
