@@ -504,10 +504,7 @@ const getRoutingInfo = () => {
 };
 
 const submit = () => {
-	form.transform((data) => ({
-		...data,
-		_token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-	})).post(route("kepala-poli.store"), {
+	form.post(route("kepala-poli.store"), {
 		preserveScroll: true,
 		onError: (errors) => {
 			console.error('Form errors:', errors);

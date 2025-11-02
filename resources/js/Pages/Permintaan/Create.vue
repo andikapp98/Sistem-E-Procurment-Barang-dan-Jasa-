@@ -114,8 +114,10 @@
 									type="date" 
 									v-model="form.tanggal_permintaan" 
 									class="mt-1 block w-full" 
+									:min="minDate"
 									required
 								/>
+								<p class="mt-1 text-xs text-gray-500">Tanggal tidak boleh kurang dari hari ini</p>
 								<InputError :message="form.errors.tanggal_permintaan" class="mt-2" />
 							</div>
 
@@ -424,11 +426,17 @@ import { watch, onMounted, computed } from "vue";
 const page = usePage();
 const userRole = computed(() => page.props.auth.user.role);
 
+// Minimum date is today
+const minDate = computed(() => {
+	const today = new Date();
+	return today.toISOString().split('T')[0];
+});
+
 const form = useForm({
 	bidang: "",
 	klasifikasi_permintaan: "",
 	deskripsi: "",
-	tanggal_permintaan: "",
+	tanggal_permintaan: new Date().toISOString().split('T')[0], // Default to today
 	pic_pimpinan: "",
 	no_nota_dinas: "",
 	link_scan: "",
@@ -440,7 +448,7 @@ const form = useForm({
 	// Nota Dinas fields
 	nota_kepada: "",
 	nota_dari: "",
-	nota_tanggal_nota: "",
+	nota_tanggal_nota: new Date().toISOString().split('T')[0], // Default to today
 	nota_no_nota: "",
 	nota_sifat: "",
 	nota_lampiran: "",

@@ -225,10 +225,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.transform((data) => ({
-        ...data,
-        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-    })).put(route("kepala-poli.update", permintaan.permintaan_id), {
+    form.put(route("kepala-poli.update", permintaan.permintaan_id), {
         preserveScroll: true,
         onSuccess: () => {
             // Redirect to show page after success

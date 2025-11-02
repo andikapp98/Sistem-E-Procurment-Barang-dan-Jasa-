@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     permintaan: Object,
@@ -15,6 +16,12 @@ const form = useForm({
     isi_kerjasama: props.kso.isi_kerjasama,
     nilai_kontrak: props.kso.nilai_kontrak || '',
     status: props.kso.status,
+});
+
+// Minimum date is today
+const minDate = computed(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
 });
 
 const submit = () => {
@@ -98,15 +105,17 @@ const formatCurrency = (event) => {
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         Tanggal KSO <span class="text-red-500">*</span>
                                     </label>
-                                    <input 
+                                    <input
                                         v-model="form.tanggal_kso"
                                         type="date"
                                         required
+                                        :min="minDate"
                                         class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                     />
                                     <p v-if="form.errors.tanggal_kso" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.tanggal_kso }}
                                     </p>
+                                    <p class="mt-1 text-xs text-gray-500">Tanggal tidak boleh kurang dari hari ini</p>
                                 </div>
 
                                 <!-- Pihak Pertama -->

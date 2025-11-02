@@ -110,7 +110,9 @@
                                 type="date"
                                 v-model="form.tanggal_permintaan"
                                 class="mt-1 block w-full"
+                                :min="minDate"
                             />
+                            <p class="mt-1 text-xs text-gray-500">Tanggal tidak boleh kurang dari hari ini</p>
                             <InputError :message="form.errors.tanggal_permintaan" class="mt-2" />
                         </div>
 
@@ -203,12 +205,19 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import InputError from "@/Components/InputError.vue";
 import TextInput from "@/Components/TextInput.vue";
 import { Link, useForm } from "@inertiajs/vue3";
+import { computed } from "vue";
 
 const props = defineProps({
     permintaan: Object,
 });
 
 const permintaan = props.permintaan || {};
+
+// Minimum date is today
+const minDate = computed(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+});
 
 const form = useForm({
     bidang: permintaan.bidang || "",
