@@ -5,8 +5,17 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import { router } from '@inertiajs/vue3';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+// Add global Inertia error handler for 419 CSRF errors
+router.on('error', (event) => {
+    if (event.detail.errors && event.detail.errors.status === 419) {
+        console.warn('CSRF token mismatch detected (419), refreshing page...');
+        window.location.reload();
+    }
+});
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

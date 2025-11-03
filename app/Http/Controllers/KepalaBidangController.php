@@ -54,20 +54,32 @@ class KepalaBidangController extends Controller
         // Dapatkan klasifikasi yang sesuai dengan unit kerja Kabid
         $klasifikasiArray = $this->getKlasifikasiByUnitKerja($user->unit_kerja);
         
-        // Ambil HANYA permintaan yang BELUM di-approve Kabid (masih menunggu action)
-        // Cek: belum ada disposisi dari Kabid ke Direktur
+        // Ambil permintaan yang butuh action dari Kabid:
+        // 1. Permintaan baru dari Kepala Instalasi (pic_pimpinan = Kepala Bidang)
+        // 2. Disposisi balik dari Direktur (cek disposisi dengan jabatan_tujuan sesuai unit kerja)
         $permintaans = Permintaan::with(['user', 'notaDinas.disposisi'])
-            ->where(function($q) use ($user, $klasifikasiArray) {
-                // Filter berdasarkan klasifikasi_permintaan
-                if ($klasifikasiArray) {
-                    $q->whereIn('klasifikasi_permintaan', $klasifikasiArray);
-                }
-                // Dan kabid_tujuan sesuai unit kerja
-                $q->orWhere('kabid_tujuan', 'LIKE', '%' . $user->unit_kerja . '%');
-            })
-            // HANYA yang statusnya masih proses/diajukan DAN pic_pimpinan = Kepala Bidang
             ->where('status', 'proses')
-            ->where('pic_pimpinan', 'LIKE', '%Kepala Bidang%')
+            ->where(function($q) use ($user, $klasifikasiArray) {
+                // Kondisi 1: Permintaan baru dari Kepala Instalasi
+                // - pic_pimpinan = Kepala Bidang
+                // - klasifikasi sesuai dengan unit kerja Kabid
+                $q->where(function($subQ) use ($user, $klasifikasiArray) {
+                    $subQ->where('pic_pimpinan', 'LIKE', '%Kepala Bidang%');
+                    if ($klasifikasiArray) {
+                        $subQ->whereIn('klasifikasi_permintaan', $klasifikasiArray);
+                    }
+                })
+                // Kondisi 2: Disposisi balik dari Direktur
+                // - Ada disposisi dengan jabatan_tujuan = unit kerja Kabid
+                // - Catatan mengandung "Disetujui oleh Direktur"
+                ->orWhere(function($subQ) use ($user) {
+                    $subQ->where('kabid_tujuan', 'LIKE', '%' . $user->unit_kerja . '%')
+                         ->whereHas('notaDinas.disposisi', function($dispQ) use ($user) {
+                             $dispQ->where('jabatan_tujuan', 'LIKE', '%' . $user->unit_kerja . '%')
+                                   ->where('catatan', 'LIKE', '%Disetujui oleh Direktur%');
+                         });
+                });
+            })
             ->get();
 
         $stats = [
@@ -116,19 +128,32 @@ class KepalaBidangController extends Controller
         // Dapatkan klasifikasi yang sesuai dengan unit kerja Kabid
         $klasifikasiArray = $this->getKlasifikasiByUnitKerja($user->unit_kerja);
         
-        // Query dasar - HANYA permintaan yang BELUM di-approve Kabid
+        // Query dasar - permintaan yang butuh action dari Kabid:
+        // 1. Permintaan baru dari Kepala Instalasi (pic_pimpinan = Kepala Bidang)
+        // 2. Disposisi balik dari Direktur (cek disposisi dengan jabatan_tujuan sesuai unit kerja)
         $query = Permintaan::with(['user', 'notaDinas.disposisi'])
-            ->where(function($q) use ($user, $klasifikasiArray) {
-                // Filter berdasarkan klasifikasi_permintaan
-                if ($klasifikasiArray) {
-                    $q->whereIn('klasifikasi_permintaan', $klasifikasiArray);
-                }
-                // Dan kabid_tujuan sesuai unit kerja
-                $q->orWhere('kabid_tujuan', 'LIKE', '%' . $user->unit_kerja . '%');
-            })
-            // HANYA yang masih proses DAN pic_pimpinan = Kepala Bidang
             ->where('status', 'proses')
-            ->where('pic_pimpinan', 'LIKE', '%Kepala Bidang%');
+            ->where(function($q) use ($user, $klasifikasiArray) {
+                // Kondisi 1: Permintaan baru dari Kepala Instalasi
+                // - pic_pimpinan = Kepala Bidang
+                // - klasifikasi sesuai dengan unit kerja Kabid
+                $q->where(function($subQ) use ($user, $klasifikasiArray) {
+                    $subQ->where('pic_pimpinan', 'LIKE', '%Kepala Bidang%');
+                    if ($klasifikasiArray) {
+                        $subQ->whereIn('klasifikasi_permintaan', $klasifikasiArray);
+                    }
+                })
+                // Kondisi 2: Disposisi balik dari Direktur
+                // - Ada disposisi dengan jabatan_tujuan = unit kerja Kabid
+                // - Catatan mengandung "Disetujui oleh Direktur"
+                ->orWhere(function($subQ) use ($user) {
+                    $subQ->where('kabid_tujuan', 'LIKE', '%' . $user->unit_kerja . '%')
+                         ->whereHas('notaDinas.disposisi', function($dispQ) use ($user) {
+                             $dispQ->where('jabatan_tujuan', 'LIKE', '%' . $user->unit_kerja . '%')
+                                   ->where('catatan', 'LIKE', '%Disetujui oleh Direktur%');
+                         });
+                });
+            });
 
         // Apply filters
         if ($request->filled('search')) {
@@ -224,10 +249,14 @@ class KepalaBidangController extends Controller
         if ($notaDinas) {
             // Gunakan logic yang sama dengan approve method
             $isDisposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
-                ->where('jabatan_tujuan', 'Kepala Bidang')
-                ->where(function($q) {
+                ->where(function($q) use ($user) {
+                    // Cek berdasarkan catatan "Disetujui oleh Direktur"
                     $q->where('catatan', 'like', '%Disetujui oleh Direktur%')
-                      ->orWhere('status', 'selesai');
+                      // ATAU jabatan_tujuan mengandung unit kerja Kabid ini
+                      ->orWhere(function($subQ) use ($user) {
+                          $subQ->where('jabatan_tujuan', 'LIKE', '%' . $user->unit_kerja . '%')
+                               ->where('catatan', 'LIKE', '%Disetujui oleh Direktur%');
+                      });
                 })
                 ->exists();
         }
@@ -321,10 +350,14 @@ class KepalaBidangController extends Controller
         // Cek apakah ini disposisi balik dari Direktur atau permintaan baru dari Kepala Instalasi
         // Cek apakah ada disposisi dengan catatan dari Direktur (approval)
         $disposisiDariDirektur = Disposisi::where('nota_id', $notaDinas->nota_id)
-            ->where('jabatan_tujuan', 'Kepala Bidang')
-            ->where(function($q) {
+            ->where(function($q) use ($user) {
+                // Cek berdasarkan catatan "Disetujui oleh Direktur"
                 $q->where('catatan', 'like', '%Disetujui oleh Direktur%')
-                  ->orWhere('status', 'selesai');
+                  // ATAU jabatan_tujuan mengandung unit kerja Kabid ini
+                  ->orWhere(function($subQ) use ($user) {
+                      $subQ->where('jabatan_tujuan', 'LIKE', '%' . $user->unit_kerja . '%')
+                           ->where('catatan', 'LIKE', '%Disetujui oleh Direktur%');
+                  });
             })
             ->exists();
 

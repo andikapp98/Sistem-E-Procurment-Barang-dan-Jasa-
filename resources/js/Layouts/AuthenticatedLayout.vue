@@ -10,20 +10,44 @@ const showingNavigationDropdown = ref(false);
 const sidebarOpen = ref(true);
 
 const logout = () => {
+    // Get CSRF token from meta tag
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    if (!token) {
+        console.warn('CSRF token not found, reloading page...');
+        window.location.reload();
+        return;
+    }
+    
     // Use router.post with proper CSRF handling
     router.post(route('logout'), {}, {
         preserveState: false,
         preserveScroll: false,
+        headers: {
+            'X-CSRF-TOKEN': token
+        },
         onBefore: () => {
             // Ensure CSRF token is fresh
             return true;
         },
         onSuccess: () => {
+            // Clear any cached data
+            if (window.sessionStorage) {
+                window.sessionStorage.clear();
+            }
             // Redirect to login page
             window.location.href = '/login';
         },
         onError: (errors) => {
             console.error('Logout error:', errors);
+            // Check if it's a CSRF token mismatch (419)
+            if (errors && errors.status === 419) {
+                console.warn('CSRF token mismatch, forcing logout by clearing session...');
+                // Clear session and redirect
+                if (window.sessionStorage) {
+                    window.sessionStorage.clear();
+                }
+            }
             // Even if error, still redirect to login
             window.location.href = '/login';
         }
