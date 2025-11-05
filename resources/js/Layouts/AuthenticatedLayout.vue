@@ -10,48 +10,27 @@ const showingNavigationDropdown = ref(false);
 const sidebarOpen = ref(true);
 
 const logout = () => {
-    // Get CSRF token from meta tag
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    // Use native form submission instead of Inertia to avoid CSRF issues
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = route('logout');
     
-    if (!token) {
-        console.warn('CSRF token not found, reloading page...');
-        window.location.reload();
-        return;
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
     }
     
-    // Use router.post with proper CSRF handling
-    router.post(route('logout'), {}, {
-        preserveState: false,
-        preserveScroll: false,
-        headers: {
-            'X-CSRF-TOKEN': token
-        },
-        onBefore: () => {
-            // Ensure CSRF token is fresh
-            return true;
-        },
-        onSuccess: () => {
-            // Clear any cached data
-            if (window.sessionStorage) {
-                window.sessionStorage.clear();
-            }
-            // Redirect to login page
-            window.location.href = '/login';
-        },
-        onError: (errors) => {
-            console.error('Logout error:', errors);
-            // Check if it's a CSRF token mismatch (419)
-            if (errors && errors.status === 419) {
-                console.warn('CSRF token mismatch, forcing logout by clearing session...');
-                // Clear session and redirect
-                if (window.sessionStorage) {
-                    window.sessionStorage.clear();
-                }
-            }
-            // Even if error, still redirect to login
-            window.location.href = '/login';
-        }
-    });
+    // Add method spoofing for DELETE (if needed)
+    // Laravel logout typically uses POST, but just in case
+    
+    // Append form to body and submit
+    document.body.appendChild(form);
+    form.submit();
 };
 </script>
 

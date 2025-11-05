@@ -523,6 +523,223 @@
                     </div>
                 </div>
 
+                <!-- History / Data Perencanaan yang Sudah Diinput -->
+                <div v-if="perencanaan || disposisi || notaDinas || hps || spesifikasiTeknis" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            History Data Perencanaan
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Data dokumen yang sudah diinput untuk permintaan ini</p>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <!-- Nota Dinas Data -->
+                        <div v-if="notaDinas" class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg">
+                            <h4 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"></path>
+                                </svg>
+                                📄 Nota Dinas
+                            </h4>
+                            <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                                <div>
+                                    <dt class="font-medium text-gray-700">No. Nota:</dt>
+                                    <dd class="text-gray-900">{{ notaDinas.no_nota }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-medium text-gray-700">Tanggal:</dt>
+                                    <dd class="text-gray-900">{{ formatDate(notaDinas.tanggal_nota) }}</dd>
+                                </div>
+                                <div class="col-span-2">
+                                    <dt class="font-medium text-gray-700">Perihal:</dt>
+                                    <dd class="text-gray-900">{{ notaDinas.perihal }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-medium text-gray-700">Dari:</dt>
+                                    <dd class="text-gray-900">{{ notaDinas.dari }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-medium text-gray-700">Kepada:</dt>
+                                    <dd class="text-gray-900">{{ notaDinas.kepada }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Disposisi Data -->
+                        <div v-if="disposisi" class="border-l-4 border-purple-500 bg-purple-50 p-4 rounded-r-lg">
+                            <h4 class="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
+                                </svg>
+                                📋 Disposisi
+                            </h4>
+                            <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                                <div>
+                                    <dt class="font-medium text-gray-700">Tanggal Disposisi:</dt>
+                                    <dd class="text-gray-900">{{ formatDate(disposisi.tanggal_disposisi) }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-medium text-gray-700">Status:</dt>
+                                    <dd class="text-gray-900">
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            {{ disposisi.status_disposisi }}
+                                        </span>
+                                    </dd>
+                                </div>
+                                <div class="col-span-2" v-if="disposisi.catatan">
+                                    <dt class="font-medium text-gray-700">Catatan:</dt>
+                                    <dd class="text-gray-900 mt-1">{{ disposisi.catatan }}</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Perencanaan (DPP) Data -->
+                        <div v-if="perencanaan" class="border-l-4 border-orange-500 bg-orange-50 p-4 rounded-r-lg">
+                            <h4 class="font-semibold text-orange-900 mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                                </svg>
+                                📦 Data Perencanaan (DPP)
+                            </h4>
+                            <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                                <div class="col-span-2" v-if="perencanaan.nama_paket">
+                                    <dt class="font-medium text-gray-700">Nama Paket:</dt>
+                                    <dd class="text-gray-900 font-semibold">{{ perencanaan.nama_paket }}</dd>
+                                </div>
+                                <div v-if="perencanaan.ppk_ditunjuk">
+                                    <dt class="font-medium text-gray-700">PPK Ditunjuk:</dt>
+                                    <dd class="text-gray-900">{{ perencanaan.ppk_ditunjuk }}</dd>
+                                </div>
+                                <div v-if="perencanaan.metode_pengadaan">
+                                    <dt class="font-medium text-gray-700">Metode Pengadaan:</dt>
+                                    <dd class="text-gray-900">{{ perencanaan.metode_pengadaan }}</dd>
+                                </div>
+                                <div v-if="perencanaan.pagu_paket">
+                                    <dt class="font-medium text-gray-700">Pagu Paket:</dt>
+                                    <dd class="text-gray-900 font-semibold">Rp {{ Number(perencanaan.pagu_paket).toLocaleString('id-ID') }}</dd>
+                                </div>
+                                <div v-if="perencanaan.nilai_hps">
+                                    <dt class="font-medium text-gray-700">Nilai HPS:</dt>
+                                    <dd class="text-gray-900 font-semibold">Rp {{ Number(perencanaan.nilai_hps).toLocaleString('id-ID') }}</dd>
+                                </div>
+                                <div v-if="perencanaan.sumber_dana">
+                                    <dt class="font-medium text-gray-700">Sumber Dana:</dt>
+                                    <dd class="text-gray-900">{{ perencanaan.sumber_dana }}</dd>
+                                </div>
+                                <div v-if="perencanaan.kode_rekening">
+                                    <dt class="font-medium text-gray-700">Kode Rekening:</dt>
+                                    <dd class="text-gray-900">{{ perencanaan.kode_rekening }}</dd>
+                                </div>
+                                <div v-if="perencanaan.lokasi" class="col-span-2">
+                                    <dt class="font-medium text-gray-700">Lokasi:</dt>
+                                    <dd class="text-gray-900">{{ perencanaan.lokasi }}</dd>
+                                </div>
+                                <div v-if="perencanaan.jangka_waktu_pelaksanaan">
+                                    <dt class="font-medium text-gray-700">Jangka Waktu:</dt>
+                                    <dd class="text-gray-900">{{ perencanaan.jangka_waktu_pelaksanaan }}</dd>
+                                </div>
+                                <div v-if="perencanaan.jenis_kontrak">
+                                    <dt class="font-medium text-gray-700">Jenis Kontrak:</dt>
+                                    <dd class="text-gray-900">{{ perencanaan.jenis_kontrak }}</dd>
+                                </div>
+                                <div v-if="perencanaan.tanggal_mulai || perencanaan.tanggal_selesai" class="col-span-2">
+                                    <dt class="font-medium text-gray-700">Periode Pelaksanaan:</dt>
+                                    <dd class="text-gray-900">
+                                        <span v-if="perencanaan.tanggal_mulai">{{ formatDate(perencanaan.tanggal_mulai) }}</span>
+                                        <span v-if="perencanaan.tanggal_mulai && perencanaan.tanggal_selesai"> s/d </span>
+                                        <span v-if="perencanaan.tanggal_selesai">{{ formatDate(perencanaan.tanggal_selesai) }}</span>
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- HPS Data -->
+                        <div v-if="hps" class="border-l-4 border-green-500 bg-green-50 p-4 rounded-r-lg">
+                            <h4 class="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                                </svg>
+                                💰 HPS (Harga Perkiraan Satuan)
+                            </h4>
+                            <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                                <div v-if="hps.metode_pengadaan">
+                                    <dt class="font-medium text-gray-700">Metode Pengadaan:</dt>
+                                    <dd class="text-gray-900">{{ hps.metode_pengadaan }}</dd>
+                                </div>
+                                <div v-if="hps.total_hps">
+                                    <dt class="font-medium text-gray-700">Total HPS:</dt>
+                                    <dd class="text-gray-900 font-bold text-lg">Rp {{ Number(hps.total_hps).toLocaleString('id-ID') }}</dd>
+                                </div>
+                                <div v-if="hps.items && hps.items.length > 0" class="col-span-2">
+                                    <dt class="font-medium text-gray-700 mb-2">Detail Item:</dt>
+                                    <dd>
+                                        <div class="space-y-2">
+                                            <div v-for="item in hps.items" :key="item.item_id" 
+                                                class="bg-white p-3 rounded border border-green-200">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <p class="font-medium text-gray-900">{{ item.nama_item }}</p>
+                                                        <p class="text-xs text-gray-600">
+                                                            {{ item.kuantitas }} {{ item.satuan }} × Rp {{ Number(item.harga_satuan).toLocaleString('id-ID') }}
+                                                        </p>
+                                                    </div>
+                                                    <p class="font-semibold text-green-700">
+                                                        Rp {{ Number(item.total_harga).toLocaleString('id-ID') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Spesifikasi Teknis Data -->
+                        <div v-if="spesifikasiTeknis" class="border-l-4 border-cyan-500 bg-cyan-50 p-4 rounded-r-lg">
+                            <h4 class="font-semibold text-cyan-900 mb-3 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"></path>
+                                </svg>
+                                ⚙️ Spesifikasi Teknis
+                            </h4>
+                            <dl class="grid grid-cols-1 gap-y-3 text-sm">
+                                <div v-if="spesifikasiTeknis.nama_barang">
+                                    <dt class="font-medium text-gray-700">Nama Barang/Jasa:</dt>
+                                    <dd class="text-gray-900 font-semibold">{{ spesifikasiTeknis.nama_barang }}</dd>
+                                </div>
+                                <div v-if="spesifikasiTeknis.spesifikasi">
+                                    <dt class="font-medium text-gray-700">Spesifikasi:</dt>
+                                    <dd class="text-gray-900 whitespace-pre-line mt-1">{{ spesifikasiTeknis.spesifikasi }}</dd>
+                                </div>
+                                <div v-if="spesifikasiTeknis.kuantitas || spesifikasiTeknis.satuan" class="grid grid-cols-2 gap-4">
+                                    <div v-if="spesifikasiTeknis.kuantitas">
+                                        <dt class="font-medium text-gray-700">Kuantitas:</dt>
+                                        <dd class="text-gray-900">{{ spesifikasiTeknis.kuantitas }}</dd>
+                                    </div>
+                                    <div v-if="spesifikasiTeknis.satuan">
+                                        <dt class="font-medium text-gray-700">Satuan:</dt>
+                                        <dd class="text-gray-900">{{ spesifikasiTeknis.satuan }}</dd>
+                                    </div>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-if="!perencanaan && !disposisi && !notaDinas && !hps && !spesifikasiTeknis" 
+                            class="text-center py-8 text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="mt-2">Belum ada data perencanaan yang diinput</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Riwayat Nota Dinas & Disposisi -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 border-b border-gray-200">
@@ -679,6 +896,13 @@ const props = defineProps({
     hasDisposisi: Boolean,
     hasNotaDinasPembelian: Boolean,
     hasSpesifikasiTeknis: Boolean,
+    // Actual document data
+    notaDinas: Object,
+    disposisi: Object,
+    perencanaan: Object,
+    hps: Object,
+    notaDinasPembelian: Object,
+    spesifikasiTeknis: Object,
 });
 
 const showForwardModal = ref(false);

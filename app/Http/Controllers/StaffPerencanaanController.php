@@ -137,7 +137,7 @@ class StaffPerencanaanController extends Controller
         $user = Auth::user();
         
         
-        $permintaan->load(['user', 'notaDinas.disposisi', 'hps.items']);
+        $permintaan->load(['user', 'notaDinas.disposisi', 'hps.items', 'spesifikasiTeknis']);
         
         // Get timeline tracking
         $timeline = $permintaan->getTimelineTracking();
@@ -146,26 +146,41 @@ class StaffPerencanaanController extends Controller
         // Cek apakah dokumen sudah ada
         $hasNotaDinas = $permintaan->notaDinas()->exists();
         
-        // Cek DPP via Perencanaan
-        $hasDPP = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+        // Get Nota Dinas data
+        $notaDinas = $permintaan->notaDinas()->first();
+        
+        // Get Disposisi data
+        $disposisi = Disposisi::whereHas('notaDinas', function($query) use ($permintaan) {
             $query->where('permintaan_id', $permintaan->permintaan_id);
-        })->exists();
+        })->first();
+        
+        // Cek Disposisi
+        $hasDisposisi = $disposisi !== null;
+        
+        // Get Perencanaan data (includes DPP fields)
+        $perencanaan = null;
+        $hasDPP = false;
+        if ($disposisi) {
+            $perencanaan = Perencanaan::where('disposisi_id', $disposisi->disposisi_id)->first();
+            $hasDPP = $perencanaan !== null;
+        }
         
         // Cek HPS
         $hasHPS = $permintaan->hps()->exists();
-        
-        // Cek Disposisi
-        $hasDisposisi = Disposisi::whereHas('notaDinas', function($query) use ($permintaan) {
-            $query->where('permintaan_id', $permintaan->permintaan_id);
-        })->exists();
+        $hps = $permintaan->hps;
         
         // Cek Nota Dinas Pembelian - untuk sementara cek dari tipe_nota jika ada di nota_dinas
         $hasNotaDinasPembelian = NotaDinas::where('permintaan_id', $permintaan->permintaan_id)
             ->where('tipe_nota', 'pembelian')
             ->exists();
         
+        $notaDinasPembelian = NotaDinas::where('permintaan_id', $permintaan->permintaan_id)
+            ->where('tipe_nota', 'pembelian')
+            ->first();
+        
         // Cek Spesifikasi Teknis
         $hasSpesifikasiTeknis = $permintaan->spesifikasiTeknis()->exists();
+        $spesifikasiTeknis = $permintaan->spesifikasiTeknis;
         
         return Inertia::render('StaffPerencanaan/Show', [
             'permintaan' => $permintaan,
@@ -173,12 +188,22 @@ class StaffPerencanaanController extends Controller
             'timeline' => $timeline,
             'progress' => $progress,
             'userLogin' => $user,
+            
+            // Document existence flags
             'hasNotaDinas' => $hasNotaDinas,
             'hasDPP' => $hasDPP,
             'hasHPS' => $hasHPS,
             'hasDisposisi' => $hasDisposisi,
             'hasNotaDinasPembelian' => $hasNotaDinasPembelian,
             'hasSpesifikasiTeknis' => $hasSpesifikasiTeknis,
+            
+            // Actual document data for history display
+            'notaDinas' => $notaDinas,
+            'disposisi' => $disposisi,
+            'perencanaan' => $perencanaan,
+            'hps' => $hps,
+            'notaDinasPembelian' => $notaDinasPembelian,
+            'spesifikasiTeknis' => $spesifikasiTeknis,
         ]);
     }
 
