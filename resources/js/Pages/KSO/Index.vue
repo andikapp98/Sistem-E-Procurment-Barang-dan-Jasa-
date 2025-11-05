@@ -198,13 +198,21 @@ const formatDate = (date) => {
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                             <Link :href="route('kso.show', { permintaan: permintaan.permintaan_id })" 
-                                                  class="text-blue-600 hover:text-blue-900">
+                                                  class="inline-flex items-center text-blue-600 hover:text-blue-900">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
                                                 Detail
                                             </Link>
+                                            
                                             <Link v-if="!permintaan.has_kso" 
                                                   :href="route('kso.create', { permintaan: permintaan.permintaan_id })" 
-                                                  class="text-green-600 hover:text-green-900">
-                                                Buat KSO
+                                                  class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs font-medium">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                </svg>
+                                                Upload Dokumen KSO
                                             </Link>
                                         </td>
                                     </tr>

@@ -989,7 +989,7 @@ class StaffPerencanaanController extends Controller
     public function approved(Request $request)
     {
         $user = Auth::user();
-        
+
         // Query - ambil semua permintaan yang sudah pernah melalui Staff Perencanaan
         $query = Permintaan::with(['user', 'notaDinas.disposisi'])
             ->whereHas('notaDinas.disposisi', function($q) use ($user) {
@@ -998,6 +998,17 @@ class StaffPerencanaanController extends Controller
                   ->orWhere('jabatan_tujuan', $user->jabatan);
             })
             ->whereIn('status', ['proses', 'disetujui', 'ditolak', 'revisi', 'selesai']);
+
+        // Calculate statistics
+        $allPermintaans = clone $query;
+        $stats = [
+            'total' => $allPermintaans->count(),
+            'forwarded' => $allPermintaans->where('pic_pimpinan', '!=', 'Staff Perencanaan')
+                ->where('pic_pimpinan', '!=', $user->nama)
+                ->count(),
+            'processing' => $allPermintaans->where('status', 'proses')->count(),
+            'completed' => $allPermintaans->where('status', 'selesai')->count(),
+        ];
 
         // Apply filters
         if ($request->filled('search')) {
@@ -1034,16 +1045,17 @@ class StaffPerencanaanController extends Controller
                 $permintaan->tracking_status = $permintaan->trackingStatus;
                 $permintaan->progress = $permintaan->getProgressPercentage();
                 $permintaan->timeline_count = count($permintaan->getTimelineTracking());
-                
+
                 // Cek tahap terakhir
                 $timeline = $permintaan->getTimelineTracking();
-                $permintaan->current_stage = !empty($timeline) ? $timeline[count($timeline) - 1]['tahapan'] : 'Permintaan';
-                
+                $permintaan->last_stage = !empty($timeline) ? $timeline[count($timeline) - 1]['tahapan'] : 'Permintaan';
+
                 return $permintaan;
             });
 
         return Inertia::render('StaffPerencanaan/Approved', [
             'permintaans' => $permintaans,
+            'stats' => $stats,
             'userLogin' => $user,
             'filters' => $request->only(['search', 'bidang', 'status', 'tanggal_dari', 'tanggal_sampai', 'per_page']),
         ]);

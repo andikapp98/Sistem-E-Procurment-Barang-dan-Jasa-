@@ -217,21 +217,25 @@ class KsoController extends Controller
         // Get perencanaan
         $perencanaan = $this->getPerencanaanFromPermintaan($permintaan);
         
-        if (!$perencanaan) {
-            return redirect()->route('kso.index')
-                ->withErrors(['error' => 'Permintaan ini belum memiliki perencanaan.']);
-        }
+        // Jika belum ada perencanaan, tetap tampilkan form tapi beri warning
+        // if (!$perencanaan) {
+        //     return redirect()->route('kso.index')
+        //         ->withErrors(['error' => 'Permintaan ini belum memiliki perencanaan.']);
+        // }
         
         // Cek apakah sudah ada KSO
-        $existingKso = $perencanaan->kso()->first();
-        if ($existingKso) {
-            return redirect()->route('kso.edit', ['permintaan' => $permintaan->permintaan_id, 'kso' => $existingKso->kso_id])
-                ->with('info', 'KSO sudah ada, Anda dapat mengeditnya.');
+        if ($perencanaan) {
+            $existingKso = $perencanaan->kso()->first();
+            if ($existingKso) {
+                return redirect()->route('kso.edit', ['permintaan' => $permintaan->permintaan_id, 'kso' => $existingKso->kso_id])
+                    ->with('info', 'KSO sudah ada, Anda dapat mengeditnya.');
+            }
         }
         
         return Inertia::render('KSO/Create', [
             'permintaan' => $permintaan,
             'perencanaan' => $perencanaan,
+            'hasPerencanaan' => $perencanaan !== null,
         ]);
     }
 
@@ -252,6 +256,8 @@ class KsoController extends Controller
             'tanggal_kso' => 'required|date',
             'pihak_pertama' => 'required|string',
             'pihak_kedua' => 'required|string',
+            'isi_kerjasama' => 'required|string',
+            'nilai_kontrak' => 'required|numeric|min:0',
             'file_pks' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
             'file_mou' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
             'keterangan' => 'nullable|string',
@@ -261,7 +267,9 @@ class KsoController extends Controller
         $perencanaan = $this->getPerencanaanFromPermintaan($permintaan);
         
         if (!$perencanaan) {
-            return redirect()->route('kso.index')->withErrors(['error' => 'Perencanaan tidak ditemukan.']);
+            return redirect()->back()->withErrors([
+                'error' => 'Permintaan ini belum memiliki perencanaan (DPP). Pastikan dokumen perencanaan sudah dibuat oleh Staff Perencanaan terlebih dahulu.'
+            ]);
         }
 
         // Handle file uploads
@@ -287,10 +295,43 @@ class KsoController extends Controller
 
         $kso = Kso::create($data);
 
+        // Log activity
+        \App\Models\UserActivityLog::create([
+            'user_id' => $user->id,
+            'role' => $user->role ?? 'kso',
+            'action' => 'create',
+            'module' => 'kso',
+            'description' => "Membuat dokumen KSO #{$kso->no_kso} untuk permintaan #{$permintaan->permintaan_id} dengan pihak kedua: {$data['pihak_kedua']}",
+            'related_type' => 'Kso',
+            'related_id' => $kso->kso_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
         // Otomatis forward ke Bagian Pengadaan setelah upload dokumen
         $permintaan->update([
             'pic_pimpinan' => 'Bagian Pengadaan',
             'status' => 'proses',
+            'deskripsi' => $permintaan->deskripsi . "\n\n[DOKUMEN KSO LENGKAP - DIKIRIM KE PENGADAAN]\n" .
+                          "Tanggal: " . Carbon::now()->format('d/m/Y H:i') . "\n" .
+                          "No. KSO: {$data['no_kso']}\n" .
+                          "Pihak Kedua: {$data['pihak_kedua']}\n" .
+                          "Nilai Kontrak: Rp " . number_format($data['nilai_kontrak'], 0, ',', '.') . "\n" .
+                          "File PKS & MoU telah diupload\n" .
+                          "Workflow: Staff Perencanaan → Bagian KSO → Bagian Pengadaan",
+        ]);
+
+        // Log forward activity
+        \App\Models\UserActivityLog::create([
+            'user_id' => $user->id,
+            'role' => $user->role ?? 'kso',
+            'action' => 'forward',
+            'module' => 'permintaan',
+            'description' => "Mengirim permintaan #{$permintaan->permintaan_id} ke Bagian Pengadaan setelah dokumen KSO lengkap",
+            'related_type' => 'Permintaan',
+            'related_id' => $permintaan->permintaan_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
 
         return redirect()
@@ -343,10 +384,24 @@ class KsoController extends Controller
             'pihak_pertama' => 'required|string',
             'pihak_kedua' => 'required|string',
             'isi_kerjasama' => 'required|string',
+            'nilai_kontrak' => 'required|numeric|min:0',
             'status' => 'nullable|in:draft,aktif,selesai,batal',
         ]);
 
         $kso->update($data);
+
+        // Log activity
+        \App\Models\UserActivityLog::create([
+            'user_id' => $user->id,
+            'role' => $user->role ?? 'kso',
+            'action' => 'update',
+            'module' => 'kso',
+            'description' => "Mengupdate dokumen KSO #{$kso->no_kso} untuk permintaan #{$permintaan->permintaan_id}",
+            'related_type' => 'Kso',
+            'related_id' => $kso->kso_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         // Jika status berubah jadi aktif atau selesai, forward ke Pengadaan
         if (in_array($data['status'], ['aktif', 'selesai']) && $permintaan->pic_pimpinan === 'Bagian KSO') {

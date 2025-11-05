@@ -1,4 +1,3 @@
-b
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
@@ -7,6 +6,10 @@ import { ref, computed } from 'vue';
 const props = defineProps({
     permintaan: Object,
     perencanaan: Object,
+    hasPerencanaan: {
+        type: Boolean,
+        default: true
+    }
 });
 
 const form = useForm({
@@ -14,10 +17,11 @@ const form = useForm({
     tanggal_kso: new Date().toISOString().split("T")[0],
     pihak_pertama: "RSUD Ibnu Sina Kabupaten Gresik",
     pihak_kedua: "",
+    isi_kerjasama: "",
+    nilai_kontrak: "",
     file_pks: null,
     file_mou: null,
     keterangan: "",
-    status: "aktif",
 });
 
 const pksFileName = ref('');
@@ -54,6 +58,10 @@ const submit = () => {
         },
         onError: (errors) => {
             console.error('Error creating KSO:', errors);
+            // Log individual errors for debugging
+            Object.keys(errors).forEach(key => {
+                console.error(`Error ${key}:`, errors[key]);
+            });
         },
         onFinish: () => {
             console.log('Form submission finished');
@@ -82,6 +90,23 @@ const submit = () => {
 
         <div class="py-12">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                <!-- Warning jika belum ada perencanaan -->
+                <div v-if="!hasPerencanaan" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong class="font-bold">Peringatan!</strong><br>
+                                Permintaan ini belum memiliki dokumen perencanaan (DPP). Anda tetap dapat mengisi form KSO, namun saat submit akan error jika belum ada DPP. Pastikan Staff Perencanaan sudah membuat dokumen perencanaan terlebih dahulu.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Info Permintaan -->
                 <div
                     class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"
@@ -124,12 +149,14 @@ const submit = () => {
                         </h3>
 
                         <!-- Error Message -->
-                        <div v-if="form.hasErrors || form.recentlySuccessful === false" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+                        <div v-if="form.hasErrors" class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
                             <strong class="font-bold">Error!</strong>
-                            <span class="block sm:inline">
-                                <span v-if="form.errors.error">{{ form.errors.error }}</span>
-                                <span v-else>Terjadi kesalahan. Silakan periksa form Anda.</span>
-                            </span>
+                            <span class="block sm:inline ml-2">Terjadi kesalahan. Silakan periksa form Anda:</span>
+                            <ul class="mt-2 ml-5 list-disc text-sm">
+                                <li v-for="(error, key) in form.errors" :key="key">
+                                    <strong>{{ key }}:</strong> {{ Array.isArray(error) ? error[0] : error }}
+                                </li>
+                            </ul>
                         </div>
 
                         <form @submit.prevent="submit">
@@ -219,6 +246,55 @@ const submit = () => {
                                     >
                                         {{ form.errors.pihak_kedua }}
                                     </p>
+                                </div>
+
+                                <!-- Isi Kerjasama -->
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                    >
+                                        Isi Kerjasama
+                                        <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        v-model="form.isi_kerjasama"
+                                        rows="4"
+                                        required
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="Jelaskan detail kerjasama yang akan dilakukan..."
+                                    ></textarea>
+                                    <p
+                                        v-if="form.errors.isi_kerjasama"
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{ form.errors.isi_kerjasama }}
+                                    </p>
+                                </div>
+
+                                <!-- Nilai Kontrak -->
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-2"
+                                    >
+                                        Nilai Kontrak (Rp)
+                                        <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="form.nilai_kontrak"
+                                        type="number"
+                                        required
+                                        min="0"
+                                        step="1"
+                                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        placeholder="1000000"
+                                    />
+                                    <p
+                                        v-if="form.errors.nilai_kontrak"
+                                        class="mt-1 text-sm text-red-600"
+                                    >
+                                        {{ form.errors.nilai_kontrak }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-gray-500">Masukkan nilai dalam Rupiah (angka saja)</p>
                                 </div>
 
                                 <!-- Upload PKS (Perjanjian Kerja Sama) -->
