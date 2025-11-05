@@ -194,25 +194,25 @@ class StaffPerencanaanController extends Controller
         $spesifikasiTeknis = $permintaan->spesifikasiTeknis;
         
         // Get Activity History untuk permintaan ini
-        $activityHistory = UserActivityLog::where('related_model', 'Permintaan')
+        $activityHistory = UserActivityLog::where('related_type', 'Permintaan')
             ->where('related_id', $permintaan->permintaan_id)
             ->orWhere(function($query) use ($permintaan, $perencanaan, $hps, $spesifikasiTeknis) {
                 // Include activity logs for related documents
                 if ($perencanaan) {
                     $query->orWhere(function($q) use ($perencanaan) {
-                        $q->where('related_model', 'Perencanaan')
+                        $q->where('related_type', 'Perencanaan')
                           ->where('related_id', $perencanaan->perencanaan_id);
                     });
                 }
                 if ($hps) {
                     $query->orWhere(function($q) use ($hps) {
-                        $q->where('related_model', 'Hps')
+                        $q->where('related_type', 'Hps')
                           ->where('related_id', $hps->hps_id);
                     });
                 }
                 if ($spesifikasiTeknis) {
                     $query->orWhere(function($q) use ($spesifikasiTeknis) {
-                        $q->where('related_model', 'SpesifikasiTeknis')
+                        $q->where('related_type', 'SpesifikasiTeknis')
                           ->where('related_id', $spesifikasiTeknis->spesifikasi_id);
                     });
                 }
@@ -524,9 +524,11 @@ class StaffPerencanaanController extends Controller
         // Log activity
         UserActivityLog::create([
             'user_id' => $user->id,
-            'activity_type' => 'create_dpp',
+            'role' => $user->role ?? 'Staff Perencanaan',
+            'action' => 'create',
+            'module' => 'perencanaan',
             'description' => "Membuat DPP untuk permintaan #{$permintaan->permintaan_id}: {$data['nama_paket']}",
-            'related_model' => 'Perencanaan',
+            'related_type' => 'Perencanaan',
             'related_id' => $perencanaan->perencanaan_id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -612,9 +614,11 @@ class StaffPerencanaanController extends Controller
         // Log activity
         UserActivityLog::create([
             'user_id' => $user->id,
-            'activity_type' => 'create_hps',
+            'role' => $user->role ?? 'Staff Perencanaan',
+            'action' => 'create',
+            'module' => 'hps',
             'description' => "Membuat HPS untuk permintaan #{$permintaan->permintaan_id} dengan " . count($data['items']) . " item, total: Rp " . number_format($grandTotal, 0, ',', '.'),
-            'related_model' => 'Hps',
+            'related_type' => 'Hps',
             'related_id' => $hps->hps_id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -739,9 +743,11 @@ class StaffPerencanaanController extends Controller
         // Log activity - Forward ke Pengadaan
         UserActivityLog::create([
             'user_id' => $user->id,
-            'activity_type' => 'forward_to_pengadaan',
+            'role' => $user->role ?? 'Staff Perencanaan',
+            'action' => 'forward',
+            'module' => 'permintaan',
             'description' => "Mengirim permintaan #{$permintaan->permintaan_id} ke Bagian Pengadaan dengan semua dokumen lengkap (Nota Dinas, DPP, HPS, Nota Dinas Pembelian, Spesifikasi Teknis)",
-            'related_model' => 'Permintaan',
+            'related_type' => 'Permintaan',
             'related_id' => $permintaan->permintaan_id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -1262,9 +1268,11 @@ class StaffPerencanaanController extends Controller
         // Log activity
         UserActivityLog::create([
             'user_id' => auth()->id(),
-            'activity_type' => 'update_dpp',
+            'role' => auth()->user()->role ?? 'Staff Perencanaan',
+            'action' => 'update',
+            'module' => 'perencanaan',
             'description' => "Mengupdate DPP untuk permintaan #{$permintaan->permintaan_id}: {$validated['nama_paket']}",
-            'related_model' => 'Perencanaan',
+            'related_type' => 'Perencanaan',
             'related_id' => $dpp->perencanaan_id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -1347,9 +1355,11 @@ class StaffPerencanaanController extends Controller
         // Log activity
         UserActivityLog::create([
             'user_id' => auth()->id(),
-            'activity_type' => 'update_hps',
+            'role' => auth()->user()->role ?? 'Staff Perencanaan',
+            'action' => 'update',
+            'module' => 'hps',
             'description' => "Mengupdate HPS untuk permintaan #{$permintaan->permintaan_id} dengan " . count($validated['items']) . " item",
-            'related_model' => 'Hps',
+            'related_type' => 'Hps',
             'related_id' => $hps->hps_id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -1491,9 +1501,11 @@ class StaffPerencanaanController extends Controller
         // Log activity
         UserActivityLog::create([
             'user_id' => auth()->id(),
-            'activity_type' => 'create_spesifikasi_teknis',
+            'role' => auth()->user()->role ?? 'Staff Perencanaan',
+            'action' => 'create',
+            'module' => 'spesifikasi_teknis',
             'description' => "Membuat Spesifikasi Teknis untuk permintaan #{$permintaan->permintaan_id}: {$data['jenis_barang_jasa']}",
-            'related_model' => 'SpesifikasiTeknis',
+            'related_type' => 'SpesifikasiTeknis',
             'related_id' => $spesifikasi->id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -1567,9 +1579,11 @@ class StaffPerencanaanController extends Controller
         // Log activity
         UserActivityLog::create([
             'user_id' => auth()->id(),
-            'activity_type' => 'update_spesifikasi_teknis',
+            'role' => auth()->user()->role ?? 'Staff Perencanaan',
+            'action' => 'update',
+            'module' => 'spesifikasi_teknis',
             'description' => "Mengupdate Spesifikasi Teknis untuk permintaan #{$permintaan->permintaan_id}: {$data['jenis_barang_jasa']}",
-            'related_model' => 'SpesifikasiTeknis',
+            'related_type' => 'SpesifikasiTeknis',
             'related_id' => $spesifikasi->id,
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
@@ -1745,27 +1759,27 @@ class StaffPerencanaanController extends Controller
         // Get comprehensive activity history
         $activityHistory = UserActivityLog::where(function($query) use ($permintaan, $perencanaan, $hps, $spesifikasiTeknis) {
             $query->where(function($q) use ($permintaan) {
-                $q->where('related_model', 'Permintaan')
+                $q->where('related_type', 'Permintaan')
                   ->where('related_id', $permintaan->permintaan_id);
             });
             
             if ($perencanaan) {
                 $query->orWhere(function($q) use ($perencanaan) {
-                    $q->where('related_model', 'Perencanaan')
+                    $q->where('related_type', 'Perencanaan')
                       ->where('related_id', $perencanaan->perencanaan_id);
                 });
             }
             
             if ($hps) {
                 $query->orWhere(function($q) use ($hps) {
-                    $q->where('related_model', 'Hps')
+                    $q->where('related_type', 'Hps')
                       ->where('related_id', $hps->hps_id);
                 });
             }
             
             if ($spesifikasiTeknis) {
                 $query->orWhere(function($q) use ($spesifikasiTeknis) {
-                    $q->where('related_model', 'SpesifikasiTeknis')
+                    $q->where('related_type', 'SpesifikasiTeknis')
                       ->where('related_id', $spesifikasiTeknis->spesifikasi_id);
                 });
             }
@@ -1781,3 +1795,4 @@ class StaffPerencanaanController extends Controller
         ]);
     }
 }
+

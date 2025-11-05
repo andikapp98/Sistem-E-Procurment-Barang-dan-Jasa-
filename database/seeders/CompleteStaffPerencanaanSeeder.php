@@ -199,7 +199,7 @@ class CompleteStaffPerencanaanSeeder extends Seeder
             'tanggal_mulai' => Carbon::now()->subDays(15),
             'tanggal_selesai' => Carbon::now()->addDays(45),
             'anggaran' => 25000000,
-            'metode_pengadaan' => 'E-Catalog',
+            'metode_pengadaan' => 'E-Purchasing',
             'ppk_ditunjuk' => 'Apt. Siti Nurhaliza, S.Farm',
             'nama_paket' => 'Pengadaan Obat Emergency Tahun 2025',
             'lokasi' => 'RSUD Ibnu Sina - Instalasi Farmasi',
