@@ -149,20 +149,31 @@ class StaffPerencanaanController extends Controller
         // Get Nota Dinas data
         $notaDinas = $permintaan->notaDinas()->first();
         
-        // Get Disposisi data
-        $disposisi = Disposisi::whereHas('notaDinas', function($query) use ($permintaan) {
-            $query->where('permintaan_id', $permintaan->permintaan_id);
-        })->first();
+        // Get Disposisi data - prioritas disposisi yang punya perencanaan
+        $disposisi = null;
+        $perencanaan = null;
+        $hasDPP = false;
+        
+        if ($notaDinas) {
+            // Cari disposisi yang memiliki perencanaan
+            $disposisiWithPerencanaan = Disposisi::where('nota_id', $notaDinas->nota_id)
+                ->whereHas('perencanaan')
+                ->first();
+            
+            if ($disposisiWithPerencanaan) {
+                $disposisi = $disposisiWithPerencanaan;
+                $perencanaan = $disposisiWithPerencanaan->perencanaan;
+                $hasDPP = true;
+            } else {
+                // Jika tidak ada disposisi dengan perencanaan, ambil disposisi terakhir
+                $disposisi = Disposisi::where('nota_id', $notaDinas->nota_id)
+                    ->latest('tanggal_disposisi')
+                    ->first();
+            }
+        }
         
         // Cek Disposisi
         $hasDisposisi = $disposisi !== null;
-        
-        // Get Perencanaan data (includes DPP fields)
-        $perencanaan = null;
-        $hasDPP = false;
-        if ($disposisi) {
-            $perencanaan = Perencanaan::where('disposisi_id', $disposisi->disposisi_id)->first();
-            $hasDPP = $perencanaan !== null;
         }
         
         // Cek HPS

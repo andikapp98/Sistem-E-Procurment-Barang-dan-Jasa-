@@ -46,9 +46,10 @@ class Disposisi extends Model
 
     /**
      * Relasi ke Perencanaan
+     * One Disposisi has One Perencanaan
      */
     public function perencanaan()
     {
-        return $this->hasMany(Perencanaan::class, 'disposisi_id', 'disposisi_id');
+        return $this->hasOne(Perencanaan::class, 'disposisi_id', 'disposisi_id');
     }
 }
