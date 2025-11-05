@@ -102,39 +102,58 @@ class CompleteStaffPerencanaanSeeder extends Seeder
         // HPS
         $hps1 = Hps::create([
             'permintaan_id' => $permintaan1->permintaan_id,
-            'metode_pengadaan' => 'E-Purchasing',
-            'total_hps' => 82000000,
-            'keterangan' => 'HPS berdasarkan survei pasar dan e-catalog LKPP',
+            'ppk' => 'Dr. Ahmad Yani, Sp.PD',
+            'surat_penawaran_harga' => 'SPH/IGD/2025/001',
+            'grand_total' => 82000000,
         ]);
 
         // HPS Items
         HpsItem::create([
             'hps_id' => $hps1->hps_id,
             'nama_item' => 'Defibrillator Portable Philips HeartStart HS1',
-            'spesifikasi' => 'Biphasic waveform, AED mode, Voice prompts, Battery life 4 years, Includes carrying case and pads',
-            'kuantitas' => 2,
+            'volume' => 2,
             'satuan' => 'Unit',
             'harga_satuan' => 40000000,
-            'total_harga' => 80000000,
+            'type' => 'Alat Medis',
+            'merk' => 'Philips HeartStart HS1',
+            'total' => 80000000,
         ]);
 
         HpsItem::create([
             'hps_id' => $hps1->hps_id,
             'nama_item' => 'Electrode Pads (spare)',
-            'spesifikasi' => 'Compatible with Philips HS1, Adult pads',
-            'kuantitas' => 4,
+            'volume' => 4,
             'satuan' => 'Set',
             'harga_satuan' => 500000,
-            'total_harga' => 2000000,
+            'type' => 'Aksesoris',
+            'merk' => 'Philips Compatible',
+            'total' => 2000000,
         ]);
 
         // Spesifikasi Teknis
         SpesifikasiTeknis::create([
             'permintaan_id' => $permintaan1->permintaan_id,
-            'nama_barang' => 'Defibrillator Portable',
-            'spesifikasi' => "Spesifikasi Teknis Defibrillator Portable:\n\n1. SPESIFIKASI UMUM:\n   - Jenis: Automated External Defibrillator (AED)\n   - Waveform: Biphasic\n   - Mode: AED dengan panduan suara\n   - Display: LED indicators untuk status dan panduan\n\n2. SPESIFIKASI TEKNIS:\n   - Energy output: 150 Joules\n   - Shock delivery time: < 10 detik dari deteksi VF\n   - Voice prompts: Bahasa Indonesia dan Inggris\n   - Visual prompts: LED status indicators\n   - Battery life: Minimum 4 tahun standby atau 200 shocks\n   - Self-test: Otomatis harian\n\n3. KELENGKAPAN:\n   - Main unit with battery installed\n   - Adult electrode pads (1 set installed)\n   - Spare adult electrode pads (2 sets)\n   - Carrying case with strap\n   - Quick reference guide\n   - User manual (Bahasa Indonesia)\n\n4. SERTIFIKASI:\n   - ISO 13485 (Medical devices quality management)\n   - CE Mark\n   - FDA Approved\n   - Izin edar Kemenkes RI\n\n5. GARANSI & AFTER SALES:\n   - Garansi unit: 3 tahun\n   - Garansi battery: 4 tahun\n   - Training operator: Included\n   - Maintenance: Free 1st year",
-            'kuantitas' => 2,
-            'satuan' => 'Unit',
+            'latar_belakang' => 'Defibrillator yang ada di IGD sudah berusia 10 tahun dan sering mengalami error. Untuk meningkatkan kesiapan penanganan cardiac arrest diperlukan pengadaan defibrillator portable yang baru.',
+            'maksud_tujuan' => 'Meningkatkan kualitas pelayanan kegawatdaruratan khususnya penanganan cardiac arrest dengan menyediakan peralatan defibrillator yang handal dan mudah digunakan.',
+            'target_sasaran' => 'Tersedianya 2 unit defibrillator portable di IGD untuk penanganan pasien dengan cardiac arrest.',
+            
+            'pejabat_pengadaan' => 'Dr. Ahmad Yani, Sp.PD',
+            'sumber_dana' => 'APBD Kabupaten Gresik',
+            'perkiraan_biaya' => 'Rp 82.000.000',
+            
+            'jenis_barang_jasa' => 'Defibrillator Portable (AED)',
+            'fungsi_manfaat' => 'Untuk memberikan kejut listrik (shock) pada pasien dengan henti jantung mendadak (cardiac arrest) guna menyelamatkan nyawa pasien.',
+            'kegiatan_rutin' => 'Ya',
+            
+            'jangka_waktu' => '30 hari kalender',
+            'estimasi_waktu_datang' => '14 hari kerja setelah PO',
+            'tenaga_diperlukan' => 'Petugas medis terlatih BLS/ACLS',
+            
+            'pelaku_usaha' => 'Distributor resmi alat kesehatan yang memiliki izin edar Kemenkes',
+            'pengadaan_sejenis' => 'Ya',
+            'pengadaan_sejenis_keterangan' => 'Pengadaan serupa dilakukan tahun 2015 untuk unit lama',
+            'indikasi_konsolidasi' => 'Tidak',
+            'indikasi_konsolidasi_keterangan' => null,
         ]);
 
         $this->command->info('   ✅ Permintaan #' . $permintaan1->permintaan_id . ' - Complete dengan DPP, HPS (2 items), dan Spesifikasi Teknis');

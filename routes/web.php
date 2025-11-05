@@ -233,6 +233,9 @@ Route::middleware(['auth', 'verified'])->prefix('staff-perencanaan')->name('staf
     Route::get('/permintaan/{permintaan}/dpp/cetak', [StaffPerencanaanController::class, 'cetakDPP'])->name('dpp.cetak');
     Route::get('/permintaan/{permintaan}/hps/cetak', [StaffPerencanaanController::class, 'cetakHPS'])->name('hps.cetak');
     
+    // Activity History
+    Route::get('/permintaan/{permintaan}/history', [StaffPerencanaanController::class, 'showHistory'])->name('history');
+    
     // Forward ke Bagian Pengadaan setelah semua dokumen lengkap (Workflow: Perencanaan → Pengadaan → KSO)
     Route::post('/permintaan/{permintaan}/forward-to-pengadaan', [StaffPerencanaanController::class, 'forwardToPengadaan'])->name('forward-to-pengadaan');
 });

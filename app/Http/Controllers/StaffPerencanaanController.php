@@ -193,6 +193,34 @@ class StaffPerencanaanController extends Controller
         $hasSpesifikasiTeknis = $permintaan->spesifikasiTeknis()->exists();
         $spesifikasiTeknis = $permintaan->spesifikasiTeknis;
         
+        // Get Activity History untuk permintaan ini
+        $activityHistory = UserActivityLog::where('related_model', 'Permintaan')
+            ->where('related_id', $permintaan->permintaan_id)
+            ->orWhere(function($query) use ($permintaan, $perencanaan, $hps, $spesifikasiTeknis) {
+                // Include activity logs for related documents
+                if ($perencanaan) {
+                    $query->orWhere(function($q) use ($perencanaan) {
+                        $q->where('related_model', 'Perencanaan')
+                          ->where('related_id', $perencanaan->perencanaan_id);
+                    });
+                }
+                if ($hps) {
+                    $query->orWhere(function($q) use ($hps) {
+                        $q->where('related_model', 'Hps')
+                          ->where('related_id', $hps->hps_id);
+                    });
+                }
+                if ($spesifikasiTeknis) {
+                    $query->orWhere(function($q) use ($spesifikasiTeknis) {
+                        $q->where('related_model', 'SpesifikasiTeknis')
+                          ->where('related_id', $spesifikasiTeknis->spesifikasi_id);
+                    });
+                }
+            })
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
         return Inertia::render('StaffPerencanaan/Show', [
             'permintaan' => $permintaan,
             'trackingStatus' => $permintaan->trackingStatus,
@@ -215,6 +243,9 @@ class StaffPerencanaanController extends Controller
             'hps' => $hps,
             'notaDinasPembelian' => $notaDinasPembelian,
             'spesifikasiTeknis' => $spesifikasiTeknis,
+            
+            // Activity History
+            'activityHistory' => $activityHistory,
         ]);
     }
 
@@ -697,12 +728,23 @@ class StaffPerencanaanController extends Controller
         }
 
         // Buat disposisi ke Bagian Pengadaan
-        Disposisi::create([
+        $disposisi = Disposisi::create([
             'nota_id' => $notaDinas->nota_id,
             'jabatan_tujuan' => 'Bagian Pengadaan',
             'tanggal_disposisi' => Carbon::now(),
             'catatan' => $request->input('catatan', 'Semua dokumen perencanaan telah lengkap. Mohon ditindaklanjuti untuk proses pengadaan dan selanjutnya ke Bagian KSO.'),
             'status' => 'dalam_proses',
+        ]);
+
+        // Log activity - Forward ke Pengadaan
+        UserActivityLog::create([
+            'user_id' => $user->id,
+            'activity_type' => 'forward_to_pengadaan',
+            'description' => "Mengirim permintaan #{$permintaan->permintaan_id} ke Bagian Pengadaan dengan semua dokumen lengkap (Nota Dinas, DPP, HPS, Nota Dinas Pembelian, Spesifikasi Teknis)",
+            'related_model' => 'Permintaan',
+            'related_id' => $permintaan->permintaan_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
         ]);
 
         // Update status permintaan - dikirim ke Bagian Pengadaan
@@ -1683,5 +1725,59 @@ class StaffPerencanaanController extends Controller
         return redirect()
             ->route('staff-perencanaan.show', $permintaan)
             ->with('success', 'Nota Dinas Pembelian berhasil dihapus');
+    }
+
+    /**
+     * Show Activity History untuk Permintaan
+     */
+    public function showHistory(Permintaan $permintaan)
+    {
+        $user = Auth::user();
+        
+        // Get perencanaan, hps, spesifikasi teknis data
+        $perencanaan = Perencanaan::whereHas('disposisi.notaDinas', function($query) use ($permintaan) {
+            $query->where('permintaan_id', $permintaan->permintaan_id);
+        })->first();
+        
+        $hps = $permintaan->hps;
+        $spesifikasiTeknis = $permintaan->spesifikasiTeknis;
+        
+        // Get comprehensive activity history
+        $activityHistory = UserActivityLog::where(function($query) use ($permintaan, $perencanaan, $hps, $spesifikasiTeknis) {
+            $query->where(function($q) use ($permintaan) {
+                $q->where('related_model', 'Permintaan')
+                  ->where('related_id', $permintaan->permintaan_id);
+            });
+            
+            if ($perencanaan) {
+                $query->orWhere(function($q) use ($perencanaan) {
+                    $q->where('related_model', 'Perencanaan')
+                      ->where('related_id', $perencanaan->perencanaan_id);
+                });
+            }
+            
+            if ($hps) {
+                $query->orWhere(function($q) use ($hps) {
+                    $q->where('related_model', 'Hps')
+                      ->where('related_id', $hps->hps_id);
+                });
+            }
+            
+            if ($spesifikasiTeknis) {
+                $query->orWhere(function($q) use ($spesifikasiTeknis) {
+                    $q->where('related_model', 'SpesifikasiTeknis')
+                      ->where('related_id', $spesifikasiTeknis->spesifikasi_id);
+                });
+            }
+        })
+        ->with('user')
+        ->orderBy('created_at', 'desc')
+        ->get();
+        
+        return Inertia::render('StaffPerencanaan/History', [
+            'permintaan' => $permintaan,
+            'activityHistory' => $activityHistory,
+            'userLogin' => $user,
+        ]);
     }
 }
