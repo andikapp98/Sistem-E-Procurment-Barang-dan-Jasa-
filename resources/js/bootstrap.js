@@ -5,27 +5,48 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.axios.defaults.withCredentials = true;
 window.axios.defaults.withXSRFToken = true;
 
+// Function to get fresh CSRF token
+function getCsrfToken() {
+    const token = document.head.querySelector('meta[name="csrf-token"]');
+    return token ? token.content : null;
+}
+
 // Get CSRF token from meta tag and set it for axios
-let token = document.head.querySelector('meta[name="csrf-token"]');
+let token = getCsrfToken();
 
 if (token) {
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
-    window.axios.defaults.headers.common['X-XSRF-TOKEN'] = token.content;
+    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
+    window.axios.defaults.headers.common['X-XSRF-TOKEN'] = token;
 } else {
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');
 }
 
 // Refresh CSRF token before each axios request
 window.axios.interceptors.request.use(function (config) {
-    token = document.head.querySelector('meta[name="csrf-token"]');
-    if (token) {
-        config.headers['X-CSRF-TOKEN'] = token.content;
-        config.headers['X-XSRF-TOKEN'] = token.content;
+    const freshToken = getCsrfToken();
+    if (freshToken) {
+        config.headers['X-CSRF-TOKEN'] = freshToken;
+        config.headers['X-XSRF-TOKEN'] = freshToken;
     }
     return config;
 }, function (error) {
     return Promise.reject(error);
 });
+
+// Handle 419 errors by refreshing the page (which will get new CSRF token)
+window.axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && error.response.status === 419) {
+            console.warn('CSRF token mismatch detected, reloading page...');
+            // Give user a moment to see the error before reload
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        }
+        return Promise.reject(error);
+    }
+);
 
 // Add CSRF token to fetch requests (used by Inertia)
 const originalFetch = window.fetch;
@@ -33,13 +54,13 @@ window.fetch = function(...args) {
     const [url, config = {}] = args;
     
     // Get fresh CSRF token
-    const csrfToken = document.head.querySelector('meta[name="csrf-token"]');
+    const csrfToken = getCsrfToken();
     
     if (csrfToken && config.method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(config.method.toUpperCase())) {
         config.headers = {
             ...config.headers,
-            'X-CSRF-TOKEN': csrfToken.content,
-            'X-XSRF-TOKEN': csrfToken.content,
+            'X-CSRF-TOKEN': csrfToken,
+            'X-XSRF-TOKEN': csrfToken,
         };
     }
     
