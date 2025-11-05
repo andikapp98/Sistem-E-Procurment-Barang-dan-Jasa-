@@ -10,6 +10,7 @@ use App\Models\Perencanaan;
 use App\Models\Hps;
 use App\Models\HpsItem;
 use App\Models\SpesifikasiTeknis;
+use App\Models\UserActivityLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -174,7 +175,6 @@ class StaffPerencanaanController extends Controller
         
         // Cek Disposisi
         $hasDisposisi = $disposisi !== null;
-        }
         
         // Cek HPS
         $hasHPS = $permintaan->hps()->exists();
@@ -488,7 +488,18 @@ class StaffPerencanaanController extends Controller
         $data['rencana_kegiatan'] = $data['nama_kegiatan'];
         $data['anggaran'] = $data['pagu_paket'];
         
-        Perencanaan::create($data);
+        $perencanaan = Perencanaan::create($data);
+
+        // Log activity
+        UserActivityLog::create([
+            'user_id' => $user->id,
+            'activity_type' => 'create_dpp',
+            'description' => "Membuat DPP untuk permintaan #{$permintaan->permintaan_id}: {$data['nama_paket']}",
+            'related_model' => 'Perencanaan',
+            'related_id' => $perencanaan->perencanaan_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         // Update status permintaan - dikirim ke Bagian Pengadaan
         $permintaan->update([
@@ -566,6 +577,17 @@ class StaffPerencanaanController extends Controller
                 'total' => $item['total'],
             ]);
         }
+
+        // Log activity
+        UserActivityLog::create([
+            'user_id' => $user->id,
+            'activity_type' => 'create_hps',
+            'description' => "Membuat HPS untuk permintaan #{$permintaan->permintaan_id} dengan " . count($data['items']) . " item, total: Rp " . number_format($grandTotal, 0, ',', '.'),
+            'related_model' => 'Hps',
+            'related_id' => $hps->hps_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         // Update permintaan
         $permintaan->update([
@@ -1195,6 +1217,17 @@ class StaffPerencanaanController extends Controller
 
         $dpp->update($validated);
 
+        // Log activity
+        UserActivityLog::create([
+            'user_id' => auth()->id(),
+            'activity_type' => 'update_dpp',
+            'description' => "Mengupdate DPP untuk permintaan #{$permintaan->permintaan_id}: {$validated['nama_paket']}",
+            'related_model' => 'Perencanaan',
+            'related_id' => $dpp->perencanaan_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
         return redirect()->route('staff-perencanaan.show', $permintaan)
             ->with('success', 'Data DPP berhasil diupdate');
     }
@@ -1268,6 +1301,17 @@ class StaffPerencanaanController extends Controller
         foreach ($validated['items'] as $item) {
             $hps->items()->create($item);
         }
+
+        // Log activity
+        UserActivityLog::create([
+            'user_id' => auth()->id(),
+            'activity_type' => 'update_hps',
+            'description' => "Mengupdate HPS untuk permintaan #{$permintaan->permintaan_id} dengan " . count($validated['items']) . " item",
+            'related_model' => 'Hps',
+            'related_id' => $hps->hps_id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return redirect()->route('staff-perencanaan.show', $permintaan)
             ->with('success', 'Data HPS berhasil diupdate');
@@ -1400,7 +1444,18 @@ class StaffPerencanaanController extends Controller
 
         $data['permintaan_id'] = $permintaan->permintaan_id;
 
-        SpesifikasiTeknis::create($data);
+        $spesifikasi = SpesifikasiTeknis::create($data);
+
+        // Log activity
+        UserActivityLog::create([
+            'user_id' => auth()->id(),
+            'activity_type' => 'create_spesifikasi_teknis',
+            'description' => "Membuat Spesifikasi Teknis untuk permintaan #{$permintaan->permintaan_id}: {$data['jenis_barang_jasa']}",
+            'related_model' => 'SpesifikasiTeknis',
+            'related_id' => $spesifikasi->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return redirect()
             ->route('staff-perencanaan.show', $permintaan)
@@ -1466,6 +1521,17 @@ class StaffPerencanaanController extends Controller
         ]);
 
         $spesifikasi->update($data);
+
+        // Log activity
+        UserActivityLog::create([
+            'user_id' => auth()->id(),
+            'activity_type' => 'update_spesifikasi_teknis',
+            'description' => "Mengupdate Spesifikasi Teknis untuk permintaan #{$permintaan->permintaan_id}: {$data['jenis_barang_jasa']}",
+            'related_model' => 'SpesifikasiTeknis',
+            'related_id' => $spesifikasi->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return redirect()
             ->route('staff-perencanaan.show', $permintaan)
