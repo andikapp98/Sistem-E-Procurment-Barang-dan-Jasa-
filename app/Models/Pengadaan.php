@@ -5,6 +5,12 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class Pengadaan
+ * 
+ * REVISI WORKFLOW: Pengadaan setelah Perencanaan, sebelum KSO
+ * Urutan baru: Perencanaan → Pengadaan → KSO
+ */
 class Pengadaan extends Model
 {
     protected $table = 'pengadaan';
@@ -12,12 +18,14 @@ class Pengadaan extends Model
     public $timestamps = true;
 
     protected $casts = [
-        'kso_id' => 'int',
+        'perencanaan_id' => 'int', // REVISI: perencanaan_id instead of kso_id
+        'kso_id' => 'int',         // DEPRECATED: will be removed
         'tanggal_pengadaan' => 'date'
     ];
 
     protected $fillable = [
-        'kso_id',
+        'perencanaan_id', // NEW: Link to Perencanaan
+        'kso_id',        // DEPRECATED: Keep for backward compatibility
         'no_pengadaan',
         'tanggal_pengadaan',
         'vendor',
@@ -26,11 +34,26 @@ class Pengadaan extends Model
         'no_tracking',
     ];
 
-    public function kso()
+    /**
+     * Relasi ke Perencanaan (NEW: Parent)
+     */
+    public function perencanaan()
     {
-        return $this->belongsTo(Kso::class, 'kso_id', 'kso_id');
+        return $this->belongsTo(Perencanaan::class, 'perencanaan_id', 'perencanaan_id');
     }
 
+    /**
+     * Relasi ke KSO (REVISI: Pengadaan has many KSO)
+     */
+    public function kso()
+    {
+        return $this->hasMany(Kso::class, 'pengadaan_id', 'pengadaan_id');
+    }
+
+    /**
+     * Relasi ke Nota Penerimaan (DEPRECATED: will move to KSO)
+     * Nota Penerimaan sekarang via KSO
+     */
     public function notaPenerimaan()
     {
         return $this->hasMany(NotaPenerimaan::class, 'pengadaan_id', 'pengadaan_id');

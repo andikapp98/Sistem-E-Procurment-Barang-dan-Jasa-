@@ -148,6 +148,16 @@ class Permintaan extends Model
 	/**
 	 * Get timeline tracking lengkap untuk permintaan ini
 	 * Return array tahapan yang sudah dilalui
+	 * 
+	 * URUTAN WORKFLOW:
+	 * 1. Permintaan
+	 * 2. Nota Dinas
+	 * 3. Disposisi
+	 * 4. Perencanaan
+	 * 5. Pengadaan (REVISI: Pengadaan dulu)
+	 * 6. KSO (REVISI: KSO setelah Pengadaan)
+	 * 7. Nota Penerimaan
+	 * 8. Serah Terima
 	 */
 	public function getTimelineTracking()
 	{
@@ -199,32 +209,32 @@ class Permintaan extends Model
 						'completed' => true,
 					];
 
-					// TAHAP 5: KSO
-					$kso = $perencanaan->kso()->latest('tanggal_kso')->first();
-					if ($kso) {
+					// TAHAP 5: PENGADAAN (REVISI: Pengadaan dulu, sebelum KSO)
+					$pengadaan = $perencanaan->pengadaan()->latest('tanggal_pengadaan')->first();
+					if ($pengadaan) {
 						$timeline[] = [
-							'tahapan' => 'KSO',
-							'tanggal' => $kso->tanggal_kso,
-							'status' => $kso->status,
-							'keterangan' => 'Kerja Sama Operasional',
-							'icon' => 'handshake',
+							'tahapan' => 'Pengadaan',
+							'tanggal' => $pengadaan->tanggal_pengadaan,
+							'status' => $pengadaan->status,
+							'keterangan' => "Vendor: {$pengadaan->vendor}" . ($pengadaan->no_tracking ? " | Tracking: {$pengadaan->no_tracking}" : ''),
+							'icon' => 'shopping-cart',
 							'completed' => true,
 						];
 
-						// TAHAP 6: Pengadaan
-						$pengadaan = $kso->pengadaan()->latest('tanggal_pengadaan')->first();
-						if ($pengadaan) {
+						// TAHAP 6: KSO (REVISI: KSO setelah Pengadaan)
+						$kso = $pengadaan->kso()->latest('tanggal_kso')->first();
+						if ($kso) {
 							$timeline[] = [
-								'tahapan' => 'Pengadaan',
-								'tanggal' => $pengadaan->tanggal_pengadaan,
-								'status' => $pengadaan->status,
-								'keterangan' => "Vendor: {$pengadaan->vendor}" . ($pengadaan->tracking ? " | Tracking: {$pengadaan->tracking}" : ''),
-								'icon' => 'shopping-cart',
+								'tahapan' => 'KSO',
+								'tanggal' => $kso->tanggal_kso,
+								'status' => $kso->status,
+								'keterangan' => 'Kerja Sama Operasional',
+								'icon' => 'handshake',
 								'completed' => true,
 							];
 
 							// TAHAP 7: Nota Penerimaan
-							$notaPenerimaan = $pengadaan->notaPenerimaan()->latest('tanggal_penerimaan')->first();
+							$notaPenerimaan = $kso->notaPenerimaan()->latest('tanggal_penerimaan')->first();
 							if ($notaPenerimaan) {
 								$timeline[] = [
 									'tahapan' => 'Nota Penerimaan',
@@ -263,7 +273,7 @@ class Permintaan extends Model
 	public function getProgressPercentage()
 	{
 		$timeline = $this->getTimelineTracking();
-		$totalSteps = 8; // Total tahapan: Permintaan, Nota Dinas, Disposisi, Perencanaan, KSO, Pengadaan, Nota Penerimaan, Serah Terima
+		$totalSteps = 8; // Total tahapan: Permintaan, Nota Dinas, Disposisi, Perencanaan, Pengadaan, KSO, Nota Penerimaan, Serah Terima
 		$completedSteps = count($timeline);
 		
 		return round(($completedSteps / $totalSteps) * 100);
@@ -302,15 +312,15 @@ class Permintaan extends Model
 			],
 			[
 				'step' => 5,
-				'tahapan' => 'KSO',
-				'description' => 'Kerja Sama Operasional dengan vendor',
-				'responsible' => 'Bagian KSO',
-			],
-			[
-				'step' => 6,
 				'tahapan' => 'Pengadaan',
 				'description' => 'Proses pengadaan dan pembelian',
 				'responsible' => 'Bagian Pengadaan',
+			],
+			[
+				'step' => 6,
+				'tahapan' => 'KSO',
+				'description' => 'Kerja Sama Operasional dengan vendor',
+				'responsible' => 'Bagian KSO',
 			],
 			[
 				'step' => 7,
@@ -357,8 +367,8 @@ class Permintaan extends Model
 			'Nota Dinas',
 			'Disposisi',
 			'Perencanaan',
-			'KSO',
 			'Pengadaan',
+			'KSO',
 			'Nota Penerimaan',
 			'Serah Terima',
 		];
@@ -406,17 +416,17 @@ class Permintaan extends Model
 			],
 			[
 				'step' => 5,
-				'tahapan' => 'KSO',
-				'description' => 'Kerja Sama Operasional dengan vendor',
-				'responsible' => 'Bagian KSO',
-				'icon' => 'handshake',
-			],
-			[
-				'step' => 6,
 				'tahapan' => 'Pengadaan',
 				'description' => 'Proses pengadaan dan pembelian',
 				'responsible' => 'Bagian Pengadaan',
 				'icon' => 'shopping-cart',
+			],
+			[
+				'step' => 6,
+				'tahapan' => 'KSO',
+				'description' => 'Kerja Sama Operasional dengan vendor',
+				'responsible' => 'Bagian KSO',
+				'icon' => 'handshake',
 			],
 			[
 				'step' => 7,

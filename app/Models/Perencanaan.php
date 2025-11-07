@@ -56,6 +56,18 @@ class Perencanaan extends Model
         return $this->belongsTo(Disposisi::class, 'disposisi_id', 'disposisi_id');
     }
 
+    /**
+     * Relasi ke Pengadaan (NEW: Pengadaan setelah Perencanaan)
+     */
+    public function pengadaan()
+    {
+        return $this->hasMany(Pengadaan::class, 'perencanaan_id', 'perencanaan_id');
+    }
+
+    /**
+     * Relasi ke KSO (DEPRECATED: Akan diubah menjadi hasMany via Pengadaan)
+     * KSO sekarang setelah Pengadaan
+     */
     public function kso()
     {
         return $this->hasMany(Kso::class, 'perencanaan_id', 'perencanaan_id');
