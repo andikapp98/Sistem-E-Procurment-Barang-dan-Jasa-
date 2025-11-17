@@ -115,8 +115,30 @@
                     </div>
                 </div>
 
+                <!-- Info Box: Sudah Dikirim ke Staff Perencanaan -->
+                <div v-if="isSudahKeStaffPerencanaan" class="bg-blue-50 border border-blue-200 rounded-lg overflow-hidden shadow-sm">
+                    <div class="p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <h3 class="text-sm font-medium text-blue-800">
+                                    Permintaan Sudah Diteruskan ke Staff Perencanaan
+                                </h3>
+                                <p class="mt-2 text-sm text-blue-700">
+                                    Permintaan ini sudah Anda teruskan ke Staff Perencanaan untuk perencanaan pengadaan. 
+                                    Silakan pantau progress di halaman tracking atau daftar permintaan yang sudah di-approve.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Action Buttons -->
-                <div v-if="permintaan.status === 'proses' || permintaan.status === 'disetujui'" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div v-if="showActionButtons" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">
                             Aksi
@@ -307,6 +329,36 @@ const cleanDeskripsi = computed(() => {
     deskripsi = deskripsi.replace(/\n\n\[CATATAN REVISI dari [^\]]+\].*/g, '');
     
     return deskripsi.trim();
+});
+
+// Computed property untuk cek apakah sudah dikirim ke Staff Perencanaan
+const isSudahKeStaffPerencanaan = computed(() => {
+    if (!props.permintaan || !props.permintaan.nota_dinas || props.permintaan.nota_dinas.length === 0) {
+        return false;
+    }
+    
+    // Cek apakah ada disposisi ke Staff Perencanaan
+    const notaDinas = props.permintaan.nota_dinas[0];
+    if (!notaDinas || !notaDinas.disposisi) {
+        return false;
+    }
+    
+    // Cek apakah ada disposisi dengan jabatan_tujuan = 'Staff Perencanaan'
+    return notaDinas.disposisi.some(disp => 
+        disp.jabatan_tujuan === 'Staff Perencanaan' || 
+        disp.jabatan_tujuan?.includes('Staff Perencanaan')
+    );
+});
+
+// Computed property untuk cek apakah tombol action harus ditampilkan
+const showActionButtons = computed(() => {
+    // Jangan tampilkan tombol jika sudah dikirim ke Staff Perencanaan
+    if (isSudahKeStaffPerencanaan.value) {
+        return false;
+    }
+    
+    // Tampilkan tombol jika status proses atau disetujui
+    return props.permintaan.status === 'proses' || props.permintaan.status === 'disetujui';
 });
 
 const showApproveModal = ref(false);

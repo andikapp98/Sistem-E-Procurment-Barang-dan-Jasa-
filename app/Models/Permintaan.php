@@ -103,7 +103,7 @@ class Permintaan extends Model
 			'disposisi_id',  // Foreign key on perencanaan table
 			'permintaan_id', // Local key on permintaan table
 			'disposisi_id'   // Local key on disposisi table
-		)->latest()->first();
+		)->latest();
 	}
 
 	/**

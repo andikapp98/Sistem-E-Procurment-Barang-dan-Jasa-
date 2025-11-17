@@ -23,9 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'log.activity' => \App\Http\Middleware\LogUserActivity::class,
         ]);
         
-        // Validate CSRF tokens but don't throw on mismatch for certain routes
+        // CSRF disabled untuk sementara (development only - 1 laptop)
         $middleware->validateCsrfTokens(except: [
-            // Add any routes that should be excluded from CSRF verification
+            '*'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

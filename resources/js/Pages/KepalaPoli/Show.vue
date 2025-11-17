@@ -439,6 +439,8 @@ const props = defineProps({
     progress: Number,
     nextStep: Object,
     userLogin: Object,
+    canAccess: Boolean,
+    canEdit: Boolean,
 });
 
 const deleting = ref(false);

@@ -9,10 +9,23 @@ import { router } from '@inertiajs/vue3';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-// Add global Inertia error handler for 419 CSRF errors
+// Configure Inertia to use CSRF token from meta tag
+router.on('before', (event) => {
+    const token = document.head.querySelector('meta[name="csrf-token"]');
+    if (token) {
+        event.detail.visit.headers = {
+            ...event.detail.visit.headers,
+            'X-CSRF-TOKEN': token.content,
+        };
+    }
+});
+
+// Handle 419 CSRF errors globally
 router.on('error', (event) => {
-    if (event.detail.errors && event.detail.errors.status === 419) {
+    const response = event.detail.response;
+    if (response && response.status === 419) {
         console.warn('CSRF token mismatch detected (419), refreshing page...');
+        // Reload to get fresh CSRF token
         window.location.reload();
     }
 });
@@ -25,20 +38,10 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        // Configure Inertia to handle CSRF tokens
-        const app = createApp({ render: () => h(App, props) })
+        return createApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(ZiggyVue);
-
-        // Add global error handler for 419 errors
-        app.config.errorHandler = (err, instance, info) => {
-            if (err.response && err.response.status === 419) {
-                console.warn('CSRF token mismatch detected, refreshing page...');
-                window.location.reload();
-            }
-        };
-
-        return app.mount(el);
+            .use(ZiggyVue)
+            .mount(el);
     },
     progress: {
         color: '#4B5563',

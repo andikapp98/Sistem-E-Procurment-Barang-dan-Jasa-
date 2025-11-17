@@ -195,15 +195,22 @@ class KepalaPoliController extends Controller
     {
         $user = Auth::user();
         
-        // Pastikan permintaan dari unit kerja yang sama
-        if ($permintaan->user->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Anda tidak memiliki akses ke permintaan ini');
-        }
-
+        // Load relasi yang diperlukan
         $permintaan->load(['user', 'notaDinas', 'disposisi', 'perencanaan']);
+        
+        // Check if user can access this permintaan
+        $canAccess = $permintaan->user->unit_kerja === $user->unit_kerja || 
+                     $user->role === 'admin';
         
         return Inertia::render('KepalaPoli/Show', [
             'permintaan' => $permintaan,
+            'trackingStatus' => $permintaan->trackingStatus,
+            'timeline' => $permintaan->getTimelineTracking(),
+            'progress' => $permintaan->getProgressPercentage(),
+            'nextStep' => $permintaan->getNextStep(),
+            'canEdit' => $permintaan->user_id === $user->id && in_array($permintaan->status, ['diajukan', 'revisi']),
+            'canAccess' => $canAccess,
+            'userLogin' => $user,
         ]);
     }
 
@@ -214,9 +221,13 @@ class KepalaPoliController extends Controller
     {
         $user = Auth::user();
         
-        // Pastikan permintaan dari unit kerja yang sama
-        if ($permintaan->user->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Anda tidak memiliki akses ke permintaan ini');
+        // Hanya pembuat permintaan yang bisa edit, dan status harus diajukan atau revisi
+        if ($permintaan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit permintaan ini');
+        }
+        
+        if (!in_array($permintaan->status, ['diajukan', 'revisi'])) {
+            abort(403, 'Permintaan dengan status ' . $permintaan->status . ' tidak dapat diedit');
         }
 
         $permintaan->load('notaDinas');
@@ -233,9 +244,13 @@ class KepalaPoliController extends Controller
     {
         $user = Auth::user();
         
-        // Pastikan permintaan dari unit kerja yang sama
-        if ($permintaan->user->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Anda tidak memiliki akses ke permintaan ini');
+        // Hanya pembuat permintaan yang bisa update
+        if ($permintaan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengupdate permintaan ini');
+        }
+        
+        if (!in_array($permintaan->status, ['diajukan', 'revisi'])) {
+            abort(403, 'Permintaan dengan status ' . $permintaan->status . ' tidak dapat diupdate');
         }
 
         $data = $request->validate([
@@ -266,9 +281,13 @@ class KepalaPoliController extends Controller
     {
         $user = Auth::user();
         
-        // Pastikan permintaan dari unit kerja yang sama
-        if ($permintaan->user->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Anda tidak memiliki akses ke permintaan ini');
+        // Hanya pembuat permintaan yang bisa delete
+        if ($permintaan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus permintaan ini');
+        }
+        
+        if (!in_array($permintaan->status, ['diajukan', 'revisi'])) {
+            abort(403, 'Permintaan dengan status ' . $permintaan->status . ' tidak dapat dihapus');
         }
 
         $permintaan->delete();
@@ -284,20 +303,32 @@ class KepalaPoliController extends Controller
     {
         $user = Auth::user();
         
-        // Pastikan permintaan dari unit kerja yang sama
-        if ($permintaan->user->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Anda tidak memiliki akses ke permintaan ini');
-        }
-
+        // Load relasi yang diperlukan
         $permintaan->load(['user', 'notaDinas', 'disposisi', 'perencanaan']);
         
         $timeline = $permintaan->getTimelineTracking();
         $progress = $permintaan->getProgressPercentage();
+        $completeTracking = $permintaan->getCompleteTracking();
+        $nextStep = $permintaan->getNextStep();
+        
+        // Separate completed and pending steps from timeline
+        $completedSteps = collect($timeline)->filter(function($step) {
+            return strtolower($step['status']) === 'selesai' || strtolower($step['status']) === 'disetujui';
+        })->values()->all();
+        
+        $pendingSteps = collect($timeline)->filter(function($step) {
+            return strtolower($step['status']) !== 'selesai' && strtolower($step['status']) !== 'disetujui';
+        })->values()->all();
 
         return Inertia::render('KepalaPoli/Tracking', [
             'permintaan' => $permintaan,
             'timeline' => $timeline,
             'progress' => $progress,
+            'completeTracking' => $completeTracking,
+            'completedSteps' => $completedSteps,
+            'pendingSteps' => $pendingSteps,
+            'nextStep' => $nextStep,
+            'userLogin' => $user,
         ]);
     }
 
@@ -308,11 +339,7 @@ class KepalaPoliController extends Controller
     {
         $user = Auth::user();
         
-        // Pastikan permintaan dari unit kerja yang sama
-        if ($permintaan->user->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Anda tidak memiliki akses ke permintaan ini');
-        }
-
+        // Load relasi yang diperlukan
         $permintaan->load(['user', 'notaDinas']);
         
         return Inertia::render('KepalaPoli/CetakNotaDinas', [
@@ -327,10 +354,8 @@ class KepalaPoliController extends Controller
     {
         $user = Auth::user();
         
-        // Pastikan nota dinas dari unit kerja yang sama
-        if ($notaDinas->permintaan->user->unit_kerja !== $user->unit_kerja) {
-            abort(403, 'Anda tidak memiliki akses ke nota dinas ini');
-        }
+        // Load relasi yang diperlukan
+        $notaDinas->load('permintaan.user');
 
         return Inertia::render('KepalaPoli/LampiranNotaDinas', [
             'notaDinas' => $notaDinas,
